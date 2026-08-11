@@ -403,23 +403,7 @@ function renderChannels() {
 
   const filtered = channelsData.filter(ch => {
     const ageVal = Array.isArray(ch.age) ? ch.age : [ch.age || ''];
-    
-    let matchesFilter = currentFilter === 'all';
-    if (!matchesFilter) {
-      if (currentFilter === 'toddler') {
-        matchesFilter = ageVal.includes('toddler') || ageVal.includes('preschool');
-      } else if (currentFilter === 'preschool') {
-        matchesFilter = ageVal.includes('preschool') || ageVal.includes('toddler');
-      } else if (currentFilter === 'early-elementary') {
-        matchesFilter = ageVal.includes('early-elementary') || ageVal.includes('elementary');
-      } else if (currentFilter === 'middle-elementary') {
-        matchesFilter = ageVal.includes('middle-elementary') || ageVal.includes('elementary');
-      } else if (currentFilter === 'preteen') {
-        matchesFilter = ageVal.includes('preteen');
-      } else {
-        matchesFilter = ageVal.includes(currentFilter);
-      }
-    }
+    const matchesFilter = currentFilter === 'all' || ageVal.includes(currentFilter);
 
     const matchesSearch = !currentSearch ||
                           (ch.name && ch.name.toLowerCase().includes(currentSearch)) ||
