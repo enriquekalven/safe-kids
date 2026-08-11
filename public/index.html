@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeKids Portal | Parent-Curated Media Hub & Decision Guide</title>
+  <meta name="description" content="Research-backed parent portal summarizing parent recommendations, YouTube Kids regulations, low-stimulus channel directory by age, open-source parental tools comparison, and technical lockdown guides.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Sticky Header -->
+  <header class="header">
+    <div class="nav-container">
+      <a href="#" class="logo-group">
+        <div class="logo-icon">SK</div>
+        <div class="logo-text">
+          <h1>SafeKids Portal</h1>
+          <span>Algorithm-Free Media Hub</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#recommendations">Parent Recommendations</a></li>
+        <li><a href="#research">Research & Lessons</a></li>
+        <li><a href="#directory">Approved Channels</a></li>
+        <li><a href="#solutions">Open Source Tools</a></li>
+        <li><a href="#lockdown">Lockdown Guides</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <span class="badge-pill">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Updated August 2026 • Research & Technical Blueprint
+      </span>
+      <h2>Parent-Curated, Algorithm-Free Media Portal</h2>
+      <p>A clear parent action plan, research summary, age-categorized channel directory, open-source tool comparison, and technical lockdown guide for digital video media.</p>
+      
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-number">6</div>
+          <div class="stat-label">Action Recommendations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">18+</div>
+          <div class="stat-label">Low-Stimulus Channels</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Algorithm Free</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">6</div>
+          <div class="stat-label">Open Source Tools</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Container -->
+  <main class="main-wrapper">
+
+    <!-- SECTION 0: PARENT RECOMMENDATIONS & ACTION PLAN -->
+    <section id="recommendations" class="section-block">
+      <div class="section-header">
+        <h3>
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Top Recommendations & Decision Framework for Parents
+        </h3>
+        <p>Clear, actionable paths based on your child's age, device type, and family viewing habits.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card" style="border-top: 4px solid var(--success);">
+          <div class="card-title">
+            <span>1. Zero Screen Time</span>
+            <span class="tag-badge" style="background:#f0fdf4; color:#16a34a;">Gold Standard</span>
+          </div>
+          <p class="channel-desc"><strong>Best for:</strong> Toddlers & Preschoolers (Ages 0–3)</p>
+          <p class="channel-desc">Eliminates overstimulation (ESS), prevents Video Deficit Effect in language learning, and protects natural attention span development.</p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--primary);">
+          <div class="card-title">
+            <span>2. Curated Platforms</span>
+            <span class="tag-badge" style="background:#eff6ff; color:#1d4ed8;">Zero Overhead</span>
+          </div>
+          <p class="channel-desc"><strong>Best for:</strong> Ages 2–6</p>
+          <p class="channel-desc">Use <strong>PBS Kids</strong> or a local <strong>Plex Media Server</strong> with physical DVD rips (e.g. <i>Bluey</i>, <i>Puffin Rock</i>). 100% algorithm-free.</p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--secondary);">
+          <div class="card-title">
+            <span>3. Phone Approval Bot</span>
+            <span class="tag-badge" style="background:#f0fdf4; color:#0d9488;">Max Control</span>
+          </div>
+          <p class="channel-desc"><strong>Best for:</strong> Ages 5–12 on Tablets</p>
+          <p class="channel-desc">Deploy <strong>BrainRotGuard</strong>. Kids search on tablet; parents approve/deny in 1 tap on Telegram. Zero ads or recommendation sidebars.</p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--accent);">
+          <div class="card-title">
+            <span>4. Offline / Travel Player</span>
+            <span class="tag-badge" style="background:#fffbeb; color:#d97706;">Road Trips</span>
+          </div>
+          <p class="channel-desc"><strong>Best for:</strong> Flights, Travel & Bedtime</p>
+          <p class="channel-desc">Use <strong>KidzTV</strong> for 100% offline playback, or <strong>YouTubeWhitelist</strong> for Bedtime volume fade-out and Screen Pinning kiosk mode.</p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid #8b5cf6;">
+          <div class="card-title">
+            <span>5. Native UI Clone</span>
+            <span class="tag-badge" style="background:#f3e8ff; color:#6b21a8;">Familiar Feel</span>
+          </div>
+          <p class="channel-desc"><strong>Best for:</strong> Kids who want real YouTube</p>
+          <p class="channel-desc">Use <strong>KidTube</strong> (Flutter app). Mimics YouTube's dark mode UI, but limits videos strictly to parent-approved URLs behind a PIN.</p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--danger);">
+          <div class="card-title">
+            <span>6. OS Device Lockdown</span>
+            <span class="tag-badge" style="background:#fef2f2; color:#dc2626;">Mandatory</span>
+          </div>
+          <p class="channel-desc"><strong>Required for:</strong> ALL Digital Setups</p>
+          <p class="channel-desc">Lock tablet OS via <strong>Family Link</strong> (Android) or <strong>Screen Time</strong> (iOS) to block Chrome/Safari and unapproved app installs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: RESEARCH SUMMARY & LESSONS LEARNED -->
+    <section id="research" class="section-block">
+      <div class="section-header">
+        <h3>
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          1. Executive Research Summary & Lessons Learned
+        </h3>
+        <p>Key findings from FTC regulatory enforcement, cognitive developmental psychology, and native platform limitations.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span>Regulatory Landscape (COPPA & MFK)</span>
+            <span class="tag-badge" style="background:#dbeafe; color:#1e40af;">Policy</span>
+          </div>
+          <p class="channel-desc">
+            In 2019, Google and YouTube paid a record <strong>$170 Million settlement</strong> with the FTC for illegally harvesting data from children under 13 to serve targeted ads. This triggered the mandatory <strong>"Made for Kids" (MFK)</strong> framework.
+          </p>
+          <div class="alert-box alert-info" style="margin-bottom:0;">
+            <strong>Consequences of MFK:</strong> Personalized ads were disabled, cutting creator ad revenue by 50-80%. Crucially, interactive features like comments, live chat, and notifications were permanently shut off for kids' content.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>The Hyper-Engineered "CoComelon Formula"</span>
+            <span class="tag-badge" style="background:#fef3c7; color:#92400e;">Business Model</span>
+          </div>
+          <p class="channel-desc">
+            Stripped of ad revenue, creators pivoted to franchise-building (merchandise, Netflix licensing). Franchises like CoComelon reverse-engineered videos for toddler brains to maximize visual retention:
+          </p>
+          <ul style="font-size:0.88rem; color:var(--text-muted); margin-left:1.2rem;">
+            <li><strong>Scene Cuts:</strong> Rapid edits every 1 to 3 seconds.</li>
+            <li><strong>Color Palettes:</strong> Saturated neon primary colors.</li>
+            <li><strong>Music:</strong> Continuous high-pitched repetitive loops without silence.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 1.5rem;">
+        <div class="card">
+          <div class="card-title">
+            <span>Cognitive & Developmental Impacts</span>
+            <span class="tag-badge" style="background:#fecaca; color:#991b1b;">Psychology</span>
+          </div>
+          <p class="channel-desc">
+            Medical research highlights three major developmental risks of unchecked screen exposure:
+          </p>
+          <ul style="font-size:0.88rem; color:var(--text-muted); margin-left:1.2rem;">
+            <li><strong>Electronic Screen Syndrome (ESS):</strong> Nervous system overstimulation putting children into chronic fight-or-flight states, causing meltdowns and focus issues.</li>
+            <li><strong>Video Deficit Effect:</strong> Under-3s learn language and social skills significantly worse from screens than live humans.</li>
+            <li><strong>Impulse Control:</strong> A <i>Pediatrics</i> study showed 9 minutes of fast-paced cartoons immediately impaired executive function in 4-year-olds.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>The Native YouTube Kids "Catch-22"</span>
+            <span class="tag-badge" style="background:#e2e8f0; color:#475569;">UX Flaws</span>
+          </div>
+          <p class="channel-desc">
+            Internal caregiver logs reveal that native YouTube Kids controls are fundamentally broken:
+          </p>
+          <ul style="font-size:0.88rem; color:var(--text-muted); margin-left:1.2rem;">
+            <li><strong>Family Link Incompatibility:</strong> Enabling "Approve Content Only" often fails or disappears when logged in with a Family Link managed child account.</li>
+            <li><strong>Broken Search:</strong> In whitelist mode, search fails completely.</li>
+            <li><strong>Clunky Sharing:</strong> Requires finding videos in main YouTube app, tapping Share &rarr; With Kids, then hunting in a hidden "Shared" tab.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: APPROVED CHANNEL DIRECTORY -->
+    <section id="directory" class="section-block">
+      <div class="section-header">
+        <h3>
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          2. Parent-Approved Channel Directory (By Age Group)
+        </h3>
+        <p>Curated low-stimulus, educational channels evaluated on a 1–10 stimulus scale. Lower scores indicate calmer, more focused viewing.</p>
+      </div>
+
+      <!-- Filter & Search Controls -->
+      <div class="filter-bar">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="channel-search" class="search-input" placeholder="Search approved channels by title, category, or topic (e.g. STEM, Nature, Phonics)...">
+        </div>
+        <div class="filter-pills">
+          <button class="filter-btn active" data-filter="all">All Channels (28)</button>
+          <button class="filter-btn" data-filter="toddler">Toddlers (Ages 2-3)</button>
+          <button class="filter-btn" data-filter="preschool">Preschoolers (Ages 4-5)</button>
+          <button class="filter-btn" data-filter="early-elementary">Early Elementary (Ages 6-7)</button>
+          <button class="filter-btn" data-filter="middle-elementary">Middle Elementary (Ages 8-9)</button>
+          <button class="filter-btn" data-filter="preteen">Pre-Teens (Ages 10-12)</button>
+        </div>
+      </div>
+
+      <!-- Dynamic Grid Container -->
+      <div id="channel-grid" class="grid-3">
+        <!-- Rendered via app.js -->
+      </div>
+
+      <!-- Channels to Avoid Warning Box -->
+      <div class="alert-box alert-danger" style="margin-top: 2rem;">
+        <div class="alert-title">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          Channels & Content Formats to Avoid (High Stimulus / Overstimulation Warning)
+        </div>
+        <p>The following popular channels feature rapid editing, bright flashing colors, extreme vocal energy, or heavy commercialization designed to trigger dopamine spikes:</p>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:0.75rem; font-weight:600;">
+          <span style="background:#fee2e2; padding:0.25rem 0.6rem; border-radius:4px;">❌ CoComelon</span>
+          <span style="background:#fee2e2; padding:0.25rem 0.6rem; border-radius:4px;">❌ Ryan's World</span>
+          <span style="background:#fee2e2; padding:0.25rem 0.6rem; border-radius:4px;">❌ Blippi</span>
+          <span style="background:#fee2e2; padding:0.25rem 0.6rem; border-radius:4px;">❌ Vlad and Niki</span>
+          <span style="background:#fee2e2; padding:0.25rem 0.6rem; border-radius:4px;">❌ Diana Play</span>
+          <span style="background:#fee2e2; padding:0.25rem 0.6rem; border-radius:4px;">❌ Like Nastya</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: OPEN SOURCE PARENTAL TOOLS COMPARISON -->
+    <section id="solutions" class="section-block">
+      <div class="section-header">
+        <h3>
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          3. Open-Source Parental Control Tools Comparison
+        </h3>
+        <p>A comprehensive review of open-source applications, self-hosted bots, and custom players for managing kids' media.</p>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool Name</th>
+              <th>Platform / Stack</th>
+              <th>Remote Approval</th>
+              <th>Key Specialty / Feature</th>
+              <th>Offline Mode</th>
+              <th>GitHub Repo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>BrainRotGuard</strong></td>
+              <td>Docker / Web PWA + Telegram Bot</td>
+              <td><span style="color:var(--success); font-weight:700;">✅ Yes (Telegram)</span></td>
+              <td>1-tap phone approvals, Edu/Fun daily time budgets, zero ads</td>
+              <td>❌ Web-based</td>
+              <td><a href="https://github.com/GHJJ123/brainrotguard" target="_blank" rel="noopener">GHJJ123/brainrotguard</a></td>
+            </tr>
+            <tr>
+              <td><strong>KidTube</strong></td>
+              <td>Flutter (iOS, Android, Web, Desktop)</td>
+              <td>❌ No (Local PIN)</td>
+              <td>Authentic YouTube UI clone so kids feel like they're on real YouTube</td>
+              <td>❌ Online Stream</td>
+              <td><a href="https://github.com/SecFathy/KidTube" target="_blank" rel="noopener">SecFathy/KidTube</a></td>
+            </tr>
+            <tr>
+              <td><strong>YouTubeWhitelist</strong></td>
+              <td>Kotlin + Jetpack Compose (Android)</td>
+              <td>❌ No (Local PIN)</td>
+              <td>Bedtime Sleep Mode with volume fade-out & Kiosk mode screen pinning</td>
+              <td>❌ Online Stream</td>
+              <td><a href="https://github.com/degipe/YouTubeWhitelist" target="_blank" rel="noopener">degipe/YouTubeWhitelist</a></td>
+            </tr>
+            <tr>
+              <td><strong>KidzTV</strong></td>
+              <td>Android (Kotlin/Java)</td>
+              <td>❌ No (Local PIN)</td>
+              <td>100% Offline video player for flights, road trips & zero-data environments</td>
+              <td><span style="color:var(--success); font-weight:700;">✅ 100% Offline</span></td>
+              <td><a href="https://github.com/eltonkola/kidztv" target="_blank" rel="noopener">eltonkola/kidztv</a></td>
+            </tr>
+            <tr>
+              <td><strong>YT Kids Safe</strong></td>
+              <td>Kotlin (Piped / Invidious)</td>
+              <td>❌ No (Local PIN)</td>
+              <td>Pre-approved playlist JSON import & ad-free Invidious video playback</td>
+              <td>❌ Online Stream</td>
+              <td><a href="https://github.com/dreygur/yt-kids-safe" target="_blank" rel="noopener">dreygur/yt-kids-safe</a></td>
+            </tr>
+            <tr>
+              <td><strong>PBS Kids App</strong></td>
+              <td>Native App (iOS / Android)</td>
+              <td>❌ N/A</td>
+              <td>Curated, high-quality public broadcast content with zero algorithms</td>
+              <td>Partial</td>
+              <td>Official App Stores</td>
+            </tr>
+            <tr>
+              <td><strong>YouTube Kids (Native App)</strong></td>
+              <td>Official Google App (iOS/Android)</td>
+              <td>❌ No (In-App Share)</td>
+              <td>"Approve Content Only" whitelist mode (Note: Subject to UX bugs & Family Link conflicts)</td>
+              <td><span style="color:var(--success); font-weight:700;">✅ Premium Offline</span></td>
+              <td>Official App Stores</td>
+            </tr>
+            <tr>
+              <td><strong>Main YouTube (Supervised)</strong></td>
+              <td>Official Google App (iOS/Android)</td>
+              <td>❌ No (Setting Tier)</td>
+              <td>Family Link content tiers (Explore, Explore More, Most of YouTube); algorithm active</td>
+              <td><span style="color:var(--success); font-weight:700;">✅ Premium Offline</span></td>
+              <td>Official App Stores</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 4: STEP-BY-STEP LOCKDOWN GUIDES -->
+    <section id="lockdown" class="section-block">
+      <div class="section-header">
+        <h3>
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          4. Step-by-Step Parent Device Lockdown Guides
+        </h3>
+        <p>Clear setup instructions to restrict device access and deploy safe media viewing options.</p>
+      </div>
+
+      <div class="step-container">
+        <!-- Option A: BrainRotGuard Deployment -->
+        <div class="step-card">
+          <div class="step-number">A</div>
+          <div class="step-body" style="width: 100%;">
+            <h4>Deploying BrainRotGuard (Telegram Remote Approval Bot)</h4>
+            <p>Runs a self-hosted lightweight PWA server for your child's tablet and sends video approval requests to your phone via Telegram.</p>
+            <div class="code-block">
+              <button class="copy-btn" data-target="cmd-brg">Copy Command</button>
+              <pre id="cmd-brg">git clone https://github.com/GHJJ123/brainrotguard.git
+cd brainrotguard
+cp .env.example .env
+cp config.example.yaml config.yaml
+# Edit .env with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID
+docker compose up -d</pre>
+            </div>
+            <ul>
+              <li><strong>Kid's Tablet:</strong> Open <code>http://&lt;YOUR_SERVER_IP&gt;:8080</code> in browser and save as PWA home screen icon.</li>
+              <li><strong>Parent's Phone:</strong> Receive instant Telegram notifications with thumbnail, title, and 1-tap Approve/Deny buttons.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Option B: KidTube / YouTubeWhitelist / KidzTV -->
+        <div class="step-card">
+          <div class="step-number">B</div>
+          <div class="step-body">
+            <h4>Deploying Mobile Open-Source Apps (KidTube, YouTubeWhitelist, KidzTV)</h4>
+            <p>Select the app that best fits your child's viewing environment:</p>
+            <ul>
+              <li><strong>For YouTube UI Clone (KidTube):</strong> Build/Install <a href="https://github.com/SecFathy/KidTube" target="_blank" rel="noopener">SecFathy/KidTube</a> (Flutter cross-platform). Provides familiar YouTube dark mode UI with 100% parent PIN whitelist control.</li>
+              <li><strong>For Bedtime Fade & Kiosk Mode (YouTubeWhitelist):</strong> Install <a href="https://github.com/degipe/YouTubeWhitelist" target="_blank" rel="noopener">degipe/YouTubeWhitelist</a> (Android). Enable Sleep Mode for gradual audio fade-out and Screen Pinning for kiosk lock.</li>
+              <li><strong>For Offline Road Trips (KidzTV):</strong> Install <a href="https://github.com/eltonkola/kidztv" target="_blank" rel="noopener">eltonkola/kidztv</a> (Android). Download approved videos locally so children watch without internet access.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Option C: OS Level Hard Lockdown -->
+        <div class="step-card">
+          <div class="step-number">C</div>
+          <div class="step-body">
+            <h4>OS-Level Device Lockdown (Android & iOS)</h4>
+            <p>Prevents children from bypassing web restrictions or downloading unapproved apps.</p>
+            <ul>
+              <li><strong>Android (Google Family Link):</strong> Open Family Link &rarr; Select Child Profile &rarr; Controls &rarr; App Limits &rarr; Set Daily Limit for YouTube / Chrome to 0m (or block entirely). Allow only approved PWA or local player.</li>
+              <li><strong>iOS / iPadOS (Screen Time):</strong> Settings &rarr; Screen Time &rarr; Content & Privacy Restrictions &rarr; Allowed Apps (turn off Safari/YouTube) &rarr; App Limits &rarr; Set 1m limit on Web Browsing with "Block at End of Limit" passcode enabled.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <h5>SafeKids Parent Portal</h5>
+        <p>An open research and engineering blueprint to foster healthy, non-addictive media habits for children.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Quick Links</h5>
+        <ul>
+          <li><a href="#recommendations">Parent Recommendations</a></li>
+          <li><a href="#research">Research & COPPA Rules</a></li>
+          <li><a href="#directory">Approved Channels</a></li>
+          <li><a href="#solutions">Open Source Tools</a></li>
+          <li><a href="#lockdown">Device Lockdown Guides</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Featured Open Source Projects</h5>
+        <ul>
+          <li><a href="https://github.com/SecFathy/KidTube" target="_blank" rel="noopener">KidTube (Flutter)</a></li>
+          <li><a href="https://github.com/degipe/YouTubeWhitelist" target="_blank" rel="noopener">YouTubeWhitelist (Android)</a></li>
+          <li><a href="https://github.com/GHJJ123/brainrotguard" target="_blank" rel="noopener">BrainRotGuard (Telegram Bot)</a></li>
+          <li><a href="https://github.com/eltonkola/kidztv" target="_blank" rel="noopener">KidzTV (Offline Player)</a></li>
+          <li><a href="https://github.com/dreygur/yt-kids-safe" target="_blank" rel="noopener">YT Kids Safe (Kotlin)</a></li>
+        </ul>
+      </div>
+    </div>
+    <div style="max-width:1200px; margin:2rem auto 0; padding-top:1.5rem; border-top:1px solid #1e293b; font-size:0.78rem; color:#64748b; text-align:center;">
+      Disclaimer: SafeKids Portal is an independent, non-commercial educational resource and community guide. YouTube, YouTube Kids, and Google Family Link are registered trademarks of Google LLC. All open-source projects linked belong to their respective creators.
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
