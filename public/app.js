@@ -462,9 +462,10 @@ function setupFilterListeners() {
   const buttons = document.querySelectorAll('.filter-btn');
   buttons.forEach(btn => {
     btn.addEventListener('click', (e) => {
+      const activeBtn = e.currentTarget || e.target;
       buttons.forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      currentFilter = e.target.getAttribute('data-filter');
+      activeBtn.classList.add('active');
+      currentFilter = activeBtn.getAttribute('data-filter') || 'all';
       renderChannels();
     });
   });
