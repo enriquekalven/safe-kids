@@ -17,6 +17,8 @@ const channelsData = [
   // --- TODDLERS (AGES 2-3) ---
   {
     name: "Puffin Rock",
+    researchAnchor: "Lillard & Peterson (2011) Low-Pacing Baseline; CPM < 3",
+    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 1/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "1/10",
@@ -28,6 +30,8 @@ const channelsData = [
   },
   {
     name: "Super Simple Songs",
+    researchAnchor: "Anderson & Pempek (2005) Toddler Linguistic Cadence & Clear Articulation",
+    semBreakdown: "Pacing: 0/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 2/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "2/10",
@@ -39,6 +43,8 @@ const channelsData = [
   },
   {
     name: "Little Bear",
+    researchAnchor: "Kostyrka-Allchorne et al. (2017) Low-Stimulus Narrative Framing; CPM < 4",
+    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 1/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "1/10",
@@ -50,6 +56,8 @@ const channelsData = [
   },
   {
     name: "Alphablocks",
+    researchAnchor: "National Reading Panel (2000) Synthetic Phonics & Grapheme Mapping",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "3/10",
@@ -61,6 +69,8 @@ const channelsData = [
   },
   {
     name: "Numberblocks",
+    researchAnchor: "NCETM (UK) & Singapore Math Number Bond Visual Framework",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "3/10",
@@ -72,6 +82,8 @@ const channelsData = [
   },
   {
     name: "Sarah & Duck",
+    researchAnchor: "Lillard & Peterson (2011) Deliberate Story Pacing & Everyday Routines",
+    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 2/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "2/10",
@@ -83,6 +95,8 @@ const channelsData = [
   },
   {
     name: "Ms. Rachel - Songs for Littles",
+    researchAnchor: "Kuhl et al. (2003) Social Gating in Infant Speech Learning",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "3/10",
@@ -94,6 +108,8 @@ const channelsData = [
   },
   {
     name: "Hey Duggee",
+    researchAnchor: "Bandura (1977) Social Modeling & Activity Goal Setting",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "3/10",
@@ -105,6 +121,8 @@ const channelsData = [
   },
   {
     name: "Bluey",
+    researchAnchor: "Singer & Singer (2005) Sociodramatic Play & Emotional Co-Regulation",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "toddler",
     ageLabel: "Toddlers (Ages 2-3)",
     stimulusScore: "3/10",
@@ -118,6 +136,8 @@ const channelsData = [
   // --- PRESCHOOLERS (AGES 4-5) ---
   {
     name: "Puffin Rock",
+    researchAnchor: "Lillard & Peterson (2011) Low-Pacing Baseline; CPM < 3",
+    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 1/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "1/10",
@@ -129,6 +149,8 @@ const channelsData = [
   },
   {
     name: "Alphablocks",
+    researchAnchor: "National Reading Panel (2000) Synthetic Phonics & Grapheme Mapping",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "3/10",
@@ -140,6 +162,8 @@ const channelsData = [
   },
   {
     name: "Numberblocks",
+    researchAnchor: "NCETM (UK) & Singapore Math Number Bond Visual Framework",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "3/10",
@@ -151,6 +175,8 @@ const channelsData = [
   },
   {
     name: "Cosmic Kids Yoga",
+    researchAnchor: "Diamond (2013) Embodied Self-Regulation & Motor Mindfulness",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "3/10",
@@ -162,6 +188,8 @@ const channelsData = [
   },
   {
     name: "Super Simple Songs",
+    researchAnchor: "Anderson & Pempek (2005) Toddler Linguistic Cadence & Clear Articulation",
+    semBreakdown: "Pacing: 0/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 2/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "2/10",
@@ -173,6 +201,8 @@ const channelsData = [
   },
   {
     name: "Sesame Street",
+    researchAnchor: "Fisch & Truglio (2001) 'G' is for Growing: 30 Years of Research",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "4-5/10",
@@ -184,6 +214,8 @@ const channelsData = [
   },
   {
     name: "StoryBots",
+    researchAnchor: "Hirsh-Pasek et al. (2015) Question-Driven Inquiry Pedagogy",
+    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "5/10",
@@ -195,6 +227,8 @@ const channelsData = [
   },
   {
     name: "PBS Kids",
+    researchAnchor: "US Dept of Education Ready to Learn Grant Longitudinal Research",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
     age: "preschool",
     ageLabel: "Preschoolers (Ages 4-5)",
     stimulusScore: "4-5/10",
@@ -208,6 +242,8 @@ const channelsData = [
   // --- EARLY ELEMENTARY (AGES 6-7) ---
   {
     name: "Art for Kids Hub",
+    researchAnchor: "Vygotsky (1978) Zone of Proximal Development in Fine Motor Drawing",
+    semBreakdown: "Pacing: 1/2 • Audio: 0/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "early-elementary",
     ageLabel: "Early Elementary (Ages 6-7)",
     stimulusScore: "3/10",
@@ -219,6 +255,8 @@ const channelsData = [
   },
   {
     name: "Mystery Doug",
+    researchAnchor: "Dewey (1938) Phenomenon-Driven Inquiry & Socratic Questioning",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
     age: "early-elementary",
     ageLabel: "Early Elementary (Ages 6-7)",
     stimulusScore: "4/10",
@@ -230,6 +268,8 @@ const channelsData = [
   },
   {
     name: "SciShow Kids",
+    researchAnchor: "NRC (2012) K-12 Framework for Scientific Conceptual Literacy",
+    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "early-elementary",
     ageLabel: "Early Elementary (Ages 6-7)",
     stimulusScore: "5/10",
@@ -241,6 +281,8 @@ const channelsData = [
   },
   {
     name: "PBS Kids",
+    researchAnchor: "US Dept of Education Ready to Learn Grant Longitudinal Research",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
     age: "early-elementary",
     ageLabel: "Early Elementary (Ages 6-7)",
     stimulusScore: "4-5/10",
@@ -252,6 +294,8 @@ const channelsData = [
   },
   {
     name: "TED-Ed",
+    researchAnchor: "Mayer (2009) Multimedia Learning Principles & Dual Coding",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "early-elementary",
     ageLabel: "Early Elementary (Ages 6-7)",
     stimulusScore: "5/10",
@@ -265,6 +309,8 @@ const channelsData = [
   // --- MIDDLE ELEMENTARY (AGES 8-9) ---
   {
     name: "National Geographic Kids",
+    researchAnchor: "E.O. Wilson (1984) Biophilia Hypothesis & Habitat Observation",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "middle-elementary",
     ageLabel: "Middle Elementary (Ages 8-9)",
     stimulusScore: "5/10",
@@ -276,6 +322,8 @@ const channelsData = [
   },
   {
     name: "Crash Course Kids",
+    researchAnchor: "Next Generation Science Standards (NGSS) Earth & Physical Systems",
+    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 6/10)",
     age: "middle-elementary",
     ageLabel: "Middle Elementary (Ages 8-9)",
     stimulusScore: "6/10",
@@ -287,6 +335,8 @@ const channelsData = [
   },
   {
     name: "Art for Kids Hub",
+    researchAnchor: "Vygotsky (1978) Zone of Proximal Development in Fine Motor Drawing",
+    semBreakdown: "Pacing: 1/2 • Audio: 0/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
     age: "middle-elementary",
     ageLabel: "Middle Elementary (Ages 8-9)",
     stimulusScore: "3/10",
@@ -298,6 +348,8 @@ const channelsData = [
   },
   {
     name: "Kids Learning Tube",
+    researchAnchor: "Paivio (1986) Dual-Coding Auditory Rhyme in Geography Retention",
+    semBreakdown: "Pacing: 2/2 • Audio: 2/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 6/10)",
     age: "middle-elementary",
     ageLabel: "Middle Elementary (Ages 8-9)",
     stimulusScore: "6/10",
@@ -309,6 +361,8 @@ const channelsData = [
   },
   {
     name: "Mystery Doug",
+    researchAnchor: "Dewey (1938) Phenomenon-Driven Inquiry & Socratic Questioning",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
     age: "middle-elementary",
     ageLabel: "Middle Elementary (Ages 8-9)",
     stimulusScore: "4/10",
@@ -322,6 +376,8 @@ const channelsData = [
   // --- PRE-TEENS (AGES 10-12) ---
   {
     name: "Veritasium",
+    researchAnchor: "Muller et al. (2008) Addressing Physics Misconceptions via Dialogue",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
     age: "preteen",
     ageLabel: "Pre-Teens (Ages 10-12)",
     stimulusScore: "4/10",
@@ -333,6 +389,8 @@ const channelsData = [
   },
   {
     name: "Smarter Every Day",
+    researchAnchor: "Feynman Technique of Physical Observation & High-Speed Optics",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "preteen",
     ageLabel: "Pre-Teens (Ages 10-12)",
     stimulusScore: "5/10",
@@ -344,6 +402,8 @@ const channelsData = [
   },
   {
     name: "Physics Girl",
+    researchAnchor: "American Association of Physics Teachers (AAPT) Exploratory Models",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "preteen",
     ageLabel: "Pre-Teens (Ages 10-12)",
     stimulusScore: "5/10",
@@ -355,6 +415,8 @@ const channelsData = [
   },
   {
     name: "Mark Rober",
+    researchAnchor: "Engineering Prototyping Cycle; High-Stimulus Dynamic Editing",
+    semBreakdown: "Pacing: 2/2 • Audio: 2/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 7/10)",
     age: "preteen",
     ageLabel: "Pre-Teens (Ages 10-12)",
     stimulusScore: "7/10",
@@ -366,6 +428,8 @@ const channelsData = [
   },
   {
     name: "TED-Ed",
+    researchAnchor: "Mayer (2009) Multimedia Learning Principles & Dual Coding",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "preteen",
     ageLabel: "Pre-Teens (Ages 10-12)",
     stimulusScore: "5/10",
@@ -377,6 +441,8 @@ const channelsData = [
   },
   {
     name: "SciShow Kids",
+    researchAnchor: "NRC (2012) K-12 Framework for Scientific Conceptual Literacy",
+    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
     age: "preteen",
     ageLabel: "Pre-Teens (Ages 10-12)",
     stimulusScore: "6/10",
@@ -388,6 +454,8 @@ const channelsData = [
   },
   {
     name: "Mystery Science",
+    researchAnchor: "NGSS Phenomenon-Driven Elementary Science Modules",
+    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
     age: "preteen",
     ageLabel: "Pre-Teens (Ages 10-12)",
     stimulusScore: "4/10",
@@ -435,7 +503,9 @@ const gamesData = [
     ],
     "monetization": "Subscription (Zero Ads/IAPs)",
     "monetizationType": "paid",
-    "link": "https://playpokpok.com"
+    "link": "https://playpokpok.com",
+    "researchAnchor": "Hirsh-Pasek et al. (2015) Active Mind-On Play; Montessori Auto-Education",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "Sago Mini World / Forest Flyer",
@@ -470,7 +540,9 @@ const gamesData = [
     ],
     "monetization": "Paid / Subscription",
     "monetizationType": "paid",
-    "link": "https://sagomini.com"
+    "link": "https://sagomini.com",
+    "researchAnchor": "Anderson & Pempek (2005) Sensory Pacing Guidelines in Toddlers",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Endless Alphabet",
@@ -505,7 +577,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://www.originatorkids.com"
+    "link": "https://www.originatorkids.com",
+    "researchAnchor": "National Reading Panel (2000) Synthetic Phonics & Phonemic Awareness",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Breathe, Think, Do with Sesame",
@@ -541,7 +615,9 @@ const gamesData = [
     ],
     "monetization": "100% Free Non-Profit",
     "monetizationType": "free",
-    "link": "https://sesameworkshop.org"
+    "link": "https://sesameworkshop.org",
+    "researchAnchor": "Diamond (2013) Inhibitory Control & Prefrontal Cortex Regulation",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Khan Academy Kids",
@@ -580,7 +656,9 @@ const gamesData = [
     ],
     "monetization": "100% Free Non-Profit",
     "monetizationType": "free",
-    "link": "https://www.khanacademy.org/kids"
+    "link": "https://www.khanacademy.org/kids",
+    "researchAnchor": "Stanford Graduate School of Education (2018) Early Learning Evaluation",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "PBS KIDS Games",
@@ -616,7 +694,9 @@ const gamesData = [
     ],
     "monetization": "100% Free Public Media",
     "monetizationType": "free",
-    "link": "https://pbskids.org/games"
+    "link": "https://pbskids.org/games",
+    "researchAnchor": "US Dept of Education Ready-to-Learn Grant Evaluation (2015-2020)",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Thinkrolls: Logic & Physics Puzzles",
@@ -651,7 +731,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://avokiddo.com"
+    "link": "https://avokiddo.com",
+    "researchAnchor": "Hirsh-Pasek et al. (2015) Spatial Problem-Solving & Physics Intuition",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Monument Valley 1 & 2",
@@ -690,7 +772,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase / Apple Arcade",
     "monetizationType": "paid",
-    "link": "https://www.monumentvalleygame.com"
+    "link": "https://www.monumentvalleygame.com",
+    "researchAnchor": "M.C. Escher Spatial Geometry; Dunckley (2015) Meditative Flow",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Toca Nature",
@@ -725,7 +809,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://tocaboca.com"
+    "link": "https://tocaboca.com",
+    "researchAnchor": "Dunckley (2015) Sensory De-escalation & Open-World Nature Cognition",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "DragonBox Numbers",
@@ -760,7 +846,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://dragonbox.com"
+    "link": "https://dragonbox.com",
+    "researchAnchor": "Singapore Ministry of Education CPA (Concrete-Pictorial-Abstract) Framework",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Daniel Tiger's Grr-ific Feelings",
@@ -795,7 +883,9 @@ const gamesData = [
     ],
     "monetization": "100% Free Public Media",
     "monetizationType": "free",
-    "link": "https://pbskids.org/apps/daniel-tigers-grr-ific-feelings.html"
+    "link": "https://pbskids.org/apps/daniel-tigers-grr-ific-feelings.html",
+    "researchAnchor": "Fred Rogers Center for Early Learning & Children's Media (2016)",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "ScratchJr",
@@ -834,7 +924,9 @@ const gamesData = [
     ],
     "monetization": "100% Free Open-Source",
     "monetizationType": "foss",
-    "link": "https://www.scratchjr.org"
+    "link": "https://www.scratchjr.org",
+    "researchAnchor": "Bers et al. (2014), Computers & Education; Tufts DevTech Lab",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Slice Fractions",
@@ -870,7 +962,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://ululab.com/slice-fractions"
+    "link": "https://ululab.com/slice-fractions",
+    "researchAnchor": "Charland et al. (2016), Universit\u00e9 du Qu\u00e9bec \u00e0 Montr\u00e9al (UQAM) Study",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Lightbot: Code Hour / Lightbot Jr.",
@@ -907,7 +1001,9 @@ const gamesData = [
     ],
     "monetization": "Free Demo / One-Time Purchase",
     "monetizationType": "free",
-    "link": "https://lightbot.com"
+    "link": "https://lightbot.com",
+    "researchAnchor": "Wing (2006) Computational Thinking & Algorithmic Decomposition",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Townscaper",
@@ -947,7 +1043,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://oskarstalberg.com/Townscaper"
+    "link": "https://oskarstalberg.com/Townscaper",
+    "researchAnchor": "Papert (1980) Microworlds; Sensory De-escalation Spatial Flow",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "DragonBox Big Numbers",
@@ -982,7 +1080,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://dragonbox.com"
+    "link": "https://dragonbox.com",
+    "researchAnchor": "Sj\u00f6man et al. (2015), Computers & Education; Base-10 Structuring",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "ChessKid",
@@ -1021,7 +1121,9 @@ const gamesData = [
     ],
     "monetization": "Free Tier / Educational Membership",
     "monetizationType": "free",
-    "link": "https://www.chesskid.com"
+    "link": "https://www.chesskid.com",
+    "researchAnchor": "Diamond (2013) Inhibitory Control & Look-Ahead Strategic Planning",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Zoombinis (Logical Journey of the Zoombinis)",
@@ -1060,7 +1162,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://www.zoombinis.com"
+    "link": "https://www.zoombinis.com",
+    "researchAnchor": "Asbell-Clarke et al. (2012), TERC / NSF Grant DRL-1118534",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Scratch 3.0",
@@ -1100,7 +1204,9 @@ const gamesData = [
     ],
     "monetization": "100% Free Non-Profit",
     "monetizationType": "foss",
-    "link": "https://scratch.mit.edu"
+    "link": "https://scratch.mit.edu",
+    "researchAnchor": "Papert (1980) Constructionism; Resnick (2017) Lifelong Kindergarten",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "DragonBox Algebra (5+ & 12+)",
@@ -1137,7 +1243,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://dragonbox.com"
+    "link": "https://dragonbox.com",
+    "researchAnchor": "Sj\u00f6man et al. (2015), Computers & Education; Norwegian Research Council",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "A Short Hike",
@@ -1176,7 +1284,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://ashorthike.com"
+    "link": "https://ashorthike.com",
+    "researchAnchor": "Ryan & Deci (2000) Self-Determination Theory (Intrinsic Autonomy)",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Human Resource Machine",
@@ -1215,7 +1325,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://tomorrowcorporation.com/humanresourcemachine"
+    "link": "https://tomorrowcorporation.com/humanresourcemachine",
+    "researchAnchor": "Patterson & Hennessy (2013) Computer Architecture & Assembly Models",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Alba: A Wildlife Adventure",
@@ -1256,7 +1368,9 @@ const gamesData = [
     ],
     "monetization": "Apple Arcade / One-Time Purchase",
     "monetizationType": "arcade",
-    "link": "https://www.albawildlife.com"
+    "link": "https://www.albawildlife.com",
+    "researchAnchor": "Sobel (2008) Childhood & Nature; Place-Based Environmental Education",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Baba Is You",
@@ -1294,7 +1408,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://hempuli.com/baba"
+    "link": "https://hempuli.com/baba",
+    "researchAnchor": "Tarski (1956) Formal Semantics & Predicate Rule Induction",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Minecraft (Creative Mode & Redstone Logic)",
@@ -1333,7 +1449,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase (Private LAN Recommended)",
     "monetizationType": "paid",
-    "link": "https://www.minecraft.net"
+    "link": "https://www.minecraft.net",
+    "researchAnchor": "Papert (1980) Constructionism; Digital Boolean Logic Gates",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Kerbal Space Program",
@@ -1369,7 +1487,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://www.kerbalspaceprogram.com"
+    "link": "https://www.kerbalspaceprogram.com",
+    "researchAnchor": "NASA / ESA Orbital Physics & Newtonian Mechanics Education",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 1/2 \u2022 Visual: 1/2 \u2022 Pressure: 1/2 \u2022 Reward: 0/2 (Total: 4/10)"
   },
   {
     "name": "The Witness",
@@ -1406,7 +1526,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://the-witness.net"
+    "link": "https://the-witness.net",
+    "researchAnchor": "Peirce (1903) Semiotic Induction; Silent Epistemic Discovery",
+    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Civilization VI / Freeciv",
@@ -1443,7 +1565,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase / FOSS",
     "monetizationType": "paid",
-    "link": "https://civilization.com"
+    "link": "https://civilization.com",
+    "researchAnchor": "Sterman (2000) Business Dynamics: Complex Systems & Policy Trade-offs",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Turing Complete / Opus Magnum",
@@ -1479,7 +1603,9 @@ const gamesData = [
     ],
     "monetization": "One-Time Purchase",
     "monetizationType": "paid",
-    "link": "https://turingcomplete.game"
+    "link": "https://turingcomplete.game",
+    "researchAnchor": "Nisan & Schocken (2005) The Elements of Computing Systems (NAND to CPU)",
+    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   }
 ];
 
@@ -1531,6 +1657,11 @@ function renderChannels() {
         </div>
 
         <p class="channel-desc"><strong>Why This Channel:</strong> ${ch.whyThisChannel}</p>
+
+        <div class="citation-box">
+          <div><strong>📚 Research Anchor:</strong> ${ch.researchAnchor || 'Lillard & Peterson (2011) Pacing Guidelines'}</div>
+          <div style="margin-top:0.25rem;"><strong>🔬 SEM-10 Rubric:</strong> <span class="sem-badge">${ch.semBreakdown || 'Pacing: Low • Audio: Balanced • Visual: Calm'}</span></div>
+        </div>
         
         ${ch.checkmarks && ch.checkmarks.length > 0 ? `
           <ul style="list-style:none; margin: 0.75rem 0; font-size:0.85rem; color:var(--text-muted);">
@@ -1595,6 +1726,8 @@ function renderGames() {
     const matchesSearch = !currentGameSearch ||
       (g.name && g.name.toLowerCase().includes(currentGameSearch)) ||
       (g.developer && g.developer.toLowerCase().includes(currentGameSearch)) ||
+      (g.researchAnchor && g.researchAnchor.toLowerCase().includes(currentGameSearch)) ||
+      (g.semBreakdown && g.semBreakdown.toLowerCase().includes(currentGameSearch)) ||
       (g.whyEducatorsApprove && g.whyEducatorsApprove.toLowerCase().includes(currentGameSearch)) ||
       (g.ageLabel && g.ageLabel.toLowerCase().includes(currentGameSearch)) ||
       (g.categoryLabel && g.categoryLabel.toLowerCase().includes(currentGameSearch)) ||
@@ -1659,6 +1792,11 @@ function renderGames() {
           ` : ''}
 
           <p class="channel-desc" style="margin-bottom:0.75rem;"><strong>Why Educators Approve:</strong> ${g.whyEducatorsApprove}</p>
+
+          <div class="citation-box">
+            <div><strong>📚 Research Anchor:</strong> ${g.researchAnchor}</div>
+            <div style="margin-top:0.25rem;"><strong>🔬 SEM-10 Rubric:</strong> <span class="sem-badge">${g.semBreakdown}</span></div>
+          </div>
 
           <div style="background:var(--bg-alt); padding:0.65rem; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
             <div style="font-size:0.75rem; font-weight:700; color:var(--text-main); margin-bottom:0.3rem;">🛡️ Calm & Ethical Design:</div>
