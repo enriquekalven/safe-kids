@@ -51,7 +51,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Classic storytelling with very slow pacing and emotional literacy focus. Promotes imagination and calm viewing habits.",
     checkmarks: ["Extremely slow pacing", "Daily routine focus", "Imaginative play"],
-    startWith: [],
+    startWith: ["Father Bear Comes Home", "Little Bear's Wish", "Grandpa's Attic"],
     link: "https://www.youtube.com/channel/UCncFzSeWqySvOXEbQoEJsZg"
   },
   {
@@ -64,7 +64,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Short, energetic clips (under 5 minutes) with playful, whimsical letter characters. Structured for early reading readiness.",
     checkmarks: ["Reading readiness", "Clear pronunciation", "Educational foundation"],
-    startWith: [],
+    startWith: ["Meet the Alphabet", "Phonics Magic: The Letter A", "Word Magic: Cat & Hat"],
     link: "https://www.youtube.com/c/officialalphablocks"
   },
   {
@@ -77,7 +77,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Teaches math concepts through animated number characters. Short 5-minute episodes with clear visuals and counting songs.",
     checkmarks: ["Concept-driven pacing", "Clear visuals", "Number recognition"],
-    startWith: [],
+    startWith: ["Meet Numberblock One", "Number Magic 1 to 5", "Ten Again"],
     link: "https://www.youtube.com/channel/UCPlwvN0w4qFSP1FllALB92w"
   },
   {
@@ -90,7 +90,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Simple animation with gentle narration. Focuses on problem-solving, friendship, and everyday adventures.",
     checkmarks: ["Simple animation", "Gentle narration", "Everyday adventures"],
-    startWith: [],
+    startWith: ["Lots of Shallots", "Bouncing Ball", "Ribbon Sisters"],
     link: "https://www.youtube.com/channel/UC3OUMU3s7Oy6Ta0wnpZFBWw"
   },
   {
@@ -103,7 +103,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Speech development focus with interactive approach. Expert-designed content for language acquisition.",
     checkmarks: ["Speech development focus", "Interactive approach", "Expert design"],
-    startWith: [],
+    startWith: ["First Words & Speech Practice", "Baby Learning Songs", "Phonics & Gentle Rhymes"],
     link: "https://www.youtube.com/@msrachel"
   },
   {
@@ -116,7 +116,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Simple animation with clear narration. Activity-based learning focusing on teamwork and achievement.",
     checkmarks: ["Simple animation", "Clear narration", "Activity-based learning"],
-    startWith: [],
+    startWith: ["The Drawing Badge", "The Birdwatching Badge", "The Tree Badge"],
     link: "https://www.youtube.com/channel/UCj_mFUb-47d9QNiJ5556LjQ"
   },
   {
@@ -129,7 +129,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Story-driven pacing with natural dialogue. Focuses on imaginative play, family relationships, and play-based learning.",
     checkmarks: ["Story-driven pacing", "Natural dialogue", "Play-based learning"],
-    startWith: [],
+    startWith: ["Rain (Tranquil Dialogue-Free Episode)", "Sleepytime (Holst's Jupiter Orchestral)", "Camping"],
     link: "https://www.youtube.com/channel/UCVzLLZkDuFGAE2BGdBuBNBg"
   },
 
@@ -144,7 +144,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Described as 'Bob Ross level soothing' with gentle narration by Chris O'Dowd. Focuses on nature exploration and family relationships.",
     checkmarks: ["Gentle narration", "Natural sounds", "Watercolor animation"],
-    startWith: [],
+    startWith: ["Oona and Baba", "Tidal Pool Adventure", "Stormy Weather"],
     link: "https://www.youtube.com/c/PuffinRock"
   },
   {
@@ -157,7 +157,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Each cube-shaped letter has a unique personality matching its sound, creating engaging phonics lessons.",
     checkmarks: ["Clear pronunciation", "Visual phonics concepts", "Reading foundations"],
-    startWith: [],
+    startWith: ["Meet the Alphabet", "Phonics Magic: The Letter A", "Word Magic: Cat & Hat"],
     link: "https://www.youtube.com/c/officialalphablocks"
   },
   {
@@ -196,7 +196,7 @@ const channelsData = [
     stimulusClass: "stimulus-low",
     whyThisChannel: "Deliberate pacing with clear language focus. Songs specifically designed with simple, repetitive patterns and slow tempo.",
     checkmarks: ["Language development", "Clear vocals", "Educational songs"],
-    startWith: [],
+    startWith: ["Meet Numberblock One", "Number Magic 1 to 5", "Ten Again"],
     link: "https://www.youtube.com/channel/UCLsooMJoIpl_7ux2jvdPB-Q"
   },
   {
@@ -209,7 +209,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Research-backed educational content with social skills focus. Select quieter segments for lower stimulus viewing.",
     checkmarks: ["Educational research base", "Diverse representation", "Social-emotional learning"],
-    startWith: [],
+    startWith: ["Breathe with Elmo & Colbie Caillat", "Count von Count Number Walks", "Cookie Monster Mindfulness"],
     link: "https://www.youtube.com/sesamestreet"
   },
   {
@@ -222,7 +222,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Question-based learning that encourages curiosity. Varied animation styles keep interest while teaching information literacy.",
     checkmarks: ["Encourages questions", "Varied topics", "Information literacy"],
-    startWith: [],
+    startWith: ["How Does the Eye See?", "Why Do We Brush Our Teeth?", "How Do Airplanes Fly?"],
     link: "https://www.youtube.com/playlist?list=PLPphPHIzdSQPhHIEDhqwg0qh5p-FgwxTH"
   },
   {
@@ -235,7 +235,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Wide variety of educational shows with varying pacing. Most have faster editing than dedicated low-stimulus content but still have an educational focus.",
     checkmarks: ["Research-backed content", "Diverse representation", "Social skills focus"],
-    startWith: [],
+    startWith: ["Daniel Tiger: Count to Four", "Peg + Cat: The Golden Egg Math", "Wild Kratts: Great Horned Owl"],
     link: "https://www.youtube.com/pbskids"
   },
 
@@ -289,7 +289,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Character-based learning with research backing. Balanced pacing with focus on educational outcomes.",
     checkmarks: ["Educational research", "Character learning", "Balanced content"],
-    startWith: [],
+    startWith: ["Daniel Tiger: Count to Four", "Peg + Cat: The Golden Egg Math", "Wild Kratts: Great Horned Owl"],
     link: "https://www.youtube.com/pbskids"
   },
   {
@@ -302,7 +302,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Animated explanations of diverse topics with thoughtful pacing. Encourages curiosity about the world.",
     checkmarks: ["Well-paced animations", "Diverse topics", "Critical thinking"],
-    startWith: [],
+    startWith: ["How Do Memories Form?", "Why Do We Dream?", "How Does the Immune System Work?"],
     link: "https://www.youtube.com/TEDEducation"
   },
 
@@ -330,7 +330,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Systematic science education aligned with standards. Builds knowledge progressively with moderate pacing.",
     checkmarks: ["Standards-aligned", "Systematic learning", "Critical thinking"],
-    startWith: [],
+    startWith: ["Amazing Animals: Sea Otters", "Habitat Discovery: Rain Forests", "Weird But True: Ocean Giants"],
     link: "https://www.youtube.com/crashcoursekids"
   },
   {
@@ -356,7 +356,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Educational songs that aid memory through music. Covers varied topics with global awareness focus.",
     checkmarks: ["Memory through music", "Varied topics", "Global awareness"],
-    startWith: [],
+    startWith: ["The Basics of Engineering", "Ecosystem Interactions: Food Webs", "Gravity & Earth's Spheres"],
     link: "https://www.youtube.com/channel/UC7EFWpvc1wYuUwrtZ_BLi9A"
   },
   {
@@ -369,7 +369,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Question-based learning with controlled transitions. Encourages critical thinking through scientific inquiry.",
     checkmarks: ["Question-based learning", "Controlled transitions", "Critical thinking"],
-    startWith: [],
+    startWith: ["The Solar System Song", "Continents & Oceans of the World", "The Skeletal System"],
     link: "https://www.youtube.com/mysterydoug"
   },
 
@@ -410,7 +410,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Female STEM representation with clean graphics. Makes physics accessible through clear explanations.",
     checkmarks: ["STEM representation", "Clear graphics", "Scientific thinking"],
-    startWith: [],
+    startWith: ["The Science of Thinking", "Why Trees Don't Run Out of Water", "Secret of Synchronization"],
     link: "https://www.youtube.com/c/physicsgirl"
   },
   {
@@ -423,7 +423,7 @@ const channelsData = [
     stimulusClass: "stimulus-high",
     whyThisChannel: "Engineering projects with design thinking focus. Real-world applications that inspire problem-solving.",
     checkmarks: ["Engineering focus", "Design thinking", "Real applications"],
-    startWith: [],
+    startWith: ["How Rockets Steer in Space", "Physics of Cat Twisting in Slow Motion", "How Birds Fly in Air"],
     link: "https://www.youtube.com/markrober"
   },
   {
@@ -449,7 +449,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Scientific literacy with moderate pacing. Clear explanations aligned with educational standards.",
     checkmarks: ["Scientific literacy", "Moderate pacing", "Clear explanations"],
-    startWith: [],
+    startWith: ["How Do Memories Form?", "Why Do We Dream?", "How Does the Immune System Work?"],
     link: "https://www.youtube.com/scishowkids"
   },
   {
@@ -462,7 +462,7 @@ const channelsData = [
     stimulusClass: "stimulus-med",
     whyThisChannel: "Question-based learning with clear explanations. Promotes scientific inquiry with thoughtful pacing.",
     checkmarks: ["Question-based learning", "Clear explanations", "Scientific inquiry"],
-    startWith: [],
+    startWith: ["Why Does Ice Float?", "Singing Plates & Sound Waves (Chladni)", "How Waves Move Underwater"],
     link: "https://www.youtube.com/channel/UCPRCRM3JKm3sw55lB_427qg"
   }
 ];
