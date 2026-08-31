@@ -1,4 +1,6 @@
 .firebase/
 node_modules/
 projects.txt
+*.log
+.env*
 .DS_Store

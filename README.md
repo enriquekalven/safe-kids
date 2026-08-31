@@ -211,7 +211,7 @@ safe-kids-portal/
 ### Local Preview
 Open `public/index.html` directly in any browser, or launch a lightweight HTTP server:
 ```bash
-cd /Users/enriq/.gemini/jetski/scratch/safe-kids-portal/public
+cd public
 python3 -m http.server 8080
 ```
 Then visit `http://localhost:8080` in your web browser.
@@ -220,7 +220,7 @@ Then visit `http://localhost:8080` in your web browser.
 The repository is pre-configured to deploy directly to Firebase Hosting:
 
 ```bash
-cd /Users/enriq/.gemini/jetski/scratch/safe-kids-portal
+# In project root:
 
 # Deploy update to live production target
 firebase deploy --project project-maui --only hosting:safe-kids
