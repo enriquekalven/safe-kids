@@ -1679,7 +1679,7 @@ function renderChannels() {
         ` : ''}
       </div>
 
-      <a href="${ch.link}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:1rem; width:100%; justify-content:center;">
+      <a href="${ch.link}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:1rem; width:100%; justify-content:center;" onclick="if(window.trackSafeKidsEvent) window.trackSafeKidsEvent('click_channel', { name: '${ch.name.replace(/'/g, "\\'")}', url: '${ch.link}' });">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
         View Channel
       </a>
@@ -1696,6 +1696,9 @@ function setupChannelFilterListeners() {
       activeBtn.classList.add('active');
       currentChannelFilter = activeBtn.getAttribute('data-filter') || 'all';
       renderChannels();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_channels', { filter: currentChannelFilter });
+      }
     });
   });
 }
@@ -1703,9 +1706,16 @@ function setupChannelFilterListeners() {
 function setupChannelSearch() {
   const input = document.getElementById('channel-search');
   if (!input) return;
+  let chSearchTimer;
   input.addEventListener('input', (e) => {
     currentChannelSearch = e.target.value.toLowerCase().trim();
     renderChannels();
+    clearTimeout(chSearchTimer);
+    if (currentChannelSearch.length >= 3 && window.trackSafeKidsEvent) {
+      chSearchTimer = setTimeout(() => {
+        window.trackSafeKidsEvent('search_channels', { query: currentChannelSearch });
+      }, 500);
+    }
   });
 }
 
@@ -1810,7 +1820,7 @@ function renderGames() {
           </div>
         </div>
 
-        <a href="${g.link}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:0.75rem; width:100%; justify-content:center;">
+        <a href="${g.link}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:0.75rem; width:100%; justify-content:center;" onclick="if(window.trackSafeKidsEvent) window.trackSafeKidsEvent('click_game', { name: '${g.name.replace(/'/g, "\\'")}', url: '${g.link}' });">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
           Visit Official Game / App
         </a>
@@ -1828,6 +1838,9 @@ function setupGameFilterListeners() {
       activeBtn.classList.add('active');
       currentGameAgeFilter = activeBtn.getAttribute('data-filter') || 'all';
       renderGames();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_games_age', { age: currentGameAgeFilter });
+      }
     });
   });
 
@@ -1839,6 +1852,9 @@ function setupGameFilterListeners() {
       activeBtn.classList.add('active');
       currentGameDomainFilter = activeBtn.getAttribute('data-filter') || 'all';
       renderGames();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_games_domain', { domain: currentGameDomainFilter });
+      }
     });
   });
 }
@@ -1846,9 +1862,16 @@ function setupGameFilterListeners() {
 function setupGameSearch() {
   const input = document.getElementById('game-search');
   if (!input) return;
+  let gSearchTimer;
   input.addEventListener('input', (e) => {
     currentGameSearch = e.target.value.toLowerCase().trim();
     renderGames();
+    clearTimeout(gSearchTimer);
+    if (currentGameSearch.length >= 3 && window.trackSafeKidsEvent) {
+      gSearchTimer = setTimeout(() => {
+        window.trackSafeKidsEvent('search_games', { query: currentGameSearch });
+      }, 500);
+    }
   });
 }
 
@@ -1860,6 +1883,9 @@ function setupCopyButtons() {
       const codeEl = document.getElementById(codeId);
       if (codeEl) {
         navigator.clipboard.writeText(codeEl.innerText).then(() => {
+          if (window.trackSafeKidsEvent) {
+            window.trackSafeKidsEvent('copy_lockdown_code', { target: codeId });
+          }
           const orig = btn.innerText;
           btn.innerText = 'Copied!';
           setTimeout(() => btn.innerText = orig, 2000);
@@ -1868,3 +1894,4 @@ function setupCopyButtons() {
     });
   });
 }
+

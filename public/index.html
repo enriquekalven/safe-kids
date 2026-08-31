@@ -6,6 +6,40 @@
   <title>SafeKids Portal | Parent-Curated Media Hub & Decision Guide</title>
   <meta name="description" content="Research-backed parent portal summarizing parent recommendations, YouTube Kids regulations, low-stimulus channel directory by age, open-source parental tools comparison, and technical lockdown guides.">
   <link rel="stylesheet" href="styles.css">
+
+  <!-- Google tag (gtag.js) - Google Analytics 4 (Privacy-Preserved for SafeKids) -->
+  <script>
+    // Paste your GA4 Measurement ID below (starts with 'G-')
+    window.GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX" id="ga-tag-src"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    // Privacy-preserving configuration: strictly no ad profiling or cross-site tracking
+    gtag('config', window.GA_MEASUREMENT_ID, {
+      'anonymize_ip': true,
+      'allow_google_signals': false,
+      'allow_ad_personalization_signals': false,
+      'restricted_data_processing': true
+    });
+
+    // Custom telemetry helper for SafeKids events
+    window.trackSafeKidsEvent = function(eventName, eventParams) {
+      try {
+        if (typeof gtag === 'function' && window.GA_MEASUREMENT_ID && window.GA_MEASUREMENT_ID !== 'G-XXXXXXXXXX') {
+          gtag('event', eventName, eventParams);
+        } else {
+          // In local preview/dev mode, log telemetry to console
+          console.debug('[SafeKids Analytics]', eventName, eventParams);
+        }
+      } catch (err) {
+        console.warn('Analytics event error:', err);
+      }
+    };
+  </script>
 </head>
 <body>
 
@@ -803,6 +837,6 @@ docker compose up -d</pre>
     </div>
   </footer>
 
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
