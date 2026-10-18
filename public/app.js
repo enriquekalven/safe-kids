@@ -1,473 +1,391 @@
-// SafeKids Parent Portal - Client Interactive Logic
+// SafeKids Parent Portal - Client Interactive Logic (XSS-Safe DOM Architecture)
 
 document.addEventListener('DOMContentLoaded', () => {
   renderChannels();
   setupChannelFilterListeners();
   setupChannelSearch();
+  setupWhitelistExport();
 
   renderGames();
   setupGameFilterListeners();
   setupGameSearch();
 
+  setupSemCalculator();
   setupCopyButtons();
 });
 
-// Comprehensive Database of Approved Channels categorized by exact Age Bands
+// Comprehensive Database of 25 Unique Curated Low-Stimulus Channels (Deduplicated Multi-Age Bands)
 const channelsData = [
-  // --- TODDLERS (AGES 2-3) ---
+  // --- ULTRA-LOW STIMULUS (1/10 - 2/10): TODDLERS & PRESCHOOL ---
   {
     name: "Puffin Rock",
     researchAnchor: "Lillard & Peterson (2011) Low-Pacing Baseline; CPM < 3",
-    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 1/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
+    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "1/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Described as 'Bob Ross level soothing' with gentle narration by Chris O'Dowd. Slow pacing, watercolor animation, and nature sounds create an extremely calm viewing experience. Perfect for developing attention without overstimulation.",
-    checkmarks: ["Slow, deliberate pacing", "Nature-focused content", "Gentle voice narration"],
+    whyThisChannel: "Described as 'Bob Ross level soothing' with gentle narration by Chris O'Dowd. Slow pacing, watercolor animation, and coastal nature sounds create an ultra-calm viewing experience that protects developing attention spans.",
+    checkmarks: ["Slow, deliberate pacing (>15s scenes)", "Biophilic watercolor art & nature audio", "Gentle conversational narration"],
     startWith: ["Oona and Baba", "Tidal Pool Adventure", "Stormy Weather"],
     link: "https://www.youtube.com/c/PuffinRock"
   },
   {
-    name: "Super Simple Songs",
-    researchAnchor: "Anderson & Pempek (2005) Toddler Linguistic Cadence & Clear Articulation",
-    semBreakdown: "Pacing: 0/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 2/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
-    stimulusScore: "2/10",
+    name: "Tumble Leaf",
+    researchAnchor: "Hirsh-Pasek et al. (2015) Tactile Physical Inquiry & Constructivist Play",
+    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
+    stimulusScore: "1/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Deliberate pacing with clear language focus. Songs are specifically designed for language development with simple, repetitive patterns.",
-    checkmarks: ["Clear pronunciation", "Educational focus", "Simple animations"],
-    startWith: ["Colors Song", "Animal Sounds", "Clean Up Song"],
-    link: "https://www.youtube.com/channel/UCLsooMJoIpl_7ux2jvdPB-Q"
+    whyThisChannel: "Multi-Emmy-winning stop-motion series following Fig the Fox as he discovers physical objects washed ashore in the 'Finding Place' and figures out how they work through calm, hands-on scientific play.",
+    checkmarks: ["Handcrafted stop-motion textures", "Teaches physical cause-and-effect inquiry", "Tranquil acoustic soundtrack"],
+    startWith: ["Fig Finds a Magnifying Glass", "The Floating Leaf Boat", "Shadow Puppet Play"],
+    link: "https://www.youtube.com/results?search_query=Tumble+Leaf+Official+Prime+Video+Kids"
+  },
+  {
+    name: "Frog and Toad",
+    researchAnchor: "Kostyrka-Allchorne et al. (2017) Slow Conversational Cadence & Prosocial Empathy",
+    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    whyThisChannel: "Hand-drawn storybook adaptation of Arnold Lobel's classic books. Celebrates quiet friendship, patience, seasonal nature routines, and emotional kindness without villains, shouting, or rapid camera cuts.",
+    checkmarks: ["Storybook watercolor aesthetic", "Models patience and emotional loyalty", "Acoustic folk instrumentation"],
+    startWith: ["Spring", "The Garden", "Cookies (Willpower & Patience)"],
+    link: "https://www.youtube.com/results?search_query=Frog+and+Toad+Apple+TV+Official"
   },
   {
     name: "Little Bear",
     researchAnchor: "Kostyrka-Allchorne et al. (2017) Low-Stimulus Narrative Framing; CPM < 4",
-    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 1/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
+    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "1/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Classic storytelling with very slow pacing and emotional literacy focus. Promotes imagination and calm viewing habits.",
-    checkmarks: ["Extremely slow pacing", "Daily routine focus", "Imaginative play"],
+    whyThisChannel: "Classic Maurice Sendak / Else Holmelund Minarik storytelling with ultra-slow pacing, classical woodwind orchestration, and warm family literacy. Promotes outdoor imaginative play.",
+    checkmarks: ["Extremely slow, unhurried camera framing", "Classical Schubert/Bach chamber music", "Warm family & nature routines"],
     startWith: ["Father Bear Comes Home", "Little Bear's Wish", "Grandpa's Attic"],
     link: "https://www.youtube.com/channel/UCncFzSeWqySvOXEbQoEJsZg"
   },
   {
-    name: "Alphablocks",
-    researchAnchor: "National Reading Panel (2000) Synthetic Phonics & Grapheme Mapping",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
-    stimulusScore: "3/10",
+    name: "Trash Truck",
+    researchAnchor: "Lillard & Peterson (2011) Naturalistic Pacing & Unhurried Dialogue",
+    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
+    stimulusScore: "1/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Short, energetic clips (under 5 minutes) with playful, whimsical letter characters. Structured for early reading readiness.",
-    checkmarks: ["Reading readiness", "Clear pronunciation", "Educational foundation"],
-    startWith: ["Meet the Alphabet", "Phonics Magic: The Letter A", "Word Magic: Cat & Hat"],
-    link: "https://www.youtube.com/c/officialalphablocks"
+    whyThisChannel: "Created by Max Keane, featuring natural child voice acting, sunlit backyard framing, and gentle everyday adventures between 6-year-old Hank and his best friend, a giant honking Trash Truck.",
+    checkmarks: ["Authentic, unhurried child dialogue", "Zero flashing effects or frantic music", "Grounded in imaginative backyard play"],
+    startWith: ["Sleepover", "Hide and Seek", "Olive Surfs"],
+    link: "https://www.youtube.com/results?search_query=Trash+Truck+Netflix+Jr+Official"
   },
   {
-    name: "Numberblocks",
-    researchAnchor: "NCETM (UK) & Singapore Math Number Bond Visual Framework",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
-    stimulusScore: "3/10",
+    name: "Stillwater",
+    researchAnchor: "Diamond (2013) Mindfulness, Perspective-Taking & Emotional Regulation",
+    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    age: ["preschool", "early-elementary"],
+    ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
+    stimulusScore: "1/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Teaches math concepts through animated number characters. Short 5-minute episodes with clear visuals and counting songs.",
-    checkmarks: ["Concept-driven pacing", "Clear visuals", "Number recognition"],
-    startWith: ["Meet Numberblock One", "Number Magic 1 to 5", "Ten Again"],
-    link: "https://www.youtube.com/channel/UCPlwvN0w4qFSP1FllALB92w"
+    whyThisChannel: "Peabody Award-winning series based on Jon J Muth's Zen Shorts books. A wise panda neighbor named Stillwater helps three siblings navigate frustration, disappointment, and empathy through peaceful parables.",
+    checkmarks: ["Peabody Award winner for mindfulness", "Teaches deep breathing & perspective shifts", "Serene ink-wash & watercolor transitions"],
+    startWith: ["The Impossible Goal", "Theolin's Rain", "One Drop of Water"],
+    link: "https://www.youtube.com/results?search_query=Stillwater+Apple+TV+Official+Clips"
   },
   {
     name: "Sarah & Duck",
     researchAnchor: "Lillard & Peterson (2011) Deliberate Story Pacing & Everyday Routines",
-    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 2/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
+    semBreakdown: "Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 2/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "2/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Simple animation with gentle narration. Focuses on problem-solving, friendship, and everyday adventures.",
-    checkmarks: ["Simple animation", "Gentle narration", "Everyday adventures"],
+    whyThisChannel: "BAFTA-winning British animation with ample negative space, gentle conversational narration by Roger Allam, and whimsical everyday problem-solving.",
+    checkmarks: ["Minimalist uncluttered visual backgrounds", "Gentle, interactive narrator dialogue", "Everyday curiosity & friendship"],
     startWith: ["Lots of Shallots", "Bouncing Ball", "Ribbon Sisters"],
     link: "https://www.youtube.com/channel/UC3OUMU3s7Oy6Ta0wnpZFBWw"
   },
   {
-    name: "Ms. Rachel - Songs for Littles",
-    researchAnchor: "Kuhl et al. (2003) Social Gating in Infant Speech Learning",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
-    stimulusScore: "3/10",
+    name: "Daniel Tiger's Neighborhood",
+    researchAnchor: "Fred Rogers Center (2016) Emotional Co-Regulation & Coping Songs",
+    semBreakdown: "Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 2/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
+    stimulusScore: "2/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Speech development focus with interactive approach. Expert-designed content for language acquisition.",
-    checkmarks: ["Speech development focus", "Interactive approach", "Expert design"],
-    startWith: ["First Words & Speech Practice", "Baby Learning Songs", "Phonics & Gentle Rhymes"],
-    link: "https://www.youtube.com/@msrachel"
+    whyThisChannel: "Direct successor to Mister Rogers' Neighborhood. Uses short, memorable musical strategies ('When you feel so mad that you want to roar, take a deep breath and count to four') proven in clinical studies to build toddler emotional regulation.",
+    checkmarks: ["Singable emotional coping strategies", "Prepares toddlers for real-world transitions", "Backed by Fred Rogers Center research"],
+    startWith: ["Calm Down & Count to Four", "Grown-Ups Come Back", "Sharing at the Park"],
+    link: "https://www.youtube.com/@DanielTigersNeighborhood"
   },
   {
-    name: "Hey Duggee",
-    researchAnchor: "Bandura (1977) Social Modeling & Activity Goal Setting",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
+    name: "Super Simple Songs",
+    researchAnchor: "Anderson & Pempek (2005) Toddler Linguistic Cadence & Clear Articulation",
+    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 2/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
+    stimulusScore: "2/10",
+    stimulusClass: "stimulus-low",
+    whyThisChannel: "Created by ESL teachers specifically to counter overly fast children's music. Features deliberate, slowed-down vocal tempos, uncluttered 2D puppetry/animation, and gesture-based vocabulary building.",
+    checkmarks: ["Slowed-down vocal articulation for speech", "Uncluttered 2D backgrounds", "Predictable, calming musical cadence"],
+    startWith: ["Twinkle Twinkle Little Star", "Down By The Bay", "Clean Up Song"],
+    link: "https://www.youtube.com/channel/UCLsooMJoIpl_7ux2jvdPB-Q"
+  },
+  {
+    name: "Ms. Rachel - Songs for Littles",
+    researchAnchor: "Kuhl et al. (2003) Social Gating & Parentese in Infant Speech Learning",
+    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["toddler"],
+    ageLabel: "Toddlers (Ages 2–3)",
     stimulusScore: "3/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Simple animation with clear narration. Activity-based learning focusing on teamwork and achievement.",
-    checkmarks: ["Simple animation", "Clear narration", "Activity-based learning"],
-    startWith: ["The Drawing Badge", "The Birdwatching Badge", "The Tree Badge"],
-    link: "https://www.youtube.com/channel/UCj_mFUb-47d9QNiJ5556LjQ"
+    whyThisChannel: "Created by a music educator with a Master's in Early Childhood Development. Uses close-up mouth framing, ASL baby sign language, 'parentese' pitch contours, and expectant pauses to model real speech therapy techniques.",
+    checkmarks: ["Speech-language pathology techniques", "ASL sign language & lip-reading focus", "Best when co-viewed with parent interaction"],
+    startWith: ["First Words & Speech Practice", "Baby Sign Language Basics", "Phonics & Gentle Rhymes"],
+    link: "https://www.youtube.com/@msrachel"
   },
   {
     name: "Bluey",
     researchAnchor: "Singer & Singer (2005) Sociodramatic Play & Emotional Co-Regulation",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "toddler",
-    ageLabel: "Toddlers (Ages 2-3)",
+    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
     stimulusScore: "3/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Story-driven pacing with natural dialogue. Focuses on imaginative play, family relationships, and play-based learning.",
-    checkmarks: ["Story-driven pacing", "Natural dialogue", "Play-based learning"],
-    startWith: ["Rain (Tranquil Dialogue-Free Episode)", "Sleepytime (Holst's Jupiter Orchestral)", "Camping"],
+    whyThisChannel: "Acclaimed Australian series centering on 7-minute episodes of imaginative family roleplay, emotional resilience, and classical musical arrangements. Select tranquil episodes ('Rain', 'Sleepytime') for wind-down viewing.",
+    checkmarks: ["Models rich offline sociodramatic play", "Classical orchestral scores (Holst, Bach)", "High emotional intelligence & family warmth"],
+    startWith: ["Rain (Dialogue-Free Tranquil Episode)", "Sleepytime (Holst's Jupiter)", "The Creek"],
     link: "https://www.youtube.com/channel/UCVzLLZkDuFGAE2BGdBuBNBg"
-  },
-
-  // --- PRESCHOOLERS (AGES 4-5) ---
-  {
-    name: "Puffin Rock",
-    researchAnchor: "Lillard & Peterson (2011) Low-Pacing Baseline; CPM < 3",
-    semBreakdown: "Pacing: 0/2 • Audio: 0/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 1/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
-    stimulusScore: "1/10",
-    stimulusClass: "stimulus-low",
-    whyThisChannel: "Described as 'Bob Ross level soothing' with gentle narration by Chris O'Dowd. Focuses on nature exploration and family relationships.",
-    checkmarks: ["Gentle narration", "Natural sounds", "Watercolor animation"],
-    startWith: ["Oona and Baba", "Tidal Pool Adventure", "Stormy Weather"],
-    link: "https://www.youtube.com/c/PuffinRock"
   },
   {
     name: "Alphablocks",
     researchAnchor: "National Reading Panel (2000) Synthetic Phonics & Grapheme Mapping",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
+    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
     stimulusScore: "3/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Each cube-shaped letter has a unique personality matching its sound, creating engaging phonics lessons.",
-    checkmarks: ["Clear pronunciation", "Visual phonics concepts", "Reading foundations"],
-    startWith: ["Meet the Alphabet", "Phonics Magic: The Letter A", "Word Magic: Cat & Hat"],
+    whyThisChannel: "BBC CBeebies educational series where each letter block physically sounds out its phoneme when holding hands with adjacent letters, visually demonstrating synthetic phonics blending and decoding.",
+    checkmarks: ["Direct grapheme-to-phoneme blending", "Short 5-minute focused lessons", "Aligned with UK/US phonics curricula"],
+    startWith: ["Meet the Alphablocks", "C-A-T & H-A-T Word Magic", "Short Vowel Blending"],
     link: "https://www.youtube.com/c/officialalphablocks"
   },
   {
     name: "Numberblocks",
     researchAnchor: "NCETM (UK) & Singapore Math Number Bond Visual Framework",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
+    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
     stimulusScore: "3/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Teaches math concepts through animated number characters with bright colors but clear focus on mathematical concepts appropriate for older preschoolers.",
-    checkmarks: ["Visual math learning", "Clear explanations", "Number recognition"],
-    startWith: ["Meet the Numberblocks", "Number Magic", "Counting Songs"],
+    whyThisChannel: "BAFTA-winning CBeebies series built with the UK National Centre for Excellence in the Teaching of Mathematics. Characters are made of countable blocks that physically split and combine to show number bonds, multiplication, and squares.",
+    checkmarks: ["Concrete-Pictorial-Abstract math mastery", "Zero arbitrary visual clutter", "Builds deep subitizing & number sense"],
+    startWith: ["Meet Numberblock One", "Number Bonds to 10", "Square Numbers Club"],
     link: "https://www.youtube.com/channel/UCPlwvN0w4qFSP1FllALB92w"
+  },
+  {
+    name: "Hey Duggee",
+    researchAnchor: "Bandura (1977) Social Modeling & Cooperative Activity Framing",
+    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["toddler", "preschool"],
+    ageLabel: "Toddlers (2–3) & Preschool (4–5)",
+    stimulusScore: "3/10",
+    stimulusClass: "stimulus-low",
+    whyThisChannel: "Flat vector animation against clean backgrounds with calm British narration by Alexander Armstrong. Encourages real-world offline activities (drawing, birdwatching, gardening) to earn Squirrel Club badges.",
+    checkmarks: ["Clean vector design with zero strobing", "Models cooperative teamwork", "Inspires offline hands-on crafts"],
+    startWith: ["The Drawing Badge", "The Birdwatching Badge", "The Tree Badge"],
+    link: "https://www.youtube.com/channel/UCj_mFUb-47d9QNiJ5556LjQ"
   },
   {
     name: "Cosmic Kids Yoga",
     researchAnchor: "Diamond (2013) Embodied Self-Regulation & Motor Mindfulness",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
+    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["preschool", "early-elementary"],
+    ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
     stimulusScore: "3/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Combines movement with mindfulness through story-based yoga. Promotes body awareness and self-regulation skills.",
-    checkmarks: ["Physical activity", "Mindfulness practice", "Self-regulation"],
-    startWith: ["Tiny the T-Rex", "Cosmic Kids Peace Out", "Popcorn the Dolphin"],
+    whyThisChannel: "Transforms passive screen time into full-body proprioceptive movement, balance, and guided 'Peace Out' relaxation stories led by Jaime Amor.",
+    checkmarks: ["Converts screen time into physical yoga", "Guided breathing & body-scan relaxation", "Builds gross motor balance & focus"],
+    startWith: ["Cosmic Kids Peace Out (Guided Relaxation)", "Tiny the T-Rex Yoga", "Popcorn the Dolphin"],
     link: "https://www.youtube.com/channel/UC5uIZ2KOZZeQDQo_Gsi_qbQ"
   },
   {
-    name: "Super Simple Songs",
-    researchAnchor: "Anderson & Pempek (2005) Toddler Linguistic Cadence & Clear Articulation",
-    semBreakdown: "Pacing: 0/2 • Audio: 1/2 • Visual: 0/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 2/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
-    stimulusScore: "2/10",
+    name: "Art for Kids Hub",
+    researchAnchor: "Vygotsky (1978) Zone of Proximal Development in Fine Motor Drawing",
+    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["early-elementary", "middle-elementary"],
+    ageLabel: "Early & Middle Elementary (Ages 6–9)",
+    stimulusScore: "3/10",
     stimulusClass: "stimulus-low",
-    whyThisChannel: "Deliberate pacing with clear language focus. Songs specifically designed with simple, repetitive patterns and slow tempo.",
-    checkmarks: ["Language development", "Clear vocals", "Educational songs"],
-    startWith: ["Meet Numberblock One", "Number Magic 1 to 5", "Ten Again"],
-    link: "https://www.youtube.com/channel/UCLsooMJoIpl_7ux2jvdPB-Q"
+    whyThisChannel: "A father draws side-by-side in real time with his children using a static overhead camera. Eyes stay 80% on physical paper and markers rather than the screen, celebrating imperfection and fine-motor focus.",
+    checkmarks: ["80% eyes-on-paper physical activity", "Single static overhead camera (0 cuts)", "Models growth mindset & patience"],
+    startWith: ["How To Draw A Realistic Owl", "How To Fold Origami Animals", "Watercolor Landscape for Kids"],
+    link: "https://www.youtube.com/user/ArtforKidsHub"
   },
+  {
+    name: "3Blue1Brown / Numberphile",
+    researchAnchor: "Papert (1980) & Lockhart (2009) Visual Geometric Intuition in Mathematics",
+    semBreakdown: "Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 1/2 • Host/Ad: 1/2 (Total: 3/10)",
+    age: ["preteen"],
+    ageLabel: "Pre-Teens (Ages 10–12) & Teens",
+    stimulusScore: "3/10",
+    stimulusClass: "stimulus-low",
+    whyThisChannel: "Grant Sanderson's custom Python animation engine (Manim) and Brady Haran's brown-paper mathematician interviews present geometry, prime numbers, and topology at a meditative, deeply intellectual pace.",
+    checkmarks: ["Calm, dark-mode geometric visualizations", "Acoustic cello & piano background score", "Cultivates deep mathematical wonder"],
+    startWith: ["Why Do Prime Numbers Make These Spirals?", "The Monty Hall Problem Explained", "But What Is Pi Visually?"],
+    link: "https://www.youtube.com/@3blue1brown"
+  },
+
+  // --- MODERATE STIMULUS (4/10 - 6/10): PRESCHOOL TO PRE-TEENS ---
   {
     name: "Sesame Street",
     researchAnchor: "Fisch & Truglio (2001) 'G' is for Growing: 30 Years of Research",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
-    stimulusScore: "4-5/10",
+    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    age: ["preschool"],
+    ageLabel: "Preschoolers (Ages 4–5)",
+    stimulusScore: "4/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Research-backed educational content with social skills focus. Select quieter segments for lower stimulus viewing.",
-    checkmarks: ["Educational research base", "Diverse representation", "Social-emotional learning"],
-    startWith: ["Breathe with Elmo & Colbie Caillat", "Count von Count Number Walks", "Cookie Monster Mindfulness"],
+    whyThisChannel: "The most extensively researched educational program in television history. Classic street stories and acoustic musical guests foster literacy, inclusivity, and emotional vocabulary.",
+    checkmarks: ["50+ years of peer-reviewed literacy impact", "Strong social-emotional curriculum", "Tip: Select acoustic & street story segments"],
+    startWith: ["Breathe with Elmo & Colbie Caillat", "Count von Count Number Walks", "Cookie Monster's Self-Control Practice"],
     link: "https://www.youtube.com/sesamestreet"
   },
   {
-    name: "StoryBots",
-    researchAnchor: "Hirsh-Pasek et al. (2015) Question-Driven Inquiry Pedagogy",
-    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
-    stimulusScore: "5/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Question-based learning that encourages curiosity. Varied animation styles keep interest while teaching information literacy.",
-    checkmarks: ["Encourages questions", "Varied topics", "Information literacy"],
-    startWith: ["How Does the Eye See?", "Why Do We Brush Our Teeth?", "How Do Airplanes Fly?"],
-    link: "https://www.youtube.com/playlist?list=PLPphPHIzdSQPhHIEDhqwg0qh5p-FgwxTH"
-  },
-  {
     name: "PBS Kids",
     researchAnchor: "US Dept of Education Ready to Learn Grant Longitudinal Research",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
-    age: "preschool",
-    ageLabel: "Preschoolers (Ages 4-5)",
-    stimulusScore: "4-5/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Wide variety of educational shows with varying pacing. Most have faster editing than dedicated low-stimulus content but still have an educational focus.",
-    checkmarks: ["Research-backed content", "Diverse representation", "Social skills focus"],
-    startWith: ["Daniel Tiger: Count to Four", "Peg + Cat: The Golden Egg Math", "Wild Kratts: Great Horned Owl"],
-    link: "https://www.youtube.com/pbskids"
-  },
-
-  // --- EARLY ELEMENTARY (AGES 6-7) ---
-  {
-    name: "Art for Kids Hub",
-    researchAnchor: "Vygotsky (1978) Zone of Proximal Development in Fine Motor Drawing",
-    semBreakdown: "Pacing: 1/2 • Audio: 0/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "early-elementary",
-    ageLabel: "Early Elementary (Ages 6-7)",
-    stimulusScore: "3/10",
-    stimulusClass: "stimulus-low",
-    whyThisChannel: "Step-by-step art instruction with calm narration. Develops creativity and fine motor skills through patient guidance.",
-    checkmarks: ["Patient instruction", "Creativity development", "Clear demonstrations"],
-    startWith: ["How To Draw Animals", "Art Projects for Kids", "Season-themed drawing lessons"],
-    link: "https://www.youtube.com/user/ArtforKidsHub"
-  },
-  {
-    name: "Mystery Doug",
-    researchAnchor: "Dewey (1938) Phenomenon-Driven Inquiry & Socratic Questioning",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
-    age: "early-elementary",
-    ageLabel: "Early Elementary (Ages 6-7)",
+    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    age: ["preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Ages 4–9 (Preschool to Middle Elementary)",
     stimulusScore: "4/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Question-based science learning with appropriate pacing. Encourages curiosity through clear explanations of everyday phenomena.",
-    checkmarks: ["Scientific thinking", "Clear explanations", "Moderate pacing"],
-    startWith: ["How Does a Telescope Work?", "Why is Mars Red?", "What is the Biggest Spider in the World?"],
+    whyThisChannel: "Publicly funded, curriculum-audited shows including Wild Kratts (zoology), Molly of Denali (informational text literacy), Elinor Wonders Why (scientific observation), and Odd Squad (elementary math).",
+    checkmarks: ["Federally audited curriculum goals", "Zero commercial toy-selling agendas", "Use the dedicated PBS Video App for 0 algorithms"],
+    startWith: ["Elinor Wonders Why: Butterfly Camouflage", "Wild Kratts: Great Horned Owl", "Molly of Denali: Northern Lights"],
+    link: "https://www.youtube.com/pbskids"
+  },
+  {
+    name: "Mystery Doug / Mystery Science",
+    researchAnchor: "Dewey (1938) & NGSS Phenomenon-Driven Socratic Inquiry",
+    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    age: ["early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 6–12 (Elementary to Pre-Teen)",
+    stimulusScore: "4/10",
+    stimulusClass: "stimulus-med",
+    whyThisChannel: "Former classroom science teacher Doug Peltz answers real questions submitted by elementary students. Pauses mid-video to ask children to hypothesize why a phenomenon happens before revealing the mechanism.",
+    checkmarks: ["Built-in Socratic discussion pauses", "NGSS classroom science curriculum", "Calm, warm, teacher-led narration"],
+    startWith: ["Why Is Mars Red?", "How Do Bees Make Honey?", "Why Does Ice Float?"],
     link: "https://www.youtube.com/channel/UCPRCRM3JKm3sw55lB_427qg"
   },
   {
-    name: "SciShow Kids",
-    researchAnchor: "NRC (2012) K-12 Framework for Scientific Conceptual Literacy",
-    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "early-elementary",
-    ageLabel: "Early Elementary (Ages 6-7)",
-    stimulusScore: "5/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Science concepts explained at appropriate level with balanced pacing. Aligns with educational standards while keeping engagement.",
-    checkmarks: ["Standards-aligned", "Kid-friendly explanations", "Scientific literacy"],
-    startWith: ["Why Do We Get Sick?", "The Coolest Machine Ever!", "How Do Plants Know Which Way Is Up?"],
-    link: "https://www.youtube.com/channel/UCRFIPG2u1DxKLNuE3y2SjHA"
-  },
-  {
-    name: "PBS Kids",
-    researchAnchor: "US Dept of Education Ready to Learn Grant Longitudinal Research",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
-    age: "early-elementary",
-    ageLabel: "Early Elementary (Ages 6-7)",
-    stimulusScore: "4-5/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Character-based learning with research backing. Balanced pacing with focus on educational outcomes.",
-    checkmarks: ["Educational research", "Character learning", "Balanced content"],
-    startWith: ["Daniel Tiger: Count to Four", "Peg + Cat: The Golden Egg Math", "Wild Kratts: Great Horned Owl"],
-    link: "https://www.youtube.com/pbskids"
-  },
-  {
-    name: "TED-Ed",
-    researchAnchor: "Mayer (2009) Multimedia Learning Principles & Dual Coding",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "early-elementary",
-    ageLabel: "Early Elementary (Ages 6-7)",
-    stimulusScore: "5/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Animated explanations of diverse topics with thoughtful pacing. Encourages curiosity about the world.",
-    checkmarks: ["Well-paced animations", "Diverse topics", "Critical thinking"],
-    startWith: ["How Do Memories Form?", "Why Do We Dream?", "How Does the Immune System Work?"],
-    link: "https://www.youtube.com/TEDEducation"
-  },
-
-  // --- MIDDLE ELEMENTARY (AGES 8-9) ---
-  {
-    name: "National Geographic Kids",
-    researchAnchor: "E.O. Wilson (1984) Biophilia Hypothesis & Habitat Observation",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "middle-elementary",
-    ageLabel: "Middle Elementary (Ages 8-9)",
-    stimulusScore: "5/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "High-quality nature footage with environmental focus. Develops global awareness through balanced pacing.",
-    checkmarks: ["Quality footage", "Environmental awareness", "Balanced pacing"],
-    startWith: ["Amazing Animals: Gorillas", "Exploring Habitats", "Saving Endangered Species"],
-    link: "https://www.youtube.com/channel/UCXVCgDuD_QCkI7gTKU7-tpg"
-  },
-  {
-    name: "Crash Course Kids",
-    researchAnchor: "Next Generation Science Standards (NGSS) Earth & Physical Systems",
-    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 6/10)",
-    age: "middle-elementary",
-    ageLabel: "Middle Elementary (Ages 8-9)",
-    stimulusScore: "6/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Systematic science education aligned with standards. Builds knowledge progressively with moderate pacing.",
-    checkmarks: ["Standards-aligned", "Systematic learning", "Critical thinking"],
-    startWith: ["Amazing Animals: Sea Otters", "Habitat Discovery: Rain Forests", "Weird But True: Ocean Giants"],
-    link: "https://www.youtube.com/crashcoursekids"
-  },
-  {
-    name: "Art for Kids Hub",
-    researchAnchor: "Vygotsky (1978) Zone of Proximal Development in Fine Motor Drawing",
-    semBreakdown: "Pacing: 1/2 • Audio: 0/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 3/10)",
-    age: "middle-elementary",
-    ageLabel: "Middle Elementary (Ages 8-9)",
-    stimulusScore: "3/10",
-    stimulusClass: "stimulus-low",
-    whyThisChannel: "Advanced drawing techniques with patient instruction. Develops focus and artistic skills through calm guidance.",
-    checkmarks: ["Advanced techniques", "Patience development", "Step-by-step guidance"],
-    startWith: ["How To Draw A Tiger", "How To Make Origami Animals", "Drawing Landscapes Tutorial"],
-    link: "https://www.youtube.com/user/ArtforKidsHub"
-  },
-  {
-    name: "Kids Learning Tube",
-    researchAnchor: "Paivio (1986) Dual-Coding Auditory Rhyme in Geography Retention",
-    semBreakdown: "Pacing: 2/2 • Audio: 2/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 6/10)",
-    age: "middle-elementary",
-    ageLabel: "Middle Elementary (Ages 8-9)",
-    stimulusScore: "6/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Educational songs that aid memory through music. Covers varied topics with global awareness focus.",
-    checkmarks: ["Memory through music", "Varied topics", "Global awareness"],
-    startWith: ["The Basics of Engineering", "Ecosystem Interactions: Food Webs", "Gravity & Earth's Spheres"],
-    link: "https://www.youtube.com/channel/UC7EFWpvc1wYuUwrtZ_BLi9A"
-  },
-  {
-    name: "Mystery Doug",
-    researchAnchor: "Dewey (1938) Phenomenon-Driven Inquiry & Socratic Questioning",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
-    age: "middle-elementary",
-    ageLabel: "Middle Elementary (Ages 8-9)",
+    name: "BBC Earth Kids",
+    researchAnchor: "E.O. Wilson (1984) Biophilia Hypothesis & Natural History Observation",
+    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    age: ["early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 6–12 (Elementary to Pre-Teen)",
     stimulusScore: "4/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Question-based learning with controlled transitions. Encourages critical thinking through scientific inquiry.",
-    checkmarks: ["Question-based learning", "Controlled transitions", "Critical thinking"],
-    startWith: ["The Solar System Song", "Continents & Oceans of the World", "The Skeletal System"],
-    link: "https://www.youtube.com/mysterydoug"
+    whyThisChannel: "World-class BBC Natural History Unit cinematography adapted for young viewers. Long, patient wildlife camera shots and factual narration cultivate awe for marine biology, botany, and conservation.",
+    checkmarks: ["Cinematic long-take wildlife photography", "Develops ecological & biological literacy", "Free of frantic YouTuber jump-cuts"],
+    startWith: ["How Sea Otters Hold Hands", "The Secret Life of Coral Reefs", "Arctic Fox Winter Survival"],
+    link: "https://www.youtube.com/@BBCEarthKids"
   },
-
-  // --- PRE-TEENS (AGES 10-12) ---
   {
     name: "Veritasium",
     researchAnchor: "Muller et al. (2008) Addressing Physics Misconceptions via Dialogue",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
-    age: "preteen",
-    ageLabel: "Pre-Teens (Ages 10-12)",
+    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    age: ["preteen"],
+    ageLabel: "Pre-Teens (Ages 10–12) & Teens",
     stimulusScore: "4/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Deep scientific explanations with thoughtful pacing. Evidence-based content that encourages critical thinking.",
-    checkmarks: ["Deep explanations", "Evidence-based", "Thoughtful pacing"],
-    startWith: ["The Most Radioactive Places on Earth", "Why Are Mosquitoes Attracted To You?", "World's Roundest Object"],
+    whyThisChannel: "Founded by Dr. Derek Muller based on his Ph.D. thesis in physics education research. Demonstrates that confronting common intuitive misconceptions before explaining physical laws dramatically improves retention.",
+    checkmarks: ["Grounded in physics education Ph.D. research", "Long-form 15–25 minute deep dives", "Models rigorous scientific skepticism"],
+    startWith: ["World's Roundest Object (Silicon Sphere)", "How Trees Bend the Laws of Physics", "The Secret of Synchronization"],
     link: "https://www.youtube.com/@veritasium"
   },
   {
     name: "Smarter Every Day",
     researchAnchor: "Feynman Technique of Physical Observation & High-Speed Optics",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "preteen",
-    ageLabel: "Pre-Teens (Ages 10-12)",
+    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    age: ["preteen"],
+    ageLabel: "Pre-Teens (Ages 10–12) & Teens",
     stimulusScore: "5/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Scientific methodology through real experiments. Thoughtful explanations that model problem-solving approaches.",
-    checkmarks: ["Scientific method", "Problem-solving", "Real experiments"],
-    startWith: ["How Do Bees Make Honey?", "How Does a Telescope Work?", "The Backwards Brain Bicycle"],
+    whyThisChannel: "Aerospace engineer Destin Sandlin uses ultra-slow-motion Phantom cameras to slow down fast physical phenomena (fluid dynamics, insect flight, acoustics), literally decelerating visual stimulus to study nature.",
+    checkmarks: ["High-speed slow-motion physical analysis", "Models humble curiosity & family values", "Zero clickbait outrage or cynicism"],
+    startWith: ["The Backwards Brain Bicycle (Neuroplasticity)", "How Do Honeybees Build Hexagons?", "Physics of Cat Twisting in Slow Motion"],
     link: "https://www.youtube.com/channel/UC6107grRI4m0o2-emgoDnAA"
-  },
-  {
-    name: "Physics Girl",
-    researchAnchor: "American Association of Physics Teachers (AAPT) Exploratory Models",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "preteen",
-    ageLabel: "Pre-Teens (Ages 10-12)",
-    stimulusScore: "5/10",
-    stimulusClass: "stimulus-med",
-    whyThisChannel: "Female STEM representation with clean graphics. Makes physics accessible through clear explanations.",
-    checkmarks: ["STEM representation", "Clear graphics", "Scientific thinking"],
-    startWith: ["The Science of Thinking", "Why Trees Don't Run Out of Water", "Secret of Synchronization"],
-    link: "https://www.youtube.com/c/physicsgirl"
-  },
-  {
-    name: "Mark Rober",
-    researchAnchor: "Engineering Prototyping Cycle; High-Stimulus Dynamic Editing",
-    semBreakdown: "Pacing: 2/2 • Audio: 2/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 7/10)",
-    age: "preteen",
-    ageLabel: "Pre-Teens (Ages 10-12)",
-    stimulusScore: "7/10",
-    stimulusClass: "stimulus-high",
-    whyThisChannel: "Engineering projects with design thinking focus. Real-world applications that inspire problem-solving.",
-    checkmarks: ["Engineering focus", "Design thinking", "Real applications"],
-    startWith: ["How Rockets Steer in Space", "Physics of Cat Twisting in Slow Motion", "How Birds Fly in Air"],
-    link: "https://www.youtube.com/markrober"
   },
   {
     name: "TED-Ed",
     researchAnchor: "Mayer (2009) Multimedia Learning Principles & Dual Coding",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 2/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "preteen",
-    ageLabel: "Pre-Teens (Ages 10-12)",
+    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    age: ["early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 7–12 (Elementary to Pre-Teen)",
     stimulusScore: "5/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Complex topics explained through animation. Develops critical thinking and global awareness.",
-    checkmarks: ["Complex topics", "Well-paced animation", "Global perspectives"],
-    startWith: ["How One Scientist Took On The Chemical Industry", "Why Do Cities Need Trees?", "What Would Happen If You Didn't Sleep?"],
+    whyThisChannel: "5-minute animated lessons pairing university professors and subject-matter experts with bespoke studio animators across history, cellular biology, logic riddles, and literature.",
+    checkmarks: ["Written by vetted university educators", "Bespoke artistic animation per episode", "Includes comprehension & discussion prompts"],
+    startWith: ["How Do Memories Form?", "Why Do Cities Need Trees?", "Can You Solve the Bridge Riddle?"],
     link: "https://www.youtube.com/TEDEducation"
   },
   {
-    name: "SciShow Kids",
-    researchAnchor: "NRC (2012) K-12 Framework for Scientific Conceptual Literacy",
-    semBreakdown: "Pacing: 2/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 5/10)",
-    age: "preteen",
-    ageLabel: "Pre-Teens (Ages 10-12)",
-    stimulusScore: "6/10",
+    name: "SciShow Kids / Crash Course Kids",
+    researchAnchor: "NRC (2012) K-12 Framework & Next Generation Science Standards (NGSS)",
+    semBreakdown: "Pacing: 2/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    age: ["early-elementary", "middle-elementary"],
+    ageLabel: "Early & Middle Elementary (Ages 6–9)",
+    stimulusScore: "5/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Scientific literacy with moderate pacing. Clear explanations aligned with educational standards.",
-    checkmarks: ["Scientific literacy", "Moderate pacing", "Clear explanations"],
-    startWith: ["How Do Memories Form?", "Why Do We Dream?", "How Does the Immune System Work?"],
-    link: "https://www.youtube.com/scishowkids"
+    whyThisChannel: "Structured elementary science explainers covering botany, astronomy, simple machines, and Earth systems. Moderate pacing best used as a 10-minute supplement to hands-on kitchen science experiments.",
+    checkmarks: ["Directly aligned with NGSS 1st–5th grade standards", "Clear diagramming of scientific vocabulary", "Pairs well with offline experiments"],
+    startWith: ["How Do Plants Know Which Way Is Up?", "The Basics of Simple Machines", "Ecosystems & Food Webs"],
+    link: "https://www.youtube.com/channel/UCRFIPG2u1DxKLNuE3y2SjHA"
   },
   {
-    name: "Mystery Science",
-    researchAnchor: "NGSS Phenomenon-Driven Elementary Science Modules",
-    semBreakdown: "Pacing: 1/2 • Audio: 1/2 • Visual: 1/2 • Pressure: 0/2 • Ad/Host: 1/2 (Total: 4/10)",
-    age: "preteen",
-    ageLabel: "Pre-Teens (Ages 10-12)",
-    stimulusScore: "4/10",
+    name: "StoryBots (Ask the StoryBots)",
+    researchAnchor: "Mayer (2009) Multimodal Concept Integration & Musical Mnemonics",
+    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    age: ["preschool", "early-elementary"],
+    ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
+    stimulusScore: "5/10",
     stimulusClass: "stimulus-med",
-    whyThisChannel: "Question-based learning with clear explanations. Promotes scientific inquiry with thoughtful pacing.",
-    checkmarks: ["Question-based learning", "Clear explanations", "Scientific inquiry"],
-    startWith: ["Why Does Ice Float?", "Singing Plates & Sound Waves (Chladni)", "How Waves Move Underwater"],
-    link: "https://www.youtube.com/channel/UCPRCRM3JKm3sw55lB_427qg"
+    whyThisChannel: "Multi-Emmy-winning educational series that answers big questions ('How Do Eyes See?', 'Why Is the Sky Blue?', 'How Do Computers Work?') by blending claymation, 2D art, and live-action field trips.",
+    checkmarks: ["Tackles genuine molecular & physical mechanisms", "High-craft multi-medium studio animation", "Best viewed as 1 single episode per session"],
+    startWith: ["How Do Eyes See?", "Why Do I Have to Brush My Teeth?", "How Do Planets Form?"],
+    link: "https://www.youtube.com/channel/UCcdwLMPsaU2ezNSJU1nFoBQ"
+  },
+  {
+    name: "National Geographic Kids",
+    researchAnchor: "E.O. Wilson (1984) Biophilia & Empirical Natural World Literacy",
+    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    age: ["early-elementary", "middle-elementary"],
+    ageLabel: "Early & Middle Elementary (Ages 6–9)",
+    stimulusScore: "5/10",
+    stimulusClass: "stimulus-med",
+    whyThisChannel: "Field expeditions, animal conservation reports, archaeology, and geology explainers. Avoid short clips and select full-length 'Destination World' or 'Weird But True!' wildlife documentaries.",
+    checkmarks: ["Real-world wildlife & geography footage", "Inspires outdoor nature journaling", "Select long-form playlists over Shorts"],
+    startWith: ["Destination World: All 7 Continents", "How Glaciers Shape the Earth", "Amazing Animal Migrations"],
+    link: "https://www.youtube.com/natgeokids"
+  },
+  {
+    name: "Physics Girl / Kurzgesagt – In a Nutshell",
+    researchAnchor: "Mayer (2009) Coherence Principle & Systems-Level Scientific Modeling",
+    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    age: ["preteen"],
+    ageLabel: "Pre-Teens (Ages 10–12) & Teens",
+    stimulusScore: "5/10",
+    stimulusClass: "stimulus-med",
+    whyThisChannel: "MIT physics alumna Dianna Cowern (Physics Girl) demonstrates hands-on acoustics and electromagnetism, while Kurzgesagt provides peer-reviewed flat-vector explanations of immunology, astrophysics, and ecology.",
+    checkmarks: ["Peer-reviewed scripts with public source logs", "Hands-on physics kitchen riddles", "Sparks deep dinner-table STEM debates"],
+    startWith: ["The Immune System Explained", "Crazy Pool Vortex (Fluid Physics)", "What If You Detonated a Nuclear Bomb in the Marianas Trench?"],
+    link: "https://www.youtube.com/c/physicsgirl"
   }
 ];
 
-// Comprehensive Database of Educator-Approved, Low-Stimulus Cognitive Games
+// Comprehensive Database of 33 Educator-Approved, Low-Stimulus Cognitive Games
 const gamesData = [
   {
     "name": "Pok Pok Playroom",
@@ -479,7 +397,7 @@ const gamesData = [
     "ageLabel": "Toddlers (Ages 2\u20133) & Preschool (Ages 4\u20135)",
     "stimulusScore": "1/10",
     "stimulusClass": "stimulus-low",
-    "category": "creative",
+    "category": "sandbox",
     "categoryLabel": "Montessori & Sensory Play",
     "cognitiveSkills": [
       "Spatial Reasoning",
@@ -499,24 +417,26 @@ const gamesData = [
       "Hand-drawn animation with organic acoustic audio"
     ],
     "platforms": [
-      "iOS / iPadOS"
+      "iOS / iPadOS",
+      "Android"
     ],
     "monetization": "Subscription (Zero Ads/IAPs)",
     "monetizationType": "paid",
     "link": "https://playpokpok.com",
     "researchAnchor": "Hirsh-Pasek et al. (2015) Active Mind-On Play; Montessori Auto-Education",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "Sago Mini World / Forest Flyer",
     "developer": "Sago Mini",
     "age": [
-      "toddler"
+      "toddler",
+      "preschool"
     ],
-    "ageLabel": "Toddlers (Ages 2\u20133)",
+    "ageLabel": "Toddlers (Ages 2\u20133) & Preschool (Ages 4\u20135)",
     "stimulusScore": "2/10",
     "stimulusClass": "stimulus-low",
-    "category": "creative",
+    "category": "sandbox",
     "categoryLabel": "Imaginative Exploration",
     "cognitiveSkills": [
       "Cause & Effect",
@@ -542,7 +462,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://sagomini.com",
     "researchAnchor": "Anderson & Pempek (2005) Sensory Pacing Guidelines in Toddlers",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Endless Alphabet",
@@ -579,7 +499,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.originatorkids.com",
     "researchAnchor": "National Reading Panel (2000) Synthetic Phonics & Phonemic Awareness",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Breathe, Think, Do with Sesame",
@@ -617,7 +537,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://sesameworkshop.org",
     "researchAnchor": "Diamond (2013) Inhibitory Control & Prefrontal Cortex Regulation",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Khan Academy Kids",
@@ -658,7 +578,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://www.khanacademy.org/kids",
     "researchAnchor": "Stanford Graduate School of Education (2018) Early Learning Evaluation",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "PBS KIDS Games",
@@ -696,7 +616,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://pbskids.org/games",
     "researchAnchor": "US Dept of Education Ready-to-Learn Grant Evaluation (2015-2020)",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Thinkrolls: Logic & Physics Puzzles",
@@ -729,14 +649,14 @@ const gamesData = [
       "iOS",
       "Android"
     ],
-    "monetization": "One-Time Purchase",
+    "monetization": "One-Time Purchase / Bundle",
     "monetizationType": "paid",
     "link": "https://avokiddo.com",
     "researchAnchor": "Hirsh-Pasek et al. (2015) Spatial Problem-Solving & Physics Intuition",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
-    "name": "Monument Valley 1 & 2",
+    "name": "Monument Valley Series (1, 2 & 3)",
     "developer": "ustwo games",
     "age": [
       "preschool",
@@ -758,7 +678,7 @@ const gamesData = [
       "BAFTA Video Game Award",
       "Common Sense 5-Star Selection"
     ],
-    "whyEducatorsApprove": "An architectural masterpiece exploring impossible geometry and optical illusions. Children manipulate moving platforms and rotate camera angles to create viable walking paths for Princess Ida. The meditative acoustic ambient soundscape and tranquil pacing offer a deeply calming, contemplative alternative to twitch mobile games.",
+    "whyEducatorsApprove": "An architectural masterpiece (including Monument Valley 1, 2, and the December 2024 release of Monument Valley 3) exploring impossible geometry and optical illusions. Children manipulate moving platforms, origami boats, and camera angles to create viable paths. The meditative acoustic soundscape and tranquil pacing offer a deeply calming, contemplative alternative to twitch mobile games.",
     "calmHighlights": [
       "Tranquil, meditative ambient sound design",
       "Zero timers, combat, or failure states",
@@ -774,7 +694,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.monumentvalleygame.com",
     "researchAnchor": "M.C. Escher Spatial Geometry; Dunckley (2015) Meditative Flow",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Toca Nature",
@@ -811,10 +731,10 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://tocaboca.com",
     "researchAnchor": "Dunckley (2015) Sensory De-escalation & Open-World Nature Cognition",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
   },
   {
-    "name": "DragonBox Numbers",
+    "name": "Kahoot! DragonBox Numbers",
     "developer": "Kahoot! / WeWantToKnow",
     "age": [
       "preschool",
@@ -844,11 +764,11 @@ const gamesData = [
       "iOS",
       "Android"
     ],
-    "monetization": "One-Time Purchase",
+    "monetization": "Kahoot!+ Bundle / Legacy Standalone",
     "monetizationType": "paid",
     "link": "https://dragonbox.com",
     "researchAnchor": "Singapore Ministry of Education CPA (Concrete-Pictorial-Abstract) Framework",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Daniel Tiger's Grr-ific Feelings",
@@ -885,7 +805,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://pbskids.org/apps/daniel-tigers-grr-ific-feelings.html",
     "researchAnchor": "Fred Rogers Center for Early Learning & Children's Media (2016)",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "ScratchJr",
@@ -926,7 +846,7 @@ const gamesData = [
     "monetizationType": "foss",
     "link": "https://www.scratchjr.org",
     "researchAnchor": "Bers et al. (2014), Computers & Education; Tufts DevTech Lab",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Slice Fractions",
@@ -964,7 +884,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://ululab.com/slice-fractions",
     "researchAnchor": "Charland et al. (2016), Universit\u00e9 du Qu\u00e9bec \u00e0 Montr\u00e9al (UQAM) Study",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Lightbot: Code Hour / Lightbot Jr.",
@@ -1003,7 +923,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://lightbot.com",
     "researchAnchor": "Wing (2006) Computational Thinking & Algorithmic Decomposition",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Townscaper",
@@ -1045,10 +965,10 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://oskarstalberg.com/Townscaper",
     "researchAnchor": "Papert (1980) Microworlds; Sensory De-escalation Spatial Flow",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
   },
   {
-    "name": "DragonBox Big Numbers",
+    "name": "Kahoot! DragonBox Big Numbers",
     "developer": "Kahoot! / WeWantToKnow",
     "age": [
       "early-elementary",
@@ -1072,17 +992,17 @@ const gamesData = [
     "calmHighlights": [
       "Whimsical storybook art style without flashing banners",
       "No timer pressure or sudden failure screens",
-      "One-time upfront purchase"
+      "Zero third-party ads"
     ],
     "platforms": [
       "iOS",
       "Android"
     ],
-    "monetization": "One-Time Purchase",
+    "monetization": "Kahoot!+ Bundle / Legacy Standalone",
     "monetizationType": "paid",
     "link": "https://dragonbox.com",
     "researchAnchor": "Sj\u00f6man et al. (2015), Computers & Education; Base-10 Structuring",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "ChessKid",
@@ -1123,7 +1043,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://www.chesskid.com",
     "researchAnchor": "Diamond (2013) Inhibitory Control & Look-Ahead Strategic Planning",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Zoombinis (Logical Journey of the Zoombinis)",
@@ -1164,7 +1084,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.zoombinis.com",
     "researchAnchor": "Asbell-Clarke et al. (2012), TERC / NSF Grant DRL-1118534",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Scratch 3.0",
@@ -1206,10 +1126,10 @@ const gamesData = [
     "monetizationType": "foss",
     "link": "https://scratch.mit.edu",
     "researchAnchor": "Papert (1980) Constructionism; Resnick (2017) Lifelong Kindergarten",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
-    "name": "DragonBox Algebra (5+ & 12+)",
+    "name": "Kahoot! DragonBox Algebra (5+ & 12+)",
     "developer": "Kahoot! / WeWantToKnow",
     "age": [
       "middle-elementary",
@@ -1235,17 +1155,17 @@ const gamesData = [
     "calmHighlights": [
       "Zero time pressure or stressful failure penalties",
       "Self-guided discovery of complex mathematical concepts",
-      "One-time purchase without microtransactions"
+      "Zero third-party advertisements"
     ],
     "platforms": [
       "iOS",
       "Android"
     ],
-    "monetization": "One-Time Purchase",
+    "monetization": "Kahoot!+ Bundle / Legacy Standalone",
     "monetizationType": "paid",
     "link": "https://dragonbox.com",
     "researchAnchor": "Sj\u00f6man et al. (2015), Computers & Education; Norwegian Research Council",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "A Short Hike",
@@ -1286,7 +1206,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://ashorthike.com",
     "researchAnchor": "Ryan & Deci (2000) Self-Determination Theory (Intrinsic Autonomy)",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Human Resource Machine",
@@ -1327,7 +1247,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://tomorrowcorporation.com/humanresourcemachine",
     "researchAnchor": "Patterson & Hennessy (2013) Computer Architecture & Assembly Models",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Alba: A Wildlife Adventure",
@@ -1370,7 +1290,7 @@ const gamesData = [
     "monetizationType": "arcade",
     "link": "https://www.albawildlife.com",
     "researchAnchor": "Sobel (2008) Childhood & Nature; Place-Based Environmental Education",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Baba Is You",
@@ -1410,7 +1330,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://hempuli.com/baba",
     "researchAnchor": "Tarski (1956) Formal Semantics & Predicate Rule Induction",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Minecraft (Creative Mode & Redstone Logic)",
@@ -1451,7 +1371,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.minecraft.net",
     "researchAnchor": "Papert (1980) Constructionism; Digital Boolean Logic Gates",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Kerbal Space Program",
@@ -1489,7 +1409,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.kerbalspaceprogram.com",
     "researchAnchor": "NASA / ESA Orbital Physics & Newtonian Mechanics Education",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 1/2 \u2022 Visual: 1/2 \u2022 Pressure: 1/2 \u2022 Reward: 0/2 (Total: 4/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 1/2 \u2022 Reward: 0/2 (Total: 4/10)"
   },
   {
     "name": "The Witness",
@@ -1528,7 +1448,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://the-witness.net",
     "researchAnchor": "Peirce (1903) Semiotic Induction; Silent Epistemic Discovery",
-    "semBreakdown": "Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Civilization VI / Freeciv",
@@ -1567,7 +1487,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://civilization.com",
     "researchAnchor": "Sterman (2000) Business Dynamics: Complex Systems & Policy Trade-offs",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Turing Complete / Opus Magnum",
@@ -1605,86 +1525,404 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://turingcomplete.game",
     "researchAnchor": "Nisan & Schocken (2005) The Elements of Computing Systems (NAND to CPU)",
-    "semBreakdown": "Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+  },
+  {
+    "name": "Lucas & Friends (RV AppStudios)",
+    "developer": "RV AppStudios",
+    "age": [
+      "toddler",
+      "preschool"
+    ],
+    "ageLabel": "Toddlers (Ages 2\u20133) & Preschool (Ages 4\u20135)",
+    "stimulusScore": "2/10",
+    "stimulusClass": "stimulus-low",
+    "category": "stem",
+    "categoryLabel": "Early Phonics, Tracing & Math",
+    "cognitiveSkills": [
+      "Letter Tracing & Fine Motor",
+      "Early Counting & Subitizing",
+      "Shape & Color Sorting"
+    ],
+    "endorsements": [
+      "100% Free Philanthropic Initiative",
+      "Zero Ads & Zero In-App Purchases",
+      "Teacher Approved Badge"
+    ],
+    "whyEducatorsApprove": "Funded entirely as a philanthropic initiative by RV AppStudios, their suite of early learning apps (ABC Kids Tracing & Phonics, Math Kids, 123 Numbers) contains zero third-party ads, zero paywalls, and zero in-app purchases. Offers calm, distraction-free letter tracing and early counting exercises.",
+    "calmHighlights": [
+      "100% free forever with zero ads or pop-ups",
+      "Parent-locked settings menu",
+      "Simple, predictable touch-and-trace mechanics"
+    ],
+    "platforms": [
+      "iOS",
+      "Android",
+      "Amazon Fire"
+    ],
+    "monetization": "100% Free (Zero Ads/IAPs)",
+    "monetizationType": "free",
+    "link": "https://www.rvappstudios.com",
+    "researchAnchor": "National Reading Panel (2000) Letter-Sound & Kinesthetic Tracing",
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+  },
+  {
+    "name": "Teach Your Monster to Read",
+    "developer": "The Usborne Foundation",
+    "age": [
+      "preschool",
+      "early-elementary"
+    ],
+    "ageLabel": "Preschool (Ages 4\u20135) & Early Elementary (Ages 6\u20137)",
+    "stimulusScore": "2/10",
+    "stimulusClass": "stimulus-low",
+    "category": "stem",
+    "categoryLabel": "Systematic Synthetic Phonics",
+    "cognitiveSkills": [
+      "Grapheme-Phoneme Correspondence",
+      "Blending & Segmenting",
+      "Sight Word Automaticity"
+    ],
+    "endorsements": [
+      "Usborne Foundation Non-Profit",
+      "University of Roehampton Vetted",
+      "BAFTA Children's Nominee"
+    ],
+    "whyEducatorsApprove": "Funded by the Usborne Foundation charity and designed with reading academics at the University of Roehampton (UK). Guides children from initial letter sounds through full sentence reading at a calm, self-directed pace without commercial ads or manipulative monetization.",
+    "calmHighlights": [
+      "100% free on desktop web browser",
+      "Zero advertisements or microtransactions",
+      "Structured synthetic phonics progression"
+    ],
+    "platforms": [
+      "Web (100% Free)",
+      "iOS",
+      "Android",
+      "Amazon Fire"
+    ],
+    "monetization": "Free on Web / Paid Mobile App",
+    "monetizationType": "free",
+    "link": "https://www.teachyourmonster.org",
+    "researchAnchor": "Rose (2006) Independent Review of Early Reading & Synthetic Phonics",
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+  },
+  {
+    "name": "Dorfromantik",
+    "developer": "Toukana Interactive",
+    "age": [
+      "early-elementary",
+      "middle-elementary",
+      "preteen"
+    ],
+    "ageLabel": "Ages 6\u201312 (Elementary to Pre-Teen)",
+    "stimulusScore": "1/10",
+    "stimulusClass": "stimulus-low",
+    "category": "spatial",
+    "categoryLabel": "Hexagonal Spatial Strategy & Topology",
+    "cognitiveSkills": [
+      "Spatial Topology & Adjacency",
+      "Forward Planning",
+      "Pattern Matching & Geometry",
+      "Sensory De-escalation"
+    ],
+    "endorsements": [
+      "German Computer Games Award Best Game",
+      "BAFTA Debut Game Nominee",
+      "Educator Recommended Board-Game Adaptation"
+    ],
+    "whyEducatorsApprove": "A tranquil hexagonal tile-placement puzzle and strategy game that feels like a living tabletop board game. Players place tiles of forests, windmills, rivers, and train tracks to form harmonious landscapes. Includes a Creative Mode with infinite tiles and zero score pressure.",
+    "calmHighlights": [
+      "Ultra-low stimulus acoustic soundtrack & birdsong",
+      "Turn-based hexagonal placement with zero timers",
+      "One-time purchase, 100% offline"
+    ],
+    "platforms": [
+      "PC",
+      "Mac",
+      "Nintendo Switch"
+    ],
+    "monetization": "One-Time Purchase",
+    "monetizationType": "paid",
+    "link": "https://toukana.com/dorfromantik/",
+    "researchAnchor": "Dunckley (2015) Low-Arousal Spatial Cognition & Tabletop Flow",
+    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+  },
+  {
+    "name": "World of Goo 2 / Poly Bridge",
+    "developer": "2D Boy & Tomorrow Corporation / Dry Cactus",
+    "age": [
+      "middle-elementary",
+      "preteen"
+    ],
+    "ageLabel": "Middle Elementary (Ages 8\u20139) & Pre-Teens (Ages 10\u201312)",
+    "stimulusScore": "3/10",
+    "stimulusClass": "stimulus-low",
+    "category": "logic",
+    "categoryLabel": "Structural Statics & Civil Engineering",
+    "cognitiveSkills": [
+      "Triangulation & Structural Load",
+      "Center of Mass & Torque",
+      "Fluid Dynamics",
+      "Iterative Hypothesis Testing"
+    ],
+    "endorsements": [
+      "2024 Indie Engineering Landmark",
+      "Used in Middle School STEM & Physics Clubs"
+    ],
+    "whyEducatorsApprove": "Released in August 2024 (16 years after the original classic), World of Goo 2 and Poly Bridge challenge players to construct bridges, towers, and fluid conduits obeying real-world structural statics, tension, compression, and center-of-gravity physics.",
+    "calmHighlights": [
+      "Methodical structural experimentation without countdown clocks",
+      "Zero microtransactions, battle passes, or ads",
+      "Builds tangible civil engineering intuition"
+    ],
+    "platforms": [
+      "PC",
+      "Mac",
+      "Linux",
+      "Nintendo Switch"
+    ],
+    "monetization": "One-Time Purchase",
+    "monetizationType": "paid",
+    "link": "https://worldofgoo2.com",
+    "researchAnchor": "Hirsh-Pasek et al. (2015) Constructivist Physics & Structural Statics",
+    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
   }
 ];
+
+// ==================== XSS-SAFE DOM HELPERS ====================
+function createExternalLinkSvg() {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('width', '16');
+  svg.setAttribute('height', '16');
+  svg.setAttribute('fill', 'currentColor');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  const path = document.createElementNS(svgNS, 'path');
+  path.setAttribute('d', 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14');
+  svg.appendChild(path);
+  return svg;
+}
+
+function createEmptyState(primaryMsg, secondaryMsg) {
+  const wrapper = document.createElement('div');
+  wrapper.style.gridColumn = '1 / -1';
+  wrapper.style.textAlign = 'center';
+  wrapper.style.padding = '3rem';
+  wrapper.style.color = 'var(--text-muted)';
+
+  const p1 = document.createElement('p');
+  p1.style.fontSize = '1.1rem';
+  p1.style.fontWeight = '600';
+  p1.textContent = primaryMsg;
+
+  const p2 = document.createElement('p');
+  p2.style.fontSize = '0.9rem';
+  p2.textContent = secondaryMsg;
+
+  wrapper.appendChild(p1);
+  wrapper.appendChild(p2);
+  return wrapper;
+}
 
 // ==================== CHANNEL CONTROLS & RENDERING ====================
 let currentChannelFilter = 'all';
 let currentChannelSearch = '';
 
-function renderChannels() {
-  const container = document.getElementById('channel-grid');
-  if (!container) return;
-
-  const filtered = channelsData.filter(ch => {
+function getFilteredChannels() {
+  return channelsData.filter(ch => {
     const ageVal = Array.isArray(ch.age) ? ch.age : [ch.age || ''];
     const matchesFilter = currentChannelFilter === 'all' || ageVal.includes(currentChannelFilter);
 
     const matchesSearch = !currentChannelSearch ||
-                          (ch.name && ch.name.toLowerCase().includes(currentChannelSearch)) ||
-                          (ch.whyThisChannel && ch.whyThisChannel.toLowerCase().includes(currentChannelSearch)) ||
-                          (ch.ageLabel && ch.ageLabel.toLowerCase().includes(currentChannelSearch)) ||
-                          (ch.checkmarks && ch.checkmarks.some(c => c.toLowerCase().includes(currentChannelSearch)));
+      (ch.name && ch.name.toLowerCase().includes(currentChannelSearch)) ||
+      (ch.researchAnchor && ch.researchAnchor.toLowerCase().includes(currentChannelSearch)) ||
+      (ch.whyThisChannel && ch.whyThisChannel.toLowerCase().includes(currentChannelSearch)) ||
+      (ch.ageLabel && ch.ageLabel.toLowerCase().includes(currentChannelSearch)) ||
+      (ch.checkmarks && ch.checkmarks.some(c => c.toLowerCase().includes(currentChannelSearch))) ||
+      (ch.startWith && ch.startWith.some(s => s.toLowerCase().includes(currentChannelSearch)));
     return matchesFilter && matchesSearch;
   });
+}
+
+function buildChannelCard(ch) {
+  const card = document.createElement('div');
+  card.className = 'card channel-card';
+
+  const body = document.createElement('div');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'channel-header';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'channel-name';
+  nameSpan.textContent = ch.name;
+
+  const stimSpan = document.createElement('span');
+  stimSpan.className = `stimulus-tag ${ch.stimulusClass}`;
+  stimSpan.textContent = `Stimulus: ${ch.stimulusScore}`;
+
+  header.appendChild(nameSpan);
+  header.appendChild(stimSpan);
+  body.appendChild(header);
+
+  // Age Badge
+  const ageWrap = document.createElement('div');
+  ageWrap.style.marginBottom = '0.75rem';
+  const ageBadge = document.createElement('span');
+  ageBadge.className = 'tag-badge';
+  ageBadge.style.background = '#e0f2fe';
+  ageBadge.style.color = '#0369a1';
+  ageBadge.style.fontWeight = '600';
+  ageBadge.textContent = ch.ageLabel;
+  ageWrap.appendChild(ageBadge);
+  body.appendChild(ageWrap);
+
+  // Description
+  const descP = document.createElement('p');
+  descP.className = 'channel-desc';
+  const descStrong = document.createElement('strong');
+  descStrong.textContent = 'Why This Channel: ';
+  descP.appendChild(descStrong);
+  descP.appendChild(document.createTextNode(ch.whyThisChannel));
+  body.appendChild(descP);
+
+  // Citation Box
+  const citBox = document.createElement('div');
+  citBox.className = 'citation-box';
+
+  const resDiv = document.createElement('div');
+  const resStrong = document.createElement('strong');
+  resStrong.textContent = '📚 Research Anchor: ';
+  resDiv.appendChild(resStrong);
+  resDiv.appendChild(document.createTextNode(ch.researchAnchor || 'Lillard & Peterson (2011) Pacing Guidelines'));
+
+  const semDiv = document.createElement('div');
+  semDiv.style.marginTop = '0.25rem';
+  const semStrong = document.createElement('strong');
+  semStrong.textContent = '🔬 SEM-10 Rubric: ';
+  const semBadge = document.createElement('span');
+  semBadge.className = 'sem-badge';
+  semBadge.textContent = ch.semBreakdown || 'Pacing: Low • Audio: Balanced • Visual: Calm';
+  semDiv.appendChild(semStrong);
+  semDiv.appendChild(semBadge);
+
+  citBox.appendChild(resDiv);
+  citBox.appendChild(semDiv);
+  body.appendChild(citBox);
+
+  // Checkmarks
+  if (ch.checkmarks && ch.checkmarks.length > 0) {
+    const ul = document.createElement('ul');
+    ul.style.listStyle = 'none';
+    ul.style.margin = '0.75rem 0';
+    ul.style.fontSize = '0.85rem';
+    ul.style.color = 'var(--text-muted)';
+
+    ch.checkmarks.forEach(cm => {
+      const li = document.createElement('li');
+      li.style.display = 'flex';
+      li.style.alignItems = 'center';
+      li.style.gap = '0.35rem';
+      li.style.marginBottom = '0.25rem';
+
+      const tick = document.createElement('span');
+      tick.style.color = 'var(--success)';
+      tick.style.fontWeight = '700';
+      tick.textContent = '✓';
+
+      li.appendChild(tick);
+      li.appendChild(document.createTextNode(' ' + cm));
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+  }
+
+  // Start With
+  if (ch.startWith && ch.startWith.length > 0) {
+    const swBox = document.createElement('div');
+    swBox.style.marginTop = '0.75rem';
+    swBox.style.padding = '0.6rem';
+    swBox.style.background = 'var(--bg-alt)';
+    swBox.style.borderRadius = 'var(--radius-sm)';
+
+    const swTitle = document.createElement('div');
+    swTitle.style.fontSize = '0.75rem';
+    swTitle.style.fontWeight = '700';
+    swTitle.style.color = 'var(--text-main)';
+    swTitle.style.marginBottom = '0.35rem';
+    swTitle.textContent = '🎬 Start With:';
+
+    const swList = document.createElement('div');
+    swList.style.display = 'flex';
+    swList.style.flexWrap = 'wrap';
+    swList.style.gap = '0.35rem';
+
+    ch.startWith.forEach(sw => {
+      const badge = document.createElement('span');
+      badge.className = 'tag-badge';
+      badge.style.background = '#ffffff';
+      badge.style.border = '1px solid var(--border-color)';
+      badge.style.color = 'var(--text-main)';
+      badge.textContent = sw;
+      swList.appendChild(badge);
+    });
+
+    swBox.appendChild(swTitle);
+    swBox.appendChild(swList);
+    body.appendChild(swBox);
+  }
+
+  card.appendChild(body);
+
+  // Action Link
+  const link = document.createElement('a');
+  link.href = ch.link;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.className = 'btn btn-outline';
+  link.style.marginTop = '1rem';
+  link.style.width = '100%';
+  link.style.justifyContent = 'center';
+  link.appendChild(createExternalLinkSvg());
+  link.appendChild(document.createTextNode(' View Channel'));
+
+  link.addEventListener('click', () => {
+    if (window.trackSafeKidsEvent) {
+      window.trackSafeKidsEvent('click_channel', { name: ch.name, url: ch.link });
+    }
+  });
+
+  card.appendChild(link);
+  return card;
+}
+
+function renderChannels() {
+  const container = document.getElementById('channel-grid');
+  if (!container) return;
+
+  const filtered = getFilteredChannels();
 
   const countBadge = document.getElementById('channel-count-badge');
   if (countBadge) {
-    countBadge.innerText = `${filtered.length} channels`;
+    countBadge.textContent = `${filtered.length} channels`;
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
-        <p style="font-size: 1.1rem; font-weight: 600;">No channels match your search criteria.</p>
-        <p style="font-size: 0.9rem;">Try adjusting your age filter or search term.</p>
-      </div>
-    `;
+    container.replaceChildren(
+      createEmptyState(
+        'No channels match your search criteria.',
+        'Try adjusting your age filter or search term.'
+      )
+    );
     return;
   }
 
-  container.innerHTML = filtered.map(ch => `
-    <div class="card channel-card">
-      <div>
-        <div class="channel-header">
-          <span class="channel-name">${ch.name}</span>
-          <span class="stimulus-tag ${ch.stimulusClass}">Stimulus: ${ch.stimulusScore}</span>
-        </div>
-        
-        <div style="margin-bottom:0.75rem;">
-          <span class="tag-badge" style="background:#e0f2fe; color:#0369a1; font-weight:600;">${ch.ageLabel}</span>
-        </div>
-
-        <p class="channel-desc"><strong>Why This Channel:</strong> ${ch.whyThisChannel}</p>
-
-        <div class="citation-box">
-          <div><strong>📚 Research Anchor:</strong> ${ch.researchAnchor || 'Lillard & Peterson (2011) Pacing Guidelines'}</div>
-          <div style="margin-top:0.25rem;"><strong>🔬 SEM-10 Rubric:</strong> <span class="sem-badge">${ch.semBreakdown || 'Pacing: Low • Audio: Balanced • Visual: Calm'}</span></div>
-        </div>
-        
-        ${ch.checkmarks && ch.checkmarks.length > 0 ? `
-          <ul style="list-style:none; margin: 0.75rem 0; font-size:0.85rem; color:var(--text-muted);">
-            ${ch.checkmarks.map(cm => `<li style="display:flex; align-items:center; gap:0.35rem; margin-bottom:0.25rem;"><span style="color:var(--success); font-weight:700;">✓</span> ${cm}</li>`).join('')}
-          </ul>
-        ` : ''}
-
-        ${ch.startWith && ch.startWith.length > 0 ? `
-          <div style="margin-top:0.75rem; padding:0.6rem; background:var(--bg-alt); border-radius:var(--radius-sm);">
-            <div style="font-size:0.75rem; font-weight:700; color:var(--text-main); margin-bottom:0.35rem;">🎬 Start With:</div>
-            <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
-              ${ch.startWith.map(sw => `<span class="tag-badge" style="background:#ffffff; border:1px solid var(--border-color); color:var(--text-main);">${sw}</span>`).join('')}
-            </div>
-          </div>
-        ` : ''}
-      </div>
-
-      <a href="${ch.link}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:1rem; width:100%; justify-content:center;" onclick="if(window.trackSafeKidsEvent) window.trackSafeKidsEvent('click_channel', { name: '${ch.name.replace(/'/g, "\\'")}', url: '${ch.link}' });">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        View Channel
-      </a>
-    </div>
-  `).join('');
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(ch => {
+    fragment.appendChild(buildChannelCard(ch));
+  });
+  container.replaceChildren(fragment);
 }
 
 function setupChannelFilterListeners() {
@@ -1719,10 +1957,338 @@ function setupChannelSearch() {
   });
 }
 
+// ==================== WHITELIST EXPORT TOOLS ====================
+function triggerFileDownload(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function flashButtonSuccess(btn, tempText) {
+  const originalText = btn.textContent;
+  btn.textContent = tempText;
+  btn.classList.add('copied-flash');
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.classList.remove('copied-flash');
+  }, 2000);
+}
+
+function setupWhitelistExport() {
+  const btnCopyUrls = document.getElementById('btn-copy-urls');
+  const btnExportJson = document.getElementById('btn-export-json');
+  const btnExportCsv = document.getElementById('btn-export-csv');
+
+  if (btnCopyUrls) {
+    btnCopyUrls.addEventListener('click', () => {
+      const activeChannels = getFilteredChannels();
+      const urlsText = activeChannels.map(ch => `${ch.name}: ${ch.link}`).join('\n');
+      navigator.clipboard.writeText(urlsText).then(() => {
+        flashButtonSuccess(btnCopyUrls, `✓ Copied ${activeChannels.length} URLs!`);
+        if (window.trackSafeKidsEvent) {
+          window.trackSafeKidsEvent('export_whitelist', { format: 'clipboard', count: activeChannels.length });
+        }
+      });
+    });
+  }
+
+  if (btnExportJson) {
+    btnExportJson.addEventListener('click', () => {
+      const activeChannels = getFilteredChannels();
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        filterApplied: currentChannelFilter,
+        channelCount: activeChannels.length,
+        channels: activeChannels.map(ch => ({
+          name: ch.name,
+          ageBands: ch.age,
+          ageLabel: ch.ageLabel,
+          sem10Score: ch.stimulusScore,
+          sem10Breakdown: ch.semBreakdown,
+          url: ch.link,
+          recommendedStarters: ch.startWith
+        }))
+      };
+      triggerFileDownload(
+        `safekids-whitelist-${currentChannelFilter}.json`,
+        JSON.stringify(payload, null, 2),
+        'application/json'
+      );
+      flashButtonSuccess(btnExportJson, '✓ Downloaded JSON!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_whitelist', { format: 'json', count: activeChannels.length });
+      }
+    });
+  }
+
+  if (btnExportCsv) {
+    btnExportCsv.addEventListener('click', () => {
+      const activeChannels = getFilteredChannels();
+      const escapeCsv = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+      const header = ['Channel Name', 'Age Group', 'SEM-10 Score', 'SEM-10 Breakdown', 'Research Anchor', 'Recommended Starters', 'YouTube URL'];
+      const rows = activeChannels.map(ch => [
+        escapeCsv(ch.name),
+        escapeCsv(ch.ageLabel),
+        escapeCsv(ch.stimulusScore),
+        escapeCsv(ch.semBreakdown),
+        escapeCsv(ch.researchAnchor),
+        escapeCsv((ch.startWith || []).join(' | ')),
+        escapeCsv(ch.link)
+      ].join(','));
+      const csvContent = [header.join(','), ...rows].join('\n');
+      triggerFileDownload(
+        `safekids-whitelist-${currentChannelFilter}.csv`,
+        csvContent,
+        'text/csv;charset=utf-8;'
+      );
+      flashButtonSuccess(btnExportCsv, '✓ Downloaded CSV!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_whitelist', { format: 'csv', count: activeChannels.length });
+      }
+    });
+  }
+}
+
 // ==================== EDUCATOR GAMES CONTROLS & RENDERING ====================
 let currentGameAgeFilter = 'all';
 let currentGameDomainFilter = 'all';
 let currentGameSearch = '';
+
+function buildGameCard(g) {
+  const monetizationClass =
+    g.monetizationType === 'free' ? 'monetization-free' :
+    g.monetizationType === 'foss' ? 'monetization-foss' :
+    g.monetizationType === 'arcade' ? 'monetization-arcade' : 'monetization-paid';
+
+  const card = document.createElement('div');
+  card.className = 'card game-card';
+
+  const body = document.createElement('div');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'channel-header';
+
+  const titleWrap = document.createElement('div');
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'channel-name';
+  nameDiv.textContent = g.name;
+
+  const devDiv = document.createElement('div');
+  devDiv.style.fontSize = '0.75rem';
+  devDiv.style.color = 'var(--text-light)';
+  devDiv.style.fontWeight = '500';
+  devDiv.textContent = `By ${g.developer}`;
+
+  titleWrap.appendChild(nameDiv);
+  titleWrap.appendChild(devDiv);
+
+  const stimSpan = document.createElement('span');
+  stimSpan.className = `stimulus-tag ${g.stimulusClass}`;
+  stimSpan.textContent = `Stimulus: ${g.stimulusScore}`;
+
+  header.appendChild(titleWrap);
+  header.appendChild(stimSpan);
+  body.appendChild(header);
+
+  // Age + Monetization Badges
+  const metaRow = document.createElement('div');
+  metaRow.style.display = 'flex';
+  metaRow.style.flexWrap = 'wrap';
+  metaRow.style.gap = '0.35rem';
+  metaRow.style.margin = '0.6rem 0';
+
+  const ageBadge = document.createElement('span');
+  ageBadge.className = 'tag-badge';
+  ageBadge.style.background = '#e0f2fe';
+  ageBadge.style.color = '#0369a1';
+  ageBadge.style.fontWeight = '600';
+  ageBadge.textContent = g.ageLabel;
+
+  const monBadge = document.createElement('span');
+  monBadge.className = `monetization-badge ${monetizationClass}`;
+  monBadge.textContent = g.monetization;
+
+  metaRow.appendChild(ageBadge);
+  metaRow.appendChild(monBadge);
+  body.appendChild(metaRow);
+
+  // Cognitive Focus
+  if (g.cognitiveSkills && g.cognitiveSkills.length > 0) {
+    const cogSection = document.createElement('div');
+    cogSection.style.marginBottom = '0.75rem';
+
+    const cogTitle = document.createElement('div');
+    cogTitle.style.fontSize = '0.75rem';
+    cogTitle.style.fontWeight = '700';
+    cogTitle.style.color = 'var(--text-light)';
+    cogTitle.style.textTransform = 'uppercase';
+    cogTitle.style.marginBottom = '0.25rem';
+    cogTitle.textContent = 'Cognitive Focus:';
+
+    const cogList = document.createElement('div');
+    cogList.style.display = 'flex';
+    cogList.style.flexWrap = 'wrap';
+    cogList.style.gap = '0.25rem';
+
+    g.cognitiveSkills.forEach(cs => {
+      const span = document.createElement('span');
+      span.className = 'domain-badge';
+      span.textContent = cs;
+      cogList.appendChild(span);
+    });
+
+    cogSection.appendChild(cogTitle);
+    cogSection.appendChild(cogList);
+    body.appendChild(cogSection);
+  }
+
+  // Educator Backing
+  if (g.endorsements && g.endorsements.length > 0) {
+    const endSection = document.createElement('div');
+    endSection.style.marginBottom = '0.75rem';
+
+    const endTitle = document.createElement('div');
+    endTitle.style.fontSize = '0.72rem';
+    endTitle.style.fontWeight = '700';
+    endTitle.style.color = 'var(--text-light)';
+    endTitle.style.textTransform = 'uppercase';
+    endTitle.style.marginBottom = '0.25rem';
+    endTitle.textContent = 'Educator Backing:';
+
+    const endList = document.createElement('div');
+    endList.style.display = 'flex';
+    endList.style.flexWrap = 'wrap';
+    endList.style.gap = '0.25rem';
+
+    g.endorsements.forEach(ed => {
+      const span = document.createElement('span');
+      span.className = 'endorsement-badge';
+      span.textContent = `★ ${ed}`;
+      endList.appendChild(span);
+    });
+
+    endSection.appendChild(endTitle);
+    endSection.appendChild(endList);
+    body.appendChild(endSection);
+  }
+
+  // Why Educators Approve
+  const descP = document.createElement('p');
+  descP.className = 'channel-desc';
+  descP.style.marginBottom = '0.75rem';
+  const descStrong = document.createElement('strong');
+  descStrong.textContent = 'Why Educators Approve: ';
+  descP.appendChild(descStrong);
+  descP.appendChild(document.createTextNode(g.whyEducatorsApprove));
+  body.appendChild(descP);
+
+  // Citation Box
+  const citBox = document.createElement('div');
+  citBox.className = 'citation-box';
+
+  const resDiv = document.createElement('div');
+  const resStrong = document.createElement('strong');
+  resStrong.textContent = '📚 Research Anchor: ';
+  resDiv.appendChild(resStrong);
+  resDiv.appendChild(document.createTextNode(g.researchAnchor));
+
+  const semDiv = document.createElement('div');
+  semDiv.style.marginTop = '0.25rem';
+  const semStrong = document.createElement('strong');
+  semStrong.textContent = '🔬 SEM-10 Rubric: ';
+  const semBadge = document.createElement('span');
+  semBadge.className = 'sem-badge';
+  semBadge.textContent = g.semBreakdown;
+  semDiv.appendChild(semStrong);
+  semDiv.appendChild(semBadge);
+
+  citBox.appendChild(resDiv);
+  citBox.appendChild(semDiv);
+  body.appendChild(citBox);
+
+  // Calm & Ethical Design Highlights
+  if (g.calmHighlights && g.calmHighlights.length > 0) {
+    const calmBox = document.createElement('div');
+    calmBox.style.background = 'var(--bg-alt)';
+    calmBox.style.padding = '0.65rem';
+    calmBox.style.borderRadius = 'var(--radius-sm)';
+    calmBox.style.marginBottom = '0.75rem';
+
+    const calmTitle = document.createElement('div');
+    calmTitle.style.fontSize = '0.75rem';
+    calmTitle.style.fontWeight = '700';
+    calmTitle.style.color = 'var(--text-main)';
+    calmTitle.style.marginBottom = '0.3rem';
+    calmTitle.textContent = '🛡️ Calm & Ethical Design:';
+
+    const ul = document.createElement('ul');
+    ul.style.listStyle = 'none';
+    ul.style.fontSize = '0.8rem';
+    ul.style.color = 'var(--text-muted)';
+
+    g.calmHighlights.forEach(ch => {
+      const li = document.createElement('li');
+      li.style.display = 'flex';
+      li.style.alignItems = 'flex-start';
+      li.style.gap = '0.3rem';
+      li.style.marginBottom = '0.2rem';
+
+      const tick = document.createElement('span');
+      tick.style.color = 'var(--success)';
+      tick.style.fontWeight = '700';
+      tick.textContent = '✓';
+
+      li.appendChild(tick);
+      li.appendChild(document.createTextNode(' ' + ch));
+      ul.appendChild(li);
+    });
+
+    calmBox.appendChild(calmTitle);
+    calmBox.appendChild(ul);
+    body.appendChild(calmBox);
+  }
+
+  // Platforms
+  const platDiv = document.createElement('div');
+  platDiv.style.fontSize = '0.78rem';
+  platDiv.style.color = 'var(--text-muted)';
+  platDiv.style.marginBottom = '0.5rem';
+  const platStrong = document.createElement('strong');
+  platStrong.textContent = 'Platforms: ';
+  platDiv.appendChild(platStrong);
+  platDiv.appendChild(document.createTextNode((g.platforms || []).join(' • ')));
+  body.appendChild(platDiv);
+
+  card.appendChild(body);
+
+  // Action Link
+  const link = document.createElement('a');
+  link.href = g.link;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.className = 'btn btn-outline';
+  link.style.marginTop = '0.75rem';
+  link.style.width = '100%';
+  link.style.justifyContent = 'center';
+  link.appendChild(createExternalLinkSvg());
+  link.appendChild(document.createTextNode(' Visit Official Game / App'));
+
+  link.addEventListener('click', () => {
+    if (window.trackSafeKidsEvent) {
+      window.trackSafeKidsEvent('click_game', { name: g.name, url: g.link });
+    }
+  });
+
+  card.appendChild(link);
+  return card;
+}
 
 function renderGames() {
   const container = document.getElementById('game-grid');
@@ -1750,83 +2316,24 @@ function renderGames() {
 
   const countBadge = document.getElementById('game-count-badge');
   if (countBadge) {
-    countBadge.innerText = `${filtered.length} games`;
+    countBadge.textContent = `${filtered.length} games`;
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
-        <p style="font-size: 1.1rem; font-weight: 600;">No educational games match your search criteria.</p>
-        <p style="font-size: 0.9rem;">Try selecting 'All Games' or clearing the domain and search filters.</p>
-      </div>
-    `;
+    container.replaceChildren(
+      createEmptyState(
+        'No educational games match your search criteria.',
+        "Try selecting 'All Games' or clearing the domain and search filters."
+      )
+    );
     return;
   }
 
-  container.innerHTML = filtered.map(g => {
-    const monetizationClass = 
-      g.monetizationType === 'free' ? 'monetization-free' :
-      g.monetizationType === 'foss' ? 'monetization-foss' :
-      g.monetizationType === 'arcade' ? 'monetization-arcade' : 'monetization-paid';
-
-    return `
-      <div class="card game-card">
-        <div>
-          <div class="channel-header">
-            <div>
-              <div class="channel-name">${g.name}</div>
-              <div style="font-size:0.75rem; color:var(--text-light); font-weight:500;">By ${g.developer}</div>
-            </div>
-            <span class="stimulus-tag ${g.stimulusClass}">Stimulus: ${g.stimulusScore}</span>
-          </div>
-
-          <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin: 0.6rem 0;">
-            <span class="tag-badge" style="background:#e0f2fe; color:#0369a1; font-weight:600;">${g.ageLabel}</span>
-            <span class="monetization-badge ${monetizationClass}">${g.monetization}</span>
-          </div>
-
-          <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase; margin-bottom:0.25rem;">Cognitive Focus:</div>
-            <div style="display:flex; flex-wrap:wrap; gap:0.25rem;">
-              ${g.cognitiveSkills.map(cs => `<span class="domain-badge">${cs}</span>`).join('')}
-            </div>
-          </div>
-
-          ${g.endorsements && g.endorsements.length > 0 ? `
-            <div style="margin-bottom:0.75rem;">
-              <div style="font-size:0.72rem; font-weight:700; color:var(--text-light); text-transform:uppercase; margin-bottom:0.25rem;">Educator Backing:</div>
-              <div style="display:flex; flex-wrap:wrap; gap:0.25rem;">
-                ${g.endorsements.map(ed => `<span class="endorsement-badge">★ ${ed}</span>`).join('')}
-              </div>
-            </div>
-          ` : ''}
-
-          <p class="channel-desc" style="margin-bottom:0.75rem;"><strong>Why Educators Approve:</strong> ${g.whyEducatorsApprove}</p>
-
-          <div class="citation-box">
-            <div><strong>📚 Research Anchor:</strong> ${g.researchAnchor}</div>
-            <div style="margin-top:0.25rem;"><strong>🔬 SEM-10 Rubric:</strong> <span class="sem-badge">${g.semBreakdown}</span></div>
-          </div>
-
-          <div style="background:var(--bg-alt); padding:0.65rem; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem; font-weight:700; color:var(--text-main); margin-bottom:0.3rem;">🛡️ Calm & Ethical Design:</div>
-            <ul style="list-style:none; font-size:0.8rem; color:var(--text-muted);">
-              ${g.calmHighlights.map(ch => `<li style="display:flex; align-items:flex-start; gap:0.3rem; margin-bottom:0.2rem;"><span style="color:var(--success); font-weight:700;">✓</span> ${ch}</li>`).join('')}
-            </ul>
-          </div>
-
-          <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem;">
-            <strong>Platforms:</strong> ${g.platforms.join(' • ')}
-          </div>
-        </div>
-
-        <a href="${g.link}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:0.75rem; width:100%; justify-content:center;" onclick="if(window.trackSafeKidsEvent) window.trackSafeKidsEvent('click_game', { name: '${g.name.replace(/'/g, "\\'")}', url: '${g.link}' });">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-          Visit Official Game / App
-        </a>
-      </div>
-    `;
-  }).join('');
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(g => {
+    fragment.appendChild(buildGameCard(g));
+  });
+  container.replaceChildren(fragment);
 }
 
 function setupGameFilterListeners() {
@@ -1875,6 +2382,85 @@ function setupGameSearch() {
   });
 }
 
+// ==================== INTERACTIVE SEM-10 CALCULATOR ====================
+function setupSemCalculator() {
+  const calcContainer = document.getElementById('sem-calculator');
+  if (!calcContainer) return;
+
+  const scores = {
+    pacing: 0,
+    visual: 0,
+    audio: 0,
+    pressure: 0,
+    reward: 0
+  };
+
+  const scoreBadge = document.getElementById('calc-score-badge');
+  const breakdownText = document.getElementById('calc-breakdown-text');
+  const verdictDesc = document.getElementById('calc-verdict-desc');
+  const resetBtn = document.getElementById('calc-reset-btn');
+
+  function updateCalculatorView() {
+    const rawSum = scores.pacing + scores.visual + scores.audio + scores.pressure + scores.reward;
+    // Scale 1/10 to 10/10 (0 pts across all 5 dimensions = 1/10 ultra-calm baseline; 10 pts = 10/10 extreme)
+    const displayScore = rawSum === 0 ? 1 : rawSum;
+
+    if (breakdownText) {
+      breakdownText.textContent = `Pacing: ${scores.pacing}/2 • Visual: ${scores.visual}/2 • Audio: ${scores.audio}/2 • Pressure: ${scores.pressure}/2 • Reward/Ad: ${scores.reward}/2`;
+    }
+
+    if (scoreBadge && verdictDesc) {
+      if (rawSum <= 3) {
+        scoreBadge.className = 'stimulus-tag stimulus-low';
+        scoreBadge.textContent = `SEM-10 Score: ${displayScore}/10 — Low Stimulus (Approved)`;
+        verdictDesc.textContent = 'Safe for developing executive function & bedtime wind-down. Protects endogenous attention (Lillard & Peterson, 2011; Dunckley, 2015).';
+      } else if (rawSum <= 6) {
+        scoreBadge.className = 'stimulus-tag stimulus-med';
+        scoreBadge.textContent = `SEM-10 Score: ${displayScore}/10 — Moderate Stimulus (Co-View)`;
+        verdictDesc.textContent = 'Acceptable for daytime educational sessions (20–30 mins) with parent co-viewing. Avoid within 90 minutes of sleep.';
+      } else {
+        scoreBadge.className = 'stimulus-tag stimulus-high';
+        scoreBadge.textContent = `SEM-10 Score: ${displayScore}/10 — High Stimulus (Block / Avoid)`;
+        verdictDesc.textContent = 'High risk of orienting reflex exhaustion, dopaminergic conditioning, and post-screen emotional dysregulation. Block via YouTube whitelist or NextDNS.';
+      }
+    }
+  }
+
+  const dimGroups = calcContainer.querySelectorAll('.calc-options');
+  dimGroups.forEach(group => {
+    const dim = group.getAttribute('data-dim');
+    const buttons = group.querySelectorAll('.calc-opt-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        scores[dim] = parseInt(btn.getAttribute('data-pts') || '0', 10);
+        updateCalculatorView();
+        if (window.trackSafeKidsEvent) {
+          window.trackSafeKidsEvent('use_sem_calculator', { dimension: dim, total: scores.pacing + scores.visual + scores.audio + scores.pressure + scores.reward });
+        }
+      });
+    });
+  });
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      Object.keys(scores).forEach(k => { scores[k] = 0; });
+      dimGroups.forEach(group => {
+        const buttons = group.querySelectorAll('.calc-opt-btn');
+        buttons.forEach((b, idx) => {
+          if (idx === 0) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      });
+      updateCalculatorView();
+    });
+  }
+
+  updateCalculatorView();
+}
+
+// ==================== COPY CODE BUTTONS ====================
 function setupCopyButtons() {
   const btns = document.querySelectorAll('.copy-btn');
   btns.forEach(btn => {
@@ -1886,9 +2472,9 @@ function setupCopyButtons() {
           if (window.trackSafeKidsEvent) {
             window.trackSafeKidsEvent('copy_lockdown_code', { target: codeId });
           }
-          const orig = btn.innerText;
-          btn.innerText = 'Copied!';
-          setTimeout(() => btn.innerText = orig, 2000);
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 2000);
         });
       }
     });
