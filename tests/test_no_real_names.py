@@ -107,6 +107,7 @@ class AccountHygieneAndPiiGuardTests(unittest.TestCase):
             "rec-7-calm-gaming.jpg",
             "rec-8-dns-shield.jpg",
             "rec-9-wholesome-food.jpg",
+            "rec-10-listen-read.jpg",
             "nutrition-swap-guide.jpg",
         }
         image_files = {p.name for p in (REPO_ROOT / "public" / "images").iterdir() if p.is_file()}

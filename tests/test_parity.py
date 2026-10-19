@@ -40,6 +40,9 @@ VALID_GAME_DOMAINS = frozenset({"all", "logic", "spatial", "coding", "sandbox", 
 VALID_FOOD_DOMAINS = frozenset(
     {"all", "brain-dha", "iron-focus", "steady-glucose", "bone-growth", "gut-immune", "lunchbox-swaps"}
 )
+VALID_LISTEN_DOMAINS = frozenset(
+    {"all", "stem-podcast", "story-podcast", "audiobook-card", "phonics-decodable", "living-book", "hardware-player"}
+)
 FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 
 
@@ -369,6 +372,19 @@ if (html.includes('id="btn-export-foods-csv"')) {
   registerEl(new MockElement('button', 'btn-export-foods-csv', 'btn'));
 }
 
+registerEl(new MockElement('div', 'listen-grid', 'grid-3'));
+registerEl(new MockElement('span', 'listen-count-badge', 'tag-badge'));
+registerEl(new MockElement('input', 'listen-search', 'search-input'));
+if (html.includes('id="btn-copy-listen-list"')) {
+  registerEl(new MockElement('button', 'btn-copy-listen-list', 'btn'));
+}
+if (html.includes('id="btn-export-listen-json"')) {
+  registerEl(new MockElement('button', 'btn-export-listen-json', 'btn'));
+}
+if (html.includes('id="btn-export-listen-csv"')) {
+  registerEl(new MockElement('button', 'btn-export-listen-csv', 'btn'));
+}
+
 const channelFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen'].map(
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
@@ -387,6 +403,23 @@ const foodAgeFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'm
 const foodDomainFilterBtns = ['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps'].map(
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
+const listenAgeFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen'].map(
+  (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
+);
+const listenDomainFilterBtns = ['all', 'stem-podcast', 'story-podcast', 'audiobook-card', 'phonics-decodable', 'living-book', 'hardware-player'].map(
+  (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
+);
+
+// Global Age Bar & Clinical Science Drawer Toggle
+const globalAgeBar = registerEl(new MockElement('div', 'global-age-bar', 'global-age-bar'));
+const globalAgeBtns = ['all', 'under-2', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen'].map(
+  (a, idx) => {
+    const btn = new MockElement('button', '', idx === 0 ? 'global-age-btn active' : 'global-age-btn', { 'data-global-age': a });
+    globalAgeBar.appendChild(btn);
+    return btn;
+  }
+);
+registerEl(new MockElement('button', 'btn-toggle-clinical-details', 'btn btn-outline btn-sm'));
 
 // Daily Blueprint Builder mock elements
 const blueprintContainer = registerEl(new MockElement('div', 'daily-blueprint-builder', 'blueprint-card'));
@@ -406,6 +439,7 @@ registerEl(new MockElement('div', 'bp-meal-rule', ''));
 registerEl(new MockElement('ul', 'bp-channels-list', 'fridge-col-list'));
 registerEl(new MockElement('ul', 'bp-games-list', 'fridge-col-list'));
 registerEl(new MockElement('ul', 'bp-foods-list', 'fridge-col-list'));
+registerEl(new MockElement('ul', 'bp-listen-list', 'fridge-col-list'));
 registerEl(new MockElement('button', 'btn-sync-age-directories', 'btn btn-primary btn-sm'));
 registerEl(new MockElement('button', 'btn-copy-blueprint', 'btn btn-outline btn-sm'));
 registerEl(new MockElement('button', 'btn-print-fridge-sheet', 'btn btn-outline btn-sm'));
@@ -455,6 +489,17 @@ let printCalledCount = 0;
 let downloads = [];
 const domReadyCallbacks = [];
 
+const queryAllGrids = (sel) => {
+  const grids = ['channel-grid', 'game-grid', 'food-grid', 'listen-grid'];
+  const out = [];
+  for (const gid of grids) {
+    if (elementsById[gid]) {
+      out.push(...elementsById[gid].querySelectorAll(sel));
+    }
+  }
+  return out;
+};
+
 const documentMock = {
   addEventListener: (evt, fn) => { if (evt === 'DOMContentLoaded') domReadyCallbacks.push(fn); },
   getElementById: (id) => elementsById[id] || null,
@@ -465,6 +510,11 @@ const documentMock = {
     if (sel === '#game-stopping-filters .filter-btn') return gameStoppingFilterBtns;
     if (sel === '#food-age-filters .filter-btn') return foodAgeFilterBtns;
     if (sel === '#food-domain-filters .filter-btn') return foodDomainFilterBtns;
+    if (sel === '#listen-age-filters .filter-btn') return listenAgeFilterBtns;
+    if (sel === '#listen-domain-filters .filter-btn') return listenDomainFilterBtns;
+    if (sel === '#global-age-bar .global-age-btn') return globalAgeBtns;
+    if (sel === '.card-clinical-drawer') return queryAllGrids('.card-clinical-drawer');
+    if (sel === '.card-drawer-toggle') return queryAllGrids('.card-drawer-toggle');
     if (sel === '[data-tab-panel]') return tabPanels;
     if (sel === '.sidebar-nav-btn') return tabSwitchBtns.filter(b => b.classList.contains('sidebar-nav-btn'));
     if (sel === '[data-tab]') return tabSwitchBtns;
@@ -512,6 +562,7 @@ globalThis.__exports = {
   channelsData,
   gamesData,
   foodsData: typeof foodsData !== 'undefined' ? foodsData : [],
+  listenReadData: typeof listenReadData !== 'undefined' ? listenReadData : [],
   computeSem10Score: typeof computeSem10Score === 'function' ? computeSem10Score : null,
   computeNfi10Score: typeof computeNfi10Score === 'function' ? computeNfi10Score : null,
   sanitizeCsvCell: typeof sanitizeCsvCell === 'function' ? sanitizeCsvCell : null,
@@ -584,6 +635,25 @@ if (payload.clickFoodDomainFilter) {
   if (btn) btn.click();
 }
 
+if (payload.clickListenAgeFilter) {
+  const btn = listenAgeFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickListenAgeFilter);
+  if (btn) btn.click();
+}
+
+if (payload.clickListenDomainFilter) {
+  const btn = listenDomainFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickListenDomainFilter);
+  if (btn) btn.click();
+}
+
+if (payload.clickGlobalAge) {
+  const btn = globalAgeBtns.find(b => b.getAttribute('data-global-age') === payload.clickGlobalAge);
+  if (btn) btn.click();
+}
+
+if (payload.clickToggleAllScience) {
+  if (elementsById['btn-toggle-clinical-details']) elementsById['btn-toggle-clinical-details'].click();
+}
+
 if (payload.clickBlueprintAge) {
   const btn = blueprintAgeBtns.find(b => b.getAttribute('data-bp-age') === payload.clickBlueprintAge);
   if (btn) btn.click();
@@ -628,6 +698,9 @@ if (payload.triggerExports) {
   if (elementsById['btn-export-foods-csv']) elementsById['btn-export-foods-csv'].click();
   if (elementsById['btn-export-foods-json']) elementsById['btn-export-foods-json'].click();
   if (elementsById['btn-copy-foods-swaps']) elementsById['btn-copy-foods-swaps'].click();
+  if (elementsById['btn-export-listen-csv']) elementsById['btn-export-listen-csv'].click();
+  if (elementsById['btn-export-listen-json']) elementsById['btn-export-listen-json'].click();
+  if (elementsById['btn-copy-listen-list']) elementsById['btn-copy-listen-list'].click();
 }
 
 const evalResults = [];
@@ -655,14 +728,19 @@ const channelPhdBoxes = elementsById['channel-grid'].querySelectorAll('.expert-b
 const gamePhdBoxes = elementsById['game-grid'].querySelectorAll('.expert-bridge-phd').length;
 const gameStoppingPills = elementsById['game-grid'].querySelectorAll('.stopping-cue-pill').length;
 const foodMdBoxes = elementsById['food-grid'].querySelectorAll('.expert-bridge-md').length;
+const listenPhdBoxes = elementsById['listen-grid'].querySelectorAll('.expert-bridge-phd').length;
+const allDrawers = queryAllGrids('.card-clinical-drawer');
+const openDrawerCount = allDrawers.filter(d => d.classList.contains('drawer-open')).length;
 
 const out = {
   channelsCount: sandbox.__exports.channelsData.length,
   gamesCount: sandbox.__exports.gamesData.length,
   foodsCount: sandbox.__exports.foodsData.length,
+  listenCount: sandbox.__exports.listenReadData.length,
   channelsData: sandbox.__exports.channelsData,
   gamesData: sandbox.__exports.gamesData,
   foodsData: sandbox.__exports.foodsData,
+  listenReadData: sandbox.__exports.listenReadData,
   hasComputeSem10Score: Boolean(sandbox.__exports.computeSem10Score),
   hasComputeNfi10Score: Boolean(sandbox.__exports.computeNfi10Score),
   hasSanitizeCsvCell: Boolean(sandbox.__exports.sanitizeCsvCell),
@@ -678,10 +756,14 @@ const out = {
   renderedChannelCount: elementsById['channel-grid'].children.length,
   renderedGameCount: elementsById['game-grid'].children.length,
   renderedFoodCount: elementsById['food-grid'].children.length,
+  renderedListenCount: elementsById['listen-grid'].children.length,
   channelPhdBoxes,
   gamePhdBoxes,
   gameStoppingPills,
   foodMdBoxes,
+  listenPhdBoxes,
+  totalDrawerCount: allDrawers.length,
+  openDrawerCount,
   bpStageHeadline: elementsById['bp-stage-headline'].textContent,
   bpScreenBudget: elementsById['bp-screen-budget'].textContent,
   bpSleepCutoff: elementsById['bp-sleep-cutoff'].textContent,
@@ -690,10 +772,12 @@ const out = {
   bpChannelsCount: elementsById['bp-channels-list'].children.length,
   bpGamesCount: elementsById['bp-games-list'].children.length,
   bpFoodsCount: elementsById['bp-foods-list'].children.length,
+  bpListenCount: elementsById['bp-listen-list'].children.length,
   printCalledCount,
   channelBadgeText: elementsById['channel-count-badge'].textContent,
   gameBadgeText: elementsById['game-count-badge'].textContent,
   foodBadgeText: elementsById['food-count-badge'].textContent,
+  listenBadgeText: elementsById['listen-count-badge'].textContent,
   storageAfter: storageMap,
   downloads: downloads.map(d => ({ type: d.type, content: d.content })),
   lastClipboardText,
@@ -706,6 +790,11 @@ const out = {
     elementsById['btn-copy-foods-swaps'] &&
     elementsById['btn-export-foods-json'] &&
     elementsById['btn-export-foods-csv']
+  ),
+  hasListenExportButtons: Boolean(
+    elementsById['btn-copy-listen-list'] &&
+    elementsById['btn-export-listen-json'] &&
+    elementsById['btn-export-listen-csv']
   ),
   visibleTabPanels: tabPanels.filter(p => !p.classList.contains('tab-hidden')).map(p => p.getAttribute('data-tab-panel')),
   allTabPanelsCount: tabPanels.length,
@@ -733,7 +822,7 @@ def run_node_harness(payload: dict[str, Any] | None = None) -> dict[str, Any]:
 
 
 class SafeKidsEnriqParityTests(unittest.TestCase):
-    """Comprehensive verification suite locking R-1 through R-5."""
+    """Comprehensive verification suite locking R-1 through R-9."""
 
     def test_network_guard_blocks_external_connections(self) -> None:
         with self.assertRaises(ExternalNetworkBlockedError):
@@ -868,7 +957,7 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
                 )
 
     # -----------------------------------------------------------------------
-    # R-3: CSV Formula Injection Guard, Negative Verifier & Games Export Parity
+    # R-3: CSV Formula Injection Guard, Negative Verifier & 4-Pillar Export Parity
     # -----------------------------------------------------------------------
     def test_r3_csv_formula_injection_and_negative_verifier(self) -> None:
         """sanitizeCsvCell must neutralize OWASP formula injection vectors, and verifier must catch raw formulas."""
@@ -893,11 +982,11 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             ok, reason = verify_csv_export_safety(js_cell)
             self.assertTrue(ok, f"Sanitized cell failed safety verifier ({reason}): {js_cell}")
 
-        # Verify Channel, Game, and Wholesome Food CSV/JSON exports triggered and pass safety check
+        # Verify Channel, Game, Wholesome Food, and Listen & Read CSV/JSON exports triggered and pass safety check
         csv_downloads = [d["content"] for d in res["downloads"] if "text/csv" in (d["type"] or "")]
         json_downloads = [d["content"] for d in res["downloads"] if "application/json" in (d["type"] or "")]
-        self.assertEqual(len(csv_downloads), 3, "Expected Channel, Game, and Wholesome Food CSV downloads")
-        self.assertEqual(len(json_downloads), 3, "Expected Channel, Game, and Wholesome Food JSON downloads")
+        self.assertEqual(len(csv_downloads), 4, "Expected Channel, Game, Wholesome Food, and Listen & Read CSV downloads")
+        self.assertEqual(len(json_downloads), 4, "Expected Channel, Game, Wholesome Food, and Listen & Read JSON downloads")
         for csv_doc in csv_downloads:
             ok, reason = verify_csv_export_safety(csv_doc)
             self.assertTrue(ok, reason)
@@ -1111,7 +1200,7 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         js_text = APP_JS.read_text(encoding="utf-8")
 
         html_imgs = re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>', html_text)
-        self.assertGreaterEqual(len(html_imgs), 23, "Expected hero strip, 9 rec banners, 6 showcase banners, and 5 step thumbs")
+        self.assertGreaterEqual(len(html_imgs), 25, "Expected 4-pillar hero strip, 10 rec banners, 8 showcase banners, and 5 step thumbs")
 
         for img_tag in re.findall(r'<img\s+[^>]+>', html_text):
             alt_match = re.search(r'alt="([^"]+)"', img_tag)
@@ -1119,7 +1208,7 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             self.assertGreaterEqual(len(alt_match.group(1).strip()), 10)
 
         js_imgs = re.findall(r"src:\s*'([^']+)'", js_text)
-        self.assertGreaterEqual(len(js_imgs), 7, "Expected channel, game, and food visual strip image mappings in app.js")
+        self.assertGreaterEqual(len(js_imgs), 8, "Expected channel, game, food, and listen visual strip image mappings in app.js")
 
         for rel_src in set(html_imgs + js_imgs):
             img_path = REPO_ROOT / "public" / rel_src
@@ -1127,28 +1216,35 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             self.assertGreater(img_path.stat().st_size, 10_000, f"Image file unexpectedly tiny: {rel_src}")
 
     def test_workspace_left_panel_tabs_and_persistence(self) -> None:
-        """Left-panel app-shell workspace must isolate 6 categorized tabs, support 'all' mode, and persist safely."""
+        """Left-panel app-shell workspace must isolate 7 categorized tabs, support 'all' mode, and persist safely."""
         # Default initial load shows only 'overview' panels (hero + recommendations = 2 sections)
         res_default = run_node_harness()
-        self.assertEqual(res_default["allTabPanelsCount"], 9)
+        self.assertEqual(res_default["allTabPanelsCount"], 10)
         self.assertEqual(res_default["visibleTabPanels"], ["overview", "overview"])
         self.assertIn("Overview & Top 9 Parent Recommendations", res_default["workspaceContextTitle"])
-        self.assertIn("Viewing Tab 1 of 6", res_default["workspacePagerIndicator"])
+        self.assertIn("Viewing Tab 1 of 7", res_default["workspacePagerIndicator"])
 
         # Clicking 'nutrition' tab shows only the Wholesome Food section and persists to localStorage
         res_nutrition = run_node_harness({"clickWorkspaceTab": "nutrition"})
         self.assertEqual(res_nutrition["visibleTabPanels"], ["nutrition"])
         self.assertEqual(res_nutrition["storageAfter"].get("safekids_active_tab"), "nutrition")
         self.assertIn("Whole Foods & Lunchbox Swaps", res_nutrition["workspaceContextTitle"])
-        self.assertIn("Viewing Tab 5 of 6", res_nutrition["workspacePagerIndicator"])
+        self.assertIn("Viewing Tab 5 of 7", res_nutrition["workspacePagerIndicator"])
 
-        # Clicking 'all' shows all 9 sections for full-page reading/printing
+        # Clicking 'listen' tab shows only the Listen & Read section and persists to localStorage
+        res_listen = run_node_harness({"clickWorkspaceTab": "listen"})
+        self.assertEqual(res_listen["visibleTabPanels"], ["listen"])
+        self.assertEqual(res_listen["storageAfter"].get("safekids_active_tab"), "listen")
+        self.assertIn("Listen & Read", res_listen["workspaceContextTitle"])
+        self.assertIn("Viewing Tab 6 of 7", res_listen["workspacePagerIndicator"])
+
+        # Clicking 'all' shows all 10 sections for full-page reading/printing
         res_all = run_node_harness({"clickWorkspaceTab": "all"})
-        self.assertEqual(len(res_all["visibleTabPanels"]), 9)
+        self.assertEqual(len(res_all["visibleTabPanels"]), 10)
         self.assertEqual(res_all["storageAfter"].get("safekids_active_tab"), "all")
         self.assertIn("Complete SafeKids Parent Portal Reference", res_all["workspaceContextTitle"])
 
-        # Next/Prev pager buttons step cleanly through the 6 ordered tabs
+        # Next/Prev pager buttons step cleanly through the 7 ordered tabs
         res_pager = run_node_harness({"clickNextTabCount": 2})
         self.assertEqual(res_pager["visibleTabPanels"], ["channels"])
         self.assertEqual(res_pager["storageAfter"].get("safekids_active_tab"), "channels")
@@ -1163,18 +1259,20 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         """Multi-expert upgrades: Daily Blueprint Builder, PhD/MD card bridges, Game Stopping-Cue filter, and Fridge Sheet."""
         res_default = run_node_harness()
         self.assertTrue(res_default["hasComputeDailyBlueprint"])
-        # All 28 channels + 33 games render Educational PhD Off-Screen Transfer boxes
+        # All 28 channels + 33 games + 26 listen items render Educational PhD Off-Screen/Dialogic Transfer boxes
         self.assertEqual(res_default["channelPhdBoxes"], 28)
         self.assertEqual(res_default["gamePhdBoxes"], 33)
+        self.assertEqual(res_default["listenPhdBoxes"], 26)
         # All 33 games render Stopping-Cue / Session-Exit Friction pills
         self.assertEqual(res_default["gameStoppingPills"], 33)
         # All 32 whole-food swaps render Pediatric Feeding MD 3-Step Picky-Eater Sensory Bridge boxes
         self.assertEqual(res_default["foodMdBoxes"], 32)
-        # Default blueprint is 'toddler' with 4 channels, 4 games, and 4 foods
+        # Default blueprint is 'toddler' with 4 channels, 4 games, 4 foods, and 4 listen/read items
         self.assertIn("Toddlers (Ages 2–3)", res_default["bpStageHeadline"])
         self.assertEqual(res_default["bpChannelsCount"], 4)
         self.assertEqual(res_default["bpGamesCount"], 4)
         self.assertEqual(res_default["bpFoodsCount"], 4)
+        self.assertEqual(res_default["bpListenCount"], 4)
 
         # Selecting 'under-2' shows 0 mins/day passive video rule per AAP
         res_under2 = run_node_harness({"clickBlueprintAge": "under-2"})
@@ -1182,7 +1280,7 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertIn("0 mins/day", res_under2["bpScreenBudget"])
         self.assertEqual(res_under2["storageAfter"].get("safekids_blueprint_age"), "under-2")
 
-        # Selecting 'early-elementary' + clicking Sync All 3 Directories filters Watch, Play, and Nourish simultaneously
+        # Selecting 'early-elementary' + clicking Sync All 4 Directories filters Watch, Play, Nourish, and Listen simultaneously
         res_sync = run_node_harness(
             {
                 "clickBlueprintAge": "early-elementary",
@@ -1194,8 +1292,10 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertEqual(res_sync["storageAfter"].get("safekids_channel_age_filter"), "early-elementary")
         self.assertEqual(res_sync["storageAfter"].get("safekids_game_age_filter"), "early-elementary")
         self.assertEqual(res_sync["storageAfter"].get("safekids_food_age_filter"), "early-elementary")
+        self.assertEqual(res_sync["storageAfter"].get("safekids_listen_age_filter"), "early-elementary")
         self.assertIn("Synced Watch", res_sync["bpSyncStatus"])
         self.assertIn("SAFEKIDS CAREGIVER & BABYSITTER DAILY PLAN", res_sync["lastClipboardText"])
+        self.assertIn("PILLAR 4: SCREEN-FREE AUDIO & LIVING BOOKS (LISTEN & READ)", res_sync["lastClipboardText"])
         self.assertEqual(res_sync["printCalledCount"], 1)
 
         # Game Stopping-Cue filters partition the 33 games into discrete-levels, calm-toybox, and deep-sandbox
@@ -1214,6 +1314,96 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             "All 33 games must partition cleanly across discrete-levels, calm-toybox, and deep-sandbox",
         )
         self.assertEqual(res_sandbox["storageAfter"].get("safekids_game_stopping_filter"), "deep-sandbox")
+
+    # -----------------------------------------------------------------------
+    # R-9: Pillar 4 Listen & Read (26 Picks) + Calm Tech Progressive Disclosure UX
+    # -----------------------------------------------------------------------
+    def test_r9_listen_and_read_directory_rubric_filters_and_progressive_drawer(self) -> None:
+        """All 26 Listen & Read items reconcile with SEM-10 oracle, support age/format filters, and wire Calm Tech drawers."""
+        res = run_node_harness()
+        self.assertEqual(res["listenCount"], 26)
+        self.assertEqual(res["renderedListenCount"], 26)
+        self.assertEqual(res["listenBadgeText"], "26 audio & book picks")
+        self.assertTrue(res["hasListenExportButtons"])
+
+        # Progressive disclosure drawers: all 119 cards (28+33+32+26) have a .card-clinical-drawer closed by default
+        self.assertEqual(res["totalDrawerCount"], 119)
+        self.assertEqual(res["openDrawerCount"], 0)
+
+        # Clicking #btn-toggle-clinical-details opens all 119 clinical drawers at once
+        res_expanded = run_node_harness({"clickToggleAllScience": True})
+        self.assertEqual(res_expanded["openDrawerCount"], 119)
+
+        canonical_re = re.compile(
+            r"^Base 1 \+ Pacing: ([012])/2 • Visual: ([012])/2 • "
+            r"Audio: ([012])/2 • Pressure: ([012])/2 • Reward: ([012])/2 \(Total: (\d+)/10\)$"
+        )
+        seen_domains: set[str] = set()
+        for item in res["listenReadData"]:
+            name = item["name"]
+            breakdown = item.get("semBreakdown", "")
+            m = canonical_re.match(breakdown)
+            self.assertIsNotNone(m, f"Listen item '{name}' does not match canonical SEM-10 format: {breakdown!r}")
+            assert m is not None
+            dims = {
+                "pacing": int(m.group(1)),
+                "visual": int(m.group(2)),
+                "audio": int(m.group(3)),
+                "pressure": int(m.group(4)),
+                "reward": int(m.group(5)),
+            }
+            oracle = python_compute_sem10(dims)
+            self.assertEqual(item["stimulusScore"], oracle["scoreLabel"], f"Listen '{name}' stimulusScore mismatch")
+            self.assertEqual(item["stimulusClass"], oracle["stimulusClass"], f"Listen '{name}' stimulusClass mismatch")
+            self.assertEqual(breakdown, oracle["semBreakdown"], f"Listen '{name}' semBreakdown mismatch")
+            self.assertIn(item["category"], VALID_LISTEN_DOMAINS - {"all"}, f"Invalid listen domain for '{name}'")
+            seen_domains.add(item["category"])
+            for age_tag in item["age"]:
+                self.assertIn(age_tag, VALID_AGE_FILTERS - {"all"}, f"Invalid age tag '{age_tag}' for '{name}'")
+            for req_field in (
+                "creator",
+                "categoryLabel",
+                "trapReplaced",
+                "whyEducatorsApprove",
+                "dialogicPrompt",
+                "researchAnchor",
+                "link",
+            ):
+                self.assertTrue(
+                    isinstance(item.get(req_field), str) and len(item[req_field].strip()) >= 8,
+                    f"Listen '{name}' missing or short required field '{req_field}'",
+                )
+            self.assertTrue(
+                isinstance(item.get("startWith"), list) and len(item["startWith"]) >= 2,
+                f"Listen '{name}' must have at least 2 startWith items",
+            )
+            self.assertTrue(
+                isinstance(item.get("languageSkills"), list) and len(item["languageSkills"]) >= 2,
+                f"Listen '{name}' must have at least 2 languageSkills items",
+            )
+
+        # Ensure all 6 audio/book domains are represented
+        self.assertEqual(seen_domains, VALID_LISTEN_DOMAINS - {"all"})
+
+        # Filter Listen & Read by age and domain and verify persistence
+        res_filter = run_node_harness(
+            {
+                "clickListenAgeFilter": "early-elementary",
+                "clickListenDomainFilter": "phonics-decodable",
+            }
+        )
+        self.assertGreater(res_filter["renderedListenCount"], 0)
+        self.assertLess(res_filter["renderedListenCount"], 26)
+        self.assertEqual(res_filter["storageAfter"].get("safekids_listen_age_filter"), "early-elementary")
+        self.assertEqual(res_filter["storageAfter"].get("safekids_listen_domain_filter"), "phonics-decodable")
+
+        # Global Age Selector Bar (#global-age-bar) synchronizes all 4 directories + Blueprint simultaneously
+        res_global = run_node_harness({"clickGlobalAge": "preschool"})
+        self.assertEqual(res_global["storageAfter"].get("safekids_channel_age_filter"), "preschool")
+        self.assertEqual(res_global["storageAfter"].get("safekids_game_age_filter"), "preschool")
+        self.assertEqual(res_global["storageAfter"].get("safekids_food_age_filter"), "preschool")
+        self.assertEqual(res_global["storageAfter"].get("safekids_listen_age_filter"), "preschool")
+        self.assertIn("Preschool (Ages 4–5)", res_global["bpStageHeadline"])
 
 
 if __name__ == "__main__":

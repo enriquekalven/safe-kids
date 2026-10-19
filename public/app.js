@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
   restorePersistedDirectoryFilters();
   setupWorkspaceTabs();
   setupDailyBlueprintBuilder();
+  setupGlobalAgeBar();
+  setupClinicalDrawerToggleAll();
   renderChannels();
   setupChannelFilterListeners();
   setupChannelSearch();
@@ -18,6 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFoodFilterListeners();
   setupFoodSearch();
   setupFoodsExport();
+
+  renderListenItems();
+  setupListenFilterListeners();
+  setupListenSearch();
+  setupListenExport();
 
   setupSemCalculator();
   setupFoodCalculator();
@@ -2258,14 +2265,498 @@ const foodsData = [
   }
 ];
 
+// Comprehensive Database of 26 Screen-Free Audio, Podcasts & Living Books (Pillar 4: Listen & Read)
+const listenReadData = [
+  // --- DOMAIN 1: STEM & CURIOSITY PODCASTS (5 ITEMS) ---
+  {
+    name: "Brains On! Science Podcast for Kids",
+    creator: "American Public Media (Molly Bloom & Kid Co-Hosts)",
+    age: ["early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Early Elem (6–7), Middle Elem (8–9) & Pre-Teen (10–12)",
+    category: "stem-podcast",
+    categoryLabel: "STEM & Curiosity Podcasts",
+    stimulusScore: "2/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)",
+    trapReplaced: "Backseat YouTube Shorts & Hyper-Edited 'Science Stunt' Videos (MrBeast-Style Rapid Cuts)",
+    whyEducatorsApprove: "Co-hosted each week by a real child and interviewed university scientists. Without screen visuals doing the work, children must construct mental models of sound waves, tectonic plates, and microbiology in their own visual association cortex.",
+    languageSkills: ["Default Mode Network Visual Imagery", "Tier-2 & Tier-3 STEM Vocabulary", "Hypothesis & Mystery Deduction", "Sustained 25-Min Auditory Working Memory"],
+    dialogicPrompt: "Pause during the 'Mystery Sound' segment before the answer is revealed and ask: 'Close your eyes—what material (metal, water, wood) do you picture making that vibration?'",
+    startWith: ["How Do Airplanes Stay in the Sky?", "Why Do Dogs Sniff Butts?", "The Secret Life of Soil & Fungi"],
+    researchAnchor: "Hutton et al. (2018) Pediatrics 'Goldilocks' fMRI Study; Romeo et al. (2018) Conversational Turn-Taking",
+    link: "https://www.brainson.org/"
+  },
+  {
+    name: "But Why: A Podcast for Curious Kids",
+    creator: "Vermont Public / NPR (Jane Lindholm & Melo)",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Elementary (6–9)",
+    category: "stem-podcast",
+    categoryLabel: "STEM & Curiosity Podcasts",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Dinner-Prep Tablet Pacification &Loud Commercial Kids' YouTube Channels",
+    whyEducatorsApprove: "Features a warm, unhurried public-radio cadence with zero frantic sound effects. Real young children submit voice recordings of their biggest questions, which are answered directly by naturalists, astronomers, and pediatricians.",
+    languageSkills: ["Question Formulation & Inquiry Syntax", "Calm Prosodic Listening", "Causal Reasoning ('Why / Because')", "Receptive Language Comprehension"],
+    dialogicPrompt: "After listening, record a 15-second voice memo with your child on your phone asking their own 'Why?' question and brainstorm two testable guesses together.",
+    startWith: ["Why Is the Sky Blue?", "How Do Caterpillars Turn Into Butterflies?", "Why Do People Have Different Skin Colors?"],
+    researchAnchor: "Romeo et al. (2018) Psychological Science Conversational Turns & Broca's White Matter",
+    link: "https://www.vermontpublic.org/podcast/but-why-a-podcast-for-curious-kids"
+  },
+  {
+    name: "Wow in the World",
+    creator: "Tinkercast (Mindy Thomas & Guy Raz)",
+    age: ["preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Preschool (4–5) & Elementary (6–9)",
+    category: "stem-podcast",
+    categoryLabel: "STEM & Curiosity Podcasts",
+    stimulusScore: "2/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)",
+    trapReplaced: "Afternoon Cartoon Binging & Fast-Paced Animated Sci-Fi Shows",
+    whyEducatorsApprove: "Translates newly published peer-reviewed scientific papers into theater-of-the-mind audio expeditions. Scored 1/2 on Audio for theatrical character voices while maintaining 0/2 visual stimulus and 100% screen-free imagination.",
+    languageSkills: ["Narrative-to-Concept Mapping", "Mental Scene Construction", "Scientific Method Literacy", "Humorous Wordplay & Idioms"],
+    dialogicPrompt: "Ask at the dinner table: 'What was the real-world scientific study Mindy and Guy talked about today, and how could we draw it on a napkin?'",
+    startWith: ["The Great Pancake Freeze", "Octopus Brains in Nine Places", "Tardigrades: The Indestructible Water Bears"],
+    researchAnchor: "Hutton et al. (2018) Pediatrics Audio vs. Video fMRI Connectivity",
+    link: "https://tinkercast.com/shows/wow-in-the-world/"
+  },
+  {
+    name: "Tumble Science Podcast for Kids",
+    creator: "Tumble Media (Science Journalist Lindsay Patterson & Teacher Marshall Escamilla)",
+    age: ["early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Early Elem (6–7), Middle Elem (8–9) & Pre-Teen (10–12)",
+    category: "stem-podcast",
+    categoryLabel: "STEM & Curiosity Podcasts",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Algorithmic '5-Minute Crafts' & Clickbait Science Videos",
+    whyEducatorsApprove: "Called 'Radiolab for kids,' Tumble focuses not just on scientific facts, but on *how* scientists know what they know—teaching epistemic humility, failed experiments, and peer review through calm storytelling.",
+    languageSkills: ["Epistemic Reasoning & Evidence Evaluation", "Academic Tier-2 Discourse", "Auditory Sequence Retention", "Active Listening Focus"],
+    dialogicPrompt: "Ask your child: 'What did the scientist in this episode think was true at first, and what clue changed their mind?'",
+    startWith: ["The Cave of the Glowing Skulls", "The Whale Poop Expedition", "How Do We Know Dinosaurs Had Feathers?"],
+    researchAnchor: "Hirsh-Pasek et al. (2015) Active Minds-On Inquiry; Hutton et al. (2018) Pediatrics",
+    link: "https://www.sciencepodcastforkids.com/"
+  },
+  {
+    name: "Moment of Um (Daily 3-Minute Micro-Inquiry)",
+    creator: "APM Studios (Brains On! Universe)",
+    age: ["preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Preschool (4–5) & Elementary (6–9)",
+    category: "stem-podcast",
+    categoryLabel: "STEM & Curiosity Podcasts",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "60-Second YouTube Shorts, TikTok Loops & Toothbrushing Screen Videos",
+    whyEducatorsApprove: "A single 3-minute screen-free question answered each day by an expert—perfectly sized for morning toothbrushing, tying shoes, or a short drive to school without triggering a visual dopamine loop.",
+    languageSkills: ["Concise Auditory Attention", "Daily Fact Retention", "Micro-Habit Transition Routine", "Oral Retelling Practice"],
+    dialogicPrompt: "Play one 3-minute episode while brushing teeth, then challenge your child to summarize the answer in 1 sentence before getting into the car.",
+    startWith: ["Why Do Cats Purr?", "How Do Glow Sticks Glow?", "Why Do Onions Make Us Cry?"],
+    researchAnchor: "Lillard & Peterson (2011) Executive Function Protection; Hutton et al. (2018)",
+    link: "https://www.brainson.org/page/moment-of-um"
+  },
+
+  // --- DOMAIN 2: CALM FOLKLORE & BEDTIME PODCASTS (5 ITEMS) ---
+  {
+    name: "Circle Round (WBUR / NPR Global Folktales)",
+    creator: "WBUR Boston Public Radio (Rebecca Sheir & Live Acoustic Musicians)",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Elementary (6–9)",
+    category: "story-podcast",
+    categoryLabel: "Calm Folklore & Bedtime Podcasts",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Pre-Bedtime Cartoons & Tablet Shows (Blue-Light Melatonin Suppression)",
+    whyEducatorsApprove: "Adapts folktales from around the world into 15–20 minute radio plays scored entirely with live acoustic instruments (cello, harp, clarinet, acoustic guitar) and ends every episode with a structured family conversation prompt.",
+    languageSkills: ["Cross-Cultural Narrative Schema", "Moral & Perspective-Taking Inference", "Acoustic Musical Appreciation", "Expressive Vocabulary"],
+    dialogicPrompt: "Use Circle Round's closing 'Now it's your turn' question before lights-out to practice 3 back-and-forth conversational turns (Romeo et al., 2018).",
+    startWith: ["The Violin in the Forest", "The Tortoise and the Geese", "The Magic Soup Pot"],
+    researchAnchor: "Hutton et al. (2018) Pediatrics fMRI Study; Chang et al. (2015) PNAS Melatonin Protection",
+    link: "https://www.wbur.org/circleround"
+  },
+  {
+    name: "Stories Podcast (Classic Fables & Original Literary Tales)",
+    creator: "Amanda Weldin & Daniel Hines",
+    age: ["preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Preschool (4–5) & Elementary (6–9)",
+    category: "story-podcast",
+    categoryLabel: "Calm Folklore & Bedtime Podcasts",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Passive Animated Fairy-Tale Videos & Algorithmic Story Channels",
+    whyEducatorsApprove: "Delivers rich literary prose and classic fables (Aesop, Andersen, original gentle adventures) at a calm storytelling pace that deliberately includes advanced descriptive adjectives for children to visualize.",
+    languageSkills: ["Story Grammar (Setting, Conflict, Resolution)", "Rich Adjective & Verb Imagery", "Sustained Narrative Listening", "Emotional Empathy"],
+    dialogicPrompt: "Hand your child blank paper and beeswax crayons while listening: 'Draw the main character's home exactly the way the narrator's words made it look in your head.'",
+    startWith: ["The Velveteen Rabbit Audio Retelling", "The Snow Queen's Garden", "Dog King of the Forest"],
+    researchAnchor: "Montag et al. (2015) Psychological Science Lexical Diversity; Hutton et al. (2018)",
+    link: "https://storiespodcast.com/"
+  },
+  {
+    name: "Julie's Library: Storytime with Julie Andrews",
+    creator: "APM Studios (Dame Julie Andrews & Emma Walton Hamilton)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Early Elem (6–7)",
+    category: "story-podcast",
+    categoryLabel: "Calm Folklore & Bedtime Podcasts",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Loud Animated Read-Along Videos with Flashing Text Boxes",
+    whyEducatorsApprove: "Julie Andrews and her daughter read cherished children's picture books aloud with gentle acoustic piano/violin underscore, modeling expressive prosody, breath control, and a love of physical books.",
+    languageSkills: ["Prosodic Fluency Modeling", "Phonological & Rhyming Sensitivity", "Literary Appreciation", "Parent-Child Shared Attention"],
+    dialogicPrompt: "Check out the physical picture book from your local library and let your child turn the physical pages at the chime while listening to Julie Andrews read.",
+    startWith: ["The Serious Goose", "Marilyn's Monster", "The Hike"],
+    researchAnchor: "Whitehurst et al. (1988) Dialogic Reading; AAP (2014) Literacy Promotion Policy",
+    link: "https://www.julieslibraryshow.org/"
+  },
+  {
+    name: "Greeking Out from National Geographic Kids",
+    creator: "National Geographic Kids (Kenny Curtis & Torpey)",
+    age: ["middle-elementary", "preteen"],
+    ageLabel: "Middle Elementary (8–9) & Pre-Teens (10–12)",
+    category: "story-podcast",
+    categoryLabel: "Calm Folklore & Bedtime Podcasts",
+    stimulusScore: "2/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)",
+    trapReplaced: "Fast-Cut Gaming Streams & Superhero Action Cartoons",
+    whyEducatorsApprove: "Retells classical Greek, Norse, and world mythology alongside the real ancient history and geography behind the myths—giving 8–12-year-olds complex character webs and classical allusions to hold in working memory.",
+    languageSkills: ["Classical Root Words & Etymology", "Multi-Episode Plot Working Memory", "Historical & Geographic Context", "Complex Literary Allusions"],
+    dialogicPrompt: "Keep a physical world atlas or globe nearby and find the real Mediterranean islands, mountains, or constellations mentioned in the myth.",
+    startWith: ["Jason and the Argonauts", "The Odyssey: Perilous Journey", "Athena and Arachne"],
+    researchAnchor: "Diamond (2013) Working Memory & Cognitive Flexibility; Hutton et al. (2018)",
+    link: "https://kids.nationalgeographic.com/podcasts/greeking-out"
+  },
+  {
+    name: "Nothing Much Happens (Kids & Family Bedtime Edition) & Gardenkeeper Gus",
+    creator: "Kathryn Nicolai / Calm Acoustic Sleep Storytelling",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Elementary (6–9)",
+    category: "story-podcast",
+    categoryLabel: "Calm Folklore & Bedtime Podcasts",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Late-Evening TV Shows & Bedroom Tablet Viewing Before Sleep",
+    whyEducatorsApprove: "Deliberately plots cozy, sensory-rich nature and village vignettes where 'nothing much happens' (baking bread, rain on a greenhouse roof, gathering acorns), told twice at progressively slower ~60 BPM cadence to lower evening cortisol.",
+    languageSkills: ["Sensory & Biophilic Imagery", "Parasympathetic Vagal Down-Regulation", "Mindful Auditory Anchoring", "Zero-Cliffhanger Sleep Transition"],
+    dialogicPrompt: "Play at low volume in a 100% dark room 20 minutes before sleep: 'Notice three quiet sounds or cozy textures the narrator describes as you rest your eyes.'",
+    startWith: ["The Bake Shop in Autumn", "Rain on the Tin Roof", "A Walk Through the Apple Orchard"],
+    researchAnchor: "Chang et al. (2015) PNAS Blue-Light vs. Dark Sleep Latency; Dunckley (2015) ESS",
+    link: "https://www.nothingmuchhappens.com/"
+  },
+
+  // --- DOMAIN 3: CLASSIC AUDIOBOOKS & TACTILE STORY CARDS (4 ITEMS) ---
+  {
+    name: "Frog and Toad Audio Collection (Read by Author Arnold Lobel)",
+    creator: "Arnold Lobel (HarperAudio / Yoto & Tonies Classic Card)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Early Elem (6–7)",
+    category: "audiobook-card",
+    categoryLabel: "Classic Audiobooks & Story Cards",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "High-BPM Toddler Cartoons & Noisy Plastic Flashing Toys",
+    whyEducatorsApprove: "Recorded by Arnold Lobel himself at a gentle, deliberate 110-word-per-minute cadence with warm acoustic woodwind interludes. Twenty 4-minute stories celebrate patience, friendship, waiting for seeds to grow, and quiet humor.",
+    languageSkills: ["Conversational Dialogue Modeling", "Emotional Self-Regulation Humor", "Discrete 4-Min Story Arcs", "Print-to-Audio Tracking"],
+    dialogicPrompt: "Pair the audio card with the physical 'Frog and Toad Are Friends' I-Can-Read book so your 5–7-year-old tracks each printed line with their index finger.",
+    startWith: ["Spring", "A Lost Button", "Cookies (Willpower!)", "The Garden"],
+    researchAnchor: "Hutton et al. (2018) Pediatrics; Lillard & Peterson (2011) Low-Pacing Baseline",
+    link: "https://us.yotoplay.com/products/frog-and-toad-audio-collection"
+  },
+  {
+    name: "Winnie-the-Pooh & The House at Pooh Corner (Full-Cast Acoustic Audio)",
+    creator: "A.A. Milne (Performed by Alan Bennett / Stephen Fry & Chamber Ensemble)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Early Elem (6–7)",
+    category: "audiobook-card",
+    categoryLabel: "Classic Audiobooks & Story Cards",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Fast-Cut Commercial Franchises & Merchandised Toy Videos",
+    whyEducatorsApprove: "A.A. Milne's original 1926 prose is a masterpiece of gentle irony, rhythmic poetry ('hums'), and social-emotional acceptance across different temperaments (nervous Piglet, exuberant Tigger, melancholy Eeyore).",
+    languageSkills: ["Theory of Mind & Temperament Empathy", "Poetic Meter & Rhyming Cadence", "Rich British Literary Syntax", "Unhurried Afternoon Quiet Time"],
+    dialogicPrompt: "Ask after a chapter: 'How did Pooh help Piglet feel brave without rushing him or telling him not to be scared?'",
+    startWith: ["In Which Pooh Goes Visiting and Gets Into a Tight Place", "In Which Eeyore Loses a Tail", "An Expotition to the North Pole"],
+    researchAnchor: "Montag et al. (2015) Lexical Diversity in Classic Children's Literature",
+    link: "https://us.yotoplay.com/products/the-complete-winnie-the-pooh-bbc-collection"
+  },
+  {
+    name: "The Chronicles of Narnia & The Hobbit Unabridged Audio Classics",
+    creator: "C.S. Lewis & J.R.R. Tolkien (HarperAudio / Kenneth Branagh, Patrick Stewart, Andy Serkis)",
+    age: ["early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Early Elem (6–7), Middle Elem (8–9) & Pre-Teen (10–12)",
+    category: "audiobook-card",
+    categoryLabel: "Classic Audiobooks & Story Cards",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Backseat Road-Trip Movies & Endless Video Game Sessions",
+    whyEducatorsApprove: "Multi-hour unabridged literary epics stretch a child's sustained attention span from 5-minute fragments to 45-minute chapter arcs, requiring the prefrontal cortex to hold complex geography, riddles, and moral choices in working memory.",
+    languageSkills: ["Long-Horizon Episodic Working Memory", "Complex Subordinate Clause Syntax", "World-Building Mental Cartography", "Ethical & Moral Reasoning"],
+    dialogicPrompt: "Pause between chapters on road trips and have kids sketch their own hand-drawn map of Narnia or Middle-earth in a travel notebook.",
+    startWith: ["The Lion, the Witch and the Wardrobe (Ch. 1: Lucy Looks Into a Wardrobe)", "The Magician's Nephew", "The Hobbit: Riddles in the Dark"],
+    researchAnchor: "Hutton et al. (2018) Pediatrics; Diamond (2013) Sustained Working Memory",
+    link: "https://www.harpercollins.com/blogs/harperkids/the-chronicles-of-narnia"
+  },
+  {
+    name: "Prokofiev's Peter and the Wolf & Saint-Saëns' Carnival of the Animals",
+    creator: "Maestro Classics / London Philharmonic Orchestra Story Cards",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "All Ages 2–9 (Toddlers through Middle Elementary)",
+    category: "audiobook-card",
+    categoryLabel: "Classic Audiobooks & Story Cards",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Synthetic 130-BPM Nursery Rhyme Loops & Auto-Tuned Kid Pop",
+    whyEducatorsApprove: "Introduces young ears to real orchestral timbre and leitmotifs: the bird is a flute, the duck is an oboe, the cat is a clarinet, the wolf is three French horns, and the swan is a solo cello.",
+    languageSkills: ["Auditory Timbre & Pitch Discrimination", "Musical Leitmotif Recognition", "Emotional-Acoustic Mapping", "Active Listening Without Visual Crutches"],
+    dialogicPrompt: "Play 'Guess the Character by the Instrument': pause when the oboe or French horn enters and ask which animal just stepped into the meadow.",
+    startWith: ["Peter and the Wolf (Full Orchestral Story)", "The Swan (Carnival of the Animals)", "The Sorcerer's Apprentice"],
+    researchAnchor: "Anderson & Pempek (2005) Auditory Processing; Kuhl (2007) Acoustic Feature Mapping",
+    link: "https://www.maestroclassics.com/"
+  },
+
+  // --- DOMAIN 4: SCIENCE-OF-READING PHONICS DECODABLES (4 ITEMS) ---
+  {
+    name: "Bob Books Set 1–5: Systematic Beginning & Advancing Readers",
+    creator: "Bobby Lynn Maslen & John R. Maslen (Scholastic Print Box Sets)",
+    age: ["preschool", "early-elementary"],
+    ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
+    category: "phonics-decodable",
+    categoryLabel: "Science-of-Reading Phonics Decodables",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Gamified 'Sight-Word Guessing' Apps & Flashy Edutainment Subscriptions",
+    whyEducatorsApprove: "Book 1 uses only four letters (M, A, T, S) so a 4- or 5-year-old can decode the entire physical book ('Mat sat. Sam sat.') on day one. Minimalist two-color line drawings prevent picture-guessing ('three-cueing') and wire orthographic mapping.",
+    languageSkills: ["Grapheme-to-Phoneme Blending (CVC)", "Orthographic Mapping (Left Fusiform Gyrus)", "Left-to-Right Saccadic Eye Tracking", "Intrinsic 'I Read a Whole Book!' Mastery"],
+    dialogicPrompt: "Have your child tap under each letter with their finger to sound out /m/-/a/-/t/, then slide their finger smoothly across the word to blend 'mat!'",
+    startWith: ["Set 1 Book 1: Mat", "Set 2: Advancing Beginners (Short Vowels)", "Set 3: Word Families & Consonant Blends"],
+    researchAnchor: "Castles, Rastle & Nation (2018) Psychological Science in the Public Interest: Ending the Reading Wars",
+    link: "https://bobbooks.com/"
+  },
+  {
+    name: "Primary Phonics & Explode The Code Decodable Storybooks",
+    creator: "Barbara W. Makar / Hall (Educators Publishing Service — Orton-Gillingham Print)",
+    age: ["preschool", "early-elementary"],
+    ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
+    category: "phonics-decodable",
+    categoryLabel: "Science-of-Reading Phonics Decodables",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Noisy Electronic Phonics Toys & Unstructured Leveled Readers",
+    whyEducatorsApprove: "Gold-standard Orton-Gillingham-aligned physical decodable storybooks and pencil-and-paper workbooks used by reading specialists for 40+ years. Strictly controls phonetic scope and sequence so children never have to guess unlearned spelling patterns.",
+    languageSkills: ["Systematic Synthetic Phonics", "Consonant Digraphs (sh, ch, th, wh)", "Silent-E & Vowel Team Decoding", "Pencil-to-Paper Kinesthetic Spelling"],
+    dialogicPrompt: "Before opening the storybook, build 3 target words from the story on the table using physical wooden or magnetic letters, swapping one vowel at a time (cat -> cot -> cut).",
+    startWith: ["Primary Phonics Set 1: Short Vowel Storybooks (Mac and Tab)", "Explode The Code Book 1", "Primary Phonics Set 2: Long Vowels (CVCE)"],
+    researchAnchor: "National Reading Panel (2000) & Castles et al. (2018) Systematic Phonics Consensus",
+    link: "https://epslearning.com/products/primary-phonics"
+  },
+  {
+    name: "Flyleaf Publishing 'Books to Remember' Emergent Decodable Series",
+    creator: "Laura Appleton-Smith (Flyleaf Publishing)",
+    age: ["preschool", "early-elementary"],
+    ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
+    category: "phonics-decodable",
+    categoryLabel: "Science-of-Reading Phonics Decodables",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Repetitive Nonsense Phonics Drills & Digital Reading Streak Apps",
+    whyEducatorsApprove: "Combines strict cumulative phonics decodability with rich watercolor artwork and genuine literary story arcs—bridging the gap between phonemic decoding and reading comprehension.",
+    languageSkills: ["Cumulative Phonetic Decoding", "Reading Comprehension & Inference", "Syllable Division (Closed/Open)", "Oral Reading Prosody"],
+    dialogicPrompt: "Use the inside front cover's warm-up word chart for 60 seconds, then read the story together and ask: 'Why did the character make that choice at the end?'",
+    startWith: ["I Am Sam (Foundational CVC)", "The Sunset Pond", "Bess Makes a Nest"],
+    researchAnchor: "Castles et al. (2018) Science of Reading;Scarborough's Reading Rope (2001)",
+    link: "https://flyleafpublishing.com/"
+  },
+  {
+    name: "Read Write Inc. Phonics Book Bag Books & Usborne Phonics Readers",
+    creator: "Ruth Miskin (Oxford University Press) & Usborne Print",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Early Elem (6–7)",
+    category: "phonics-decodable",
+    categoryLabel: "Science-of-Reading Phonics Decodables",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Autoplay Alphabet Songs & Flashing Letter-Tap Tablet Games",
+    whyEducatorsApprove: "Uses 'Fred Talk' oral sound-blending games for ages 3–4 followed by color-banded decodable print books for ages 4–7—teaching pure phoneme pronunciation (/mmmm/, not 'muh') for effortless blending.",
+    languageSkills: ["Pure Phoneme Articulation (No Schwa)", "Rhyming & Alliteration Awareness", "Sound-Blending Automaticity", "Partner Reading Turn-Taking"],
+    dialogicPrompt: "Play 'Fred Talk' at the breakfast table with zero screens: 'Can you pass me the c-u-p? Now let's put on your h-a-t!'",
+    startWith: ["Sound Blending Books 1–5", "Red Ditty Books", "Fat Cat on a Mat (Usborne Phonics)"],
+    researchAnchor: "Rose Report (2006) UK Synthetic Phonics Review; Castles et al. (2018)",
+    link: "https://home.oxfordowl.co.uk/reading/reading-schemes-oxford-levels/read-write-inc-phonics-guide/"
+  },
+
+  // --- DOMAIN 5: CALDECOTT, NEWBERY & READ-ALOUD LIVING BOOKS (4 ITEMS) ---
+  {
+    name: "The Complete Tales of Beatrix Potter (Original Unabridged Hardcover)",
+    creator: "Beatrix Potter (Frederick Warne & Co. — 1902 Original Text & Watercolors)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Early Elem (6–7)",
+    category: "living-book",
+    categoryLabel: "Caldecott & Read-Aloud Living Books",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Fast-Cut CGI Animal Reboots & Simplified Board-Book Adaptations",
+    whyEducatorsApprove: "Beatrix Potter respected young children's intellect by pairing serene botanical and naturalist watercolors with precise, elevated vocabulary ('soporific', 'implored', 'exertions', 'gooseberry net') learned effortlessly in context.",
+    languageSkills: ["1.7x Rare Tier-2 Vocabulary Acquisition", "Botanical & Naturalist Observation", "Complex Sentence Syntax", "Calm Visual Gaze Fixation"],
+    dialogicPrompt: "When you read 'the effect of eating too much lettuce is soporific,' ask your child to look at the watercolour of the sleeping bunnies and guess what 'soporific' means!",
+    startWith: ["The Tale of Peter Rabbit", "The Tale of Benjamin Bunny", "The Tale of Jemima Puddle-Duck", "The Tale of Jeremy Fisher"],
+    researchAnchor: "Montag, Jones & Smith (2015) Psychological Science: Picture Books & Lexical Diversity",
+    link: "https://www.penguinrandomhouse.com/series/BPO/beatrix-potter/"
+  },
+  {
+    name: "Robert McCloskey & Virginia Lee Burton Caldecott Picture Book Treasury",
+    creator: "Robert McCloskey (*Blueberries for Sal*, *Make Way for Ducklings*) & Virginia Lee Burton (*The Little House*, *Mike Mulligan*)",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Early Elem (6–7)",
+    category: "living-book",
+    categoryLabel: "Caldecott & Read-Aloud Living Books",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Noisy Battery-Operated Sound Books & Hyper-Saturated Toddlers' Cartoons",
+    whyEducatorsApprove: "Panoramic sepia, charcoal, and watercolor spreads invite slow visual scanning (15–30 seconds per page) while onomatopoeic prose ('Kuplink, kuplank, kuplunk!') builds rhythmic auditory memory and emotional security.",
+    languageSkills: ["Slow Visual Detail Scanning", "Seasonal & Historical Time Concepts", "Parallel Plot Comparison (Sal & Little Bear)", "Dialogic Question-Asking"],
+    dialogicPrompt: "Practice Whitehurst's PEER dialogic loop on each spread: Prompt ('Where is the mother duck looking?'), Evaluate, Expand, and Repeat.",
+    startWith: ["Blueberries for Sal", "Make Way for Ducklings", "Mike Mulligan and His Steam Shovel", "The Little House"],
+    researchAnchor: "Whitehurst et al. (1988) Developmental Psychology Dialogic Reading; Parish-Morris et al. (2013)",
+    link: "https://www.ala.org/alsc/awardsgrants/bookmedia/caldecott"
+  },
+  {
+    name: "E.B. White's Family Read-Aloud Trilogy (*Charlotte's Web*, *Stuart Little*, *The Trumpet of the Swan*)",
+    creator: "E.B. White & Garth Williams Illustrations (HarperCollins Print)",
+    age: ["early-elementary", "middle-elementary"],
+    ageLabel: "Early Elementary (6–7) & Middle Elementary (8–9)",
+    category: "living-book",
+    categoryLabel: "Caldecott & Read-Aloud Living Books",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Evening Sitcoms, YouTube Gaming Let's Plays & Solo Tablet Time",
+    whyEducatorsApprove: "Reading one chapter aloud together each night after dinner builds a multi-week family ritual. E.B. White's luminous prose cultivates deep empathy, loyalty, natural science observation (how orb spiders spin webs), and emotional resilience.",
+    languageSkills: ["Multi-Week Episodic Memory", "Deep Theory-of-Mind Empathy", "Figurative Language & Simile", "Listening Comprehension Above Reading Level"],
+    dialogicPrompt: "Note that a child's *listening comprehension level* stays 2–3 grade levels above their independent reading level until age 13—pause to savor words like 'salutations', 'magnum opus', and 'radiant'.",
+    startWith: ["Charlotte's Web (Ch. 1: Before Breakfast)", "The Trumpet of the Swan", "Stuart Little"],
+    researchAnchor: "AAP Policy Statement on Literacy Promotion (High et al., Pediatrics, 2014); Montag et al. (2015)",
+    link: "https://www.harpercollins.com/products/charlottes-web-e-b-white"
+  },
+  {
+    name: "David Macaulay's *The Way Things Work Now* & DK Smithsonian Visual Encyclopedias",
+    creator: "David Macaulay (HMH) & DK Smithsonian Print Reference",
+    age: ["early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Early Elem (6–7), Middle Elem (8–9) & Pre-Teen (10–12)",
+    category: "living-book",
+    categoryLabel: "Caldecott & Read-Aloud Living Books",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "late-Night Wikipedia Rabbit Holes, YouTube 'Explainer' Binging & Tablet Browsing",
+    whyEducatorsApprove: "Oversized physical hardcover cutaway diagrams (gears, levers, locks, jet engines, silicon chips, ocean trenches, and anatomy) let curious 6–12-year-olds study complex systems in bed for hours with zero blue light or algorithmic rabbit holes.",
+    languageSkills: ["Mechanical & Systems Diagram Literacy", "Spatial Cross-Section Reasoning", "Non-Fiction Index & Glossary Navigation", "Self-Directed Deep Focus"],
+    dialogicPrompt: "Leave 'The Way Things Work Now' open on the kitchen counter or bedside table: trace the path of a lever, pulley, or lock mechanism with your finger and find a real one in your house.",
+    startWith: ["The Way Things Work Now (Mechanics of Movement)", "DK Knowledge Encyclopedia: Ocean & Space", "Castle & Cathedral (Architectural Cutaways)"],
+    researchAnchor: "Hirsh-Pasek et al. (2015) Meaningful Context; Chang et al. (2015) Print vs. Light-Emitting eReaders",
+    link: "https://www.dk.com/us/category/childrens-encyclopedias/"
+  },
+
+  // --- DOMAIN 6: SCREEN-FREE TACTILE AUDIO PLAYERS & LIBRARY INFRASTRUCTURE (4 ITEMS) ---
+  {
+    name: "Yoto Player (3rd Gen) & Yoto Mini + 'Make Your Own' (MYO) NFC Cards",
+    creator: "Yoto Ltd. (Montessori-Inspired Tactile NFC Audio Player)",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Toddlers through Pre-Teens)",
+    category: "hardware-player",
+    categoryLabel: "Screen-Free Players & Library Tools",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Personal Kid Tablets, Smartphones & Always-On Bedroom Voice Assistants",
+    whyEducatorsApprove: "Designed from Montessori principles: zero microphone, zero camera, zero browser, and zero ads. Children insert physical NFC cards to play audiobooks, Yoto Daily, or parent-recorded 'Make Your Own' MP3 cards, with an optional amber/green OK-to-wake nightlight.",
+    languageSkills: ["Child-Directed Tactile Autonomy", "Screen-Free Bedtime & Quiet-Time Ritual", "Parent/Grandparent Voice Bonding (MYO Cards)", "Independent Chapter Navigation"],
+    dialogicPrompt: "Use blank 'Make Your Own' (MYO) cards to record grandparents reading family stories or link RSS feeds of Brains On! and Circle Round for 100% screen-free playback.",
+    startWith: ["Yoto Make Your Own (MYO) 10-Card Pack", "Yoto Daily (Jake's Screen-Free Daily Micro-Podcast)", "Classical Sleep Radio & Brown Noise Timer"],
+    researchAnchor: "Hutton et al. (2018) Pediatrics Audio fMRI; Chang et al. (2015) Zero Blue-Light Bedroom Standard",
+    link: "https://us.yotoplay.com/"
+  },
+  {
+    name: "Toniebox Tactile Figurine Audio Speaker Cube + Open-Source TeddyCloud",
+    creator: "boxine GmbH (Tonies) & TeddyCloud Self-Hosted FOSS Firmware/Server",
+    age: ["toddler", "preschool", "early-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Early Elem (6–7)",
+    category: "hardware-player",
+    categoryLabel: "Screen-Free Players & Library Tools",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Toddler Touchscreens, YouTube Nursery Rhyme Loops & Smart Speakers",
+    whyEducatorsApprove: "A soft, tumble-proof padded speaker cube with zero screen: toddlers place a magnetic hand-painted story figurine on top to start playback, pinch the big/little ears for volume, and tap the side to skip tracks. Tech-savvy parents can also run open-source **TeddyCloud** to host custom local audio.",
+    languageSkills: ["3D Tactile Object-to-Story Mapping", "Autonomous Fine-Motor Control for Ages 2–5", "Repeated Story Listening Mastery", "Zero-Screen Rest Time"],
+    dialogicPrompt: "Use 'Creative-Tonies' (90 minutes of custom upload space) to load public-domain LibriVox stories or home recordings of parents singing bedtime lullabies.",
+    startWith: ["Creative-Tonie (Custom Family Audio)", "The Gruffalo & Room on the Broom Audio Tonie", "National Geographic Kids Whale & Dinosaur Tonies"],
+    researchAnchor: "AAP (2016) Media & Young Minds; Kuhl (2007) Acoustic Language Processing",
+    link: "https://us.tonies.com/"
+  },
+  {
+    name: "Voxblock Screen-Free Offline Audiobook Player (Zero Wi-Fi / Physical Blocks)",
+    creator: "Voxblock UK (100% Offline Physical Cartridge Audiobook Player)",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary"],
+    ageLabel: "Toddlers (2–3), Preschool (4–5) & Elementary (6–9)",
+    category: "hardware-player",
+    categoryLabel: "Screen-Free Players & Library Tools",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Cloud-Connected Tablets & App-Dependent Streaming Devices",
+    whyEducatorsApprove: "Requires zero Wi-Fi, zero Bluetooth, zero smartphone app setup, and zero cloud accounts right out of the box. Children snap a physical cassette-sized book-block into the player and press physical Play/Pause/Chapter buttons—making it impossible to drift online.",
+    languageSkills: ["100% Offline Distraction-Free Listening", "Tactile Book-Block Library Curation", "Long-Form Chapter Attention", "Zero-Setup Caregiver/Grandparent Simplicity"],
+    dialogicPrompt: "Pack in a car caddy or camping bag alongside physical paperbacks so children can listen on flights and road trips with zero Wi-Fi or battery anxiety.",
+    startWith: ["Paddington Bear Audio Block", "The Railway Children Audio Block", "Swallows and Amazons Audio Block"],
+    researchAnchor: "Hutton et al. (2018) Pediatrics; 5Rights Foundation (2021) Privacy-by-Design",
+    link: "https://voxblock.co.uk/"
+  },
+  {
+    name: "Libby / Hoopla Public Library Audio & Print Hold Pipeline ($0 Municipal Card)",
+    creator: "OverDrive (Libby), Hoopla Digital & LibriVox Public Domain",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (100% Free with Municipal Library Card)",
+    category: "hardware-player",
+    categoryLabel: "Screen-Free Players & Library Tools",
+    stimulusScore: "1/10",
+    stimulusClass: "stimulus-low",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
+    trapReplaced: "Commercial Paid App Subscriptions & Ad-Supported Video Channels",
+    whyEducatorsApprove: "Every public library card unlocks thousands of free, unabridged children's audiobooks (via Libby/Hoopla) and physical weekly book crates. Keep the parent's phone out of sight on a high shelf and route audio to a simple kitchen/living-room Bluetooth speaker.",
+    languageSkills: ["Weekly Physical Library Ritual", "Unlimited Multi-Genre Vocabulary Exposure", "Zero-Cost Equity & Access", "Family Read-Aloud Habit Formation"],
+    dialogicPrompt: "Establish a weekly 'Saturday Morning Library Basket' ritual: let each child pick 5 physical non-fiction books, 5 picture/chapter books, and 1 family audiobook for the week's car rides.",
+    startWith: ["Libby Kids Reading Room Filter (Audiobooks)", "LibriVox Free Public-Domain Children's Classics (MP3)", "Local Public Library '1,000 Books Before Kindergarten' Program"],
+    researchAnchor: "High et al. (2014) AAP Policy Statement: Literacy Promotion as an Essential Component of Primary Care",
+    link: "https://www.overdrive.com/apps/libby"
+  }
+];
+
 // ==================== DETERMINISTIC SEM-10 & NFI-10 ORACLES & SECURITY HELPERS ====================
 const ALLOWED_AGE_FILTERS = new Set(['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
 const ALLOWED_GAME_DOMAINS = new Set(['all', 'logic', 'spatial', 'coding', 'sandbox', 'stem', 'sel']);
 const ALLOWED_GAME_STOPPING_FILTERS = new Set(['all', 'discrete-levels', 'calm-toybox', 'deep-sandbox', 'co-play']);
 const ALLOWED_FOOD_DOMAINS = new Set(['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps']);
-const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'lockdown', 'all']);
+const ALLOWED_LISTEN_DOMAINS = new Set(['all', 'stem-podcast', 'story-podcast', 'audiobook-card', 'phonics-decodable', 'living-book', 'hardware-player']);
+const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown', 'all']);
 const ALLOWED_BLUEPRINT_AGES = new Set(['under-2', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
-const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'lockdown'];
+const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown'];
 
 const STORAGE_KEYS = {
   CHANNEL_AGE: 'safekids_channel_age_filter',
@@ -2274,6 +2765,8 @@ const STORAGE_KEYS = {
   GAME_STOPPING: 'safekids_game_stopping_filter',
   FOOD_AGE: 'safekids_food_age_filter',
   FOOD_DOMAIN: 'safekids_food_domain_filter',
+  LISTEN_AGE: 'safekids_listen_age_filter',
+  LISTEN_DOMAIN: 'safekids_listen_domain_filter',
   ACTIVE_TAB: 'safekids_active_tab',
   BLUEPRINT_AGE: 'safekids_blueprint_age'
 };
@@ -2541,6 +3034,67 @@ function getFoodVisualMeta(f) {
   };
 }
 
+function getListenVisualMeta(item) {
+  const cat = (item && item.category) ? item.category : '';
+  if (cat === 'hardware-player' || cat === 'audiobook-card') {
+    return {
+      src: 'images/rec-4-offline-travel.jpg',
+      alt: 'Screen-free tactile audio player and physical story cards illustration',
+      kicker: `Pillar 4 • ${item.categoryLabel || 'Tactile Screen-Free Audio'}`,
+      sub: 'Zero Blue Light • Child-Directed Physical Cards'
+    };
+  }
+  return {
+    src: 'images/rec-10-listen-read.jpg',
+    alt: 'Warm screen-free podcast listening and dialogic shared picture-book reading illustration',
+    kicker: `Pillar 4 • ${item.categoryLabel || 'Screen-Free Audio & Living Books'}`,
+    sub: 'Default Mode Network Imagery • Tier-2 Vocabulary'
+  };
+}
+
+// ==================== PROGRESSIVE DISCLOSURE CLINICAL DRAWER HELPER ====================
+let expandAllClinicalDrawers = false;
+
+function appendClinicalDrawer(body, card, drawerNodes) {
+  const toggleBtn = document.createElement('button');
+  toggleBtn.type = 'button';
+  toggleBtn.className = 'card-drawer-toggle';
+  toggleBtn.setAttribute('aria-expanded', expandAllClinicalDrawers ? 'true' : 'false');
+  toggleBtn.textContent = expandAllClinicalDrawers
+    ? '🔬 \u2212 Hide Clinical Details & Parent Guide'
+    : '🔬 + Why It Works, Parent Guide & Citations';
+
+  const drawer = document.createElement('div');
+  drawer.className = expandAllClinicalDrawers
+    ? 'card-clinical-drawer drawer-open'
+    : 'card-clinical-drawer';
+  if (expandAllClinicalDrawers) {
+    card.classList.add('card-expanded');
+  }
+
+  (drawerNodes || []).forEach(node => {
+    if (node) drawer.appendChild(node);
+  });
+
+  toggleBtn.addEventListener('click', () => {
+    const isOpen = drawer.classList.contains('drawer-open');
+    if (isOpen) {
+      drawer.classList.remove('drawer-open');
+      card.classList.remove('card-expanded');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.textContent = '🔬 + Why It Works, Parent Guide & Citations';
+    } else {
+      drawer.classList.add('drawer-open');
+      card.classList.add('card-expanded');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      toggleBtn.textContent = '🔬 \u2212 Hide Clinical Details & Parent Guide';
+    }
+  });
+
+  body.appendChild(toggleBtn);
+  body.appendChild(drawer);
+}
+
 // ==================== MULTI-DISCIPLINARY EXPERT LENS HELPERS (PhD / MD / GAME SYSTEMS) ====================
 function createExpertBridgeBox(variantClass, titleText, bodyText) {
   const box = document.createElement('div');
@@ -2694,7 +3248,7 @@ function getFoodSensoryBridge(f) {
   return 'Step 1 (Familiar Anchor): Keep the visual bento compartment shape kids expect → Step 2 (50/50 Sensory Bridge): Plate a zero-pressure "exploler bite" next to a safe favorite (Satter Division of Responsibility) → Step 3 (Target Whole Matrix): 100% NOVA-1 lunchbox swap.';
 }
 
-// ==================== CHANNEL, GAME & FOOD STATE INITIALIZATION ====================
+// ==================== CHANNEL, GAME, FOOD & LISTEN STATE INITIALIZATION ====================
 let currentChannelFilter = 'all';
 let currentChannelSearch = '';
 let currentGameAgeFilter = 'all';
@@ -2704,6 +3258,9 @@ let currentGameSearch = '';
 let currentFoodAgeFilter = 'all';
 let currentFoodDomainFilter = 'all';
 let currentFoodSearch = '';
+let currentListenAgeFilter = 'all';
+let currentListenDomainFilter = 'all';
+let currentListenSearch = '';
 let currentBlueprintAge = 'toddler';
 
 function syncFilterButtons(selector, activeValue) {
@@ -2724,6 +3281,8 @@ function restorePersistedDirectoryFilters() {
   currentGameStoppingFilter = readPersistedFilter(STORAGE_KEYS.GAME_STOPPING, ALLOWED_GAME_STOPPING_FILTERS, 'all');
   currentFoodAgeFilter = readPersistedFilter(STORAGE_KEYS.FOOD_AGE, ALLOWED_AGE_FILTERS, 'all');
   currentFoodDomainFilter = readPersistedFilter(STORAGE_KEYS.FOOD_DOMAIN, ALLOWED_FOOD_DOMAINS, 'all');
+  currentListenAgeFilter = readPersistedFilter(STORAGE_KEYS.LISTEN_AGE, ALLOWED_AGE_FILTERS, 'all');
+  currentListenDomainFilter = readPersistedFilter(STORAGE_KEYS.LISTEN_DOMAIN, ALLOWED_LISTEN_DOMAINS, 'all');
   currentBlueprintAge = readPersistedFilter(STORAGE_KEYS.BLUEPRINT_AGE, ALLOWED_BLUEPRINT_AGES, 'toddler');
 
   syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
@@ -2732,6 +3291,8 @@ function restorePersistedDirectoryFilters() {
   syncFilterButtons('#game-stopping-filters .filter-btn', currentGameStoppingFilter);
   syncFilterButtons('#food-age-filters .filter-btn', currentFoodAgeFilter);
   syncFilterButtons('#food-domain-filters .filter-btn', currentFoodDomainFilter);
+  syncFilterButtons('#listen-age-filters .filter-btn', currentListenAgeFilter);
+  syncFilterButtons('#listen-domain-filters .filter-btn', currentListenDomainFilter);
 }
 
 // ==================== CHANNEL CONTROLS & RENDERING ====================
@@ -2757,10 +3318,7 @@ function buildChannelCard(ch) {
 
   const body = document.createElement('div');
 
-  const vMeta = getChannelVisualMeta(ch);
-  body.appendChild(createCardVisualStrip(vMeta.src, vMeta.alt, vMeta.kicker, vMeta.sub));
-
-  // Header
+  // 1. Glanceable Header (Title + Calm Stimulus Score)
   const header = document.createElement('div');
   header.className = 'channel-header';
 
@@ -2776,9 +3334,9 @@ function buildChannelCard(ch) {
   header.appendChild(stimSpan);
   body.appendChild(header);
 
-  // Age Badge
+  // 2. Glanceable Age Badge
   const ageWrap = document.createElement('div');
-  ageWrap.style.marginBottom = '0.75rem';
+  ageWrap.style.marginBottom = '0.55rem';
   const ageBadge = document.createElement('span');
   ageBadge.className = 'tag-badge';
   ageBadge.style.background = '#e0f2fe';
@@ -2788,16 +3346,36 @@ function buildChannelCard(ch) {
   ageWrap.appendChild(ageBadge);
   body.appendChild(ageWrap);
 
-  // Description
+  // 3. Glanceable Summary
   const descP = document.createElement('p');
-  descP.className = 'channel-desc';
-  const descStrong = document.createElement('strong');
-  descStrong.textContent = 'Why This Channel: ';
-  descP.appendChild(descStrong);
-  descP.appendChild(document.createTextNode(ch.whyThisChannel));
+  descP.className = 'channel-desc card-summary-clamp';
+  descP.textContent = ch.whyThisChannel;
   body.appendChild(descP);
 
-  // Citation Box
+  // 4. Glanceable "Start With" Chips
+  if (ch.startWith && ch.startWith.length > 0) {
+    const swBox = document.createElement('div');
+    swBox.className = 'quick-start-strip';
+
+    const swTitle = document.createElement('span');
+    swTitle.className = 'quick-start-label';
+    swTitle.textContent = '🎬 Start With:';
+    swBox.appendChild(swTitle);
+
+    ch.startWith.forEach(sw => {
+      const badge = document.createElement('span');
+      badge.className = 'tag-badge quick-start-chip';
+      badge.textContent = sw;
+      swBox.appendChild(badge);
+    });
+    body.appendChild(swBox);
+  }
+
+  // 5. Progressive-Disclosure Clinical Drawer Nodes
+  const drawerNodes = [];
+  const vMeta = getChannelVisualMeta(ch);
+  drawerNodes.push(createCardVisualStrip(vMeta.src, vMeta.alt, vMeta.kicker, vMeta.sub));
+
   const citBox = document.createElement('div');
   citBox.className = 'citation-box';
 
@@ -2819,14 +3397,13 @@ function buildChannelCard(ch) {
 
   citBox.appendChild(resDiv);
   citBox.appendChild(semDiv);
-  body.appendChild(citBox);
+  drawerNodes.push(citBox);
 
-  // Checkmarks
   if (ch.checkmarks && ch.checkmarks.length > 0) {
     const ul = document.createElement('ul');
     ul.style.listStyle = 'none';
-    ul.style.margin = '0.75rem 0';
-    ul.style.fontSize = '0.85rem';
+    ul.style.margin = '0.6rem 0';
+    ul.style.fontSize = '0.82rem';
     ul.style.color = 'var(--text-muted)';
 
     ch.checkmarks.forEach(cm => {
@@ -2834,7 +3411,7 @@ function buildChannelCard(ch) {
       li.style.display = 'flex';
       li.style.alignItems = 'center';
       li.style.gap = '0.35rem';
-      li.style.marginBottom = '0.25rem';
+      li.style.marginBottom = '0.2rem';
 
       const tick = document.createElement('span');
       tick.style.color = 'var(--success)';
@@ -2845,46 +3422,10 @@ function buildChannelCard(ch) {
       li.appendChild(document.createTextNode(' ' + cm));
       ul.appendChild(li);
     });
-    body.appendChild(ul);
+    drawerNodes.push(ul);
   }
 
-  // Start With
-  if (ch.startWith && ch.startWith.length > 0) {
-    const swBox = document.createElement('div');
-    swBox.style.marginTop = '0.75rem';
-    swBox.style.padding = '0.6rem';
-    swBox.style.background = 'var(--bg-alt)';
-    swBox.style.borderRadius = 'var(--radius-sm)';
-
-    const swTitle = document.createElement('div');
-    swTitle.style.fontSize = '0.75rem';
-    swTitle.style.fontWeight = '700';
-    swTitle.style.color = 'var(--text-main)';
-    swTitle.style.marginBottom = '0.35rem';
-    swTitle.textContent = '🎬 Start With:';
-
-    const swList = document.createElement('div');
-    swList.style.display = 'flex';
-    swList.style.flexWrap = 'wrap';
-    swList.style.gap = '0.35rem';
-
-    ch.startWith.forEach(sw => {
-      const badge = document.createElement('span');
-      badge.className = 'tag-badge';
-      badge.style.background = '#ffffff';
-      badge.style.border = '1px solid var(--border-color)';
-      badge.style.color = 'var(--text-main)';
-      badge.textContent = sw;
-      swList.appendChild(badge);
-    });
-
-    swBox.appendChild(swTitle);
-    swBox.appendChild(swList);
-    body.appendChild(swBox);
-  }
-
-  // Educational PhD Lens: Off-Screen Transfer Activity
-  body.appendChild(
+  drawerNodes.push(
     createExpertBridgeBox(
       'expert-bridge-phd',
       '🎓 Educational PhD • Off-Screen Transfer Activity (Hirsh-Pasek et al., 2015):',
@@ -2892,6 +3433,7 @@ function buildChannelCard(ch) {
     )
   );
 
+  appendClinicalDrawer(body, card, drawerNodes);
   card.appendChild(body);
 
   // Action Link
@@ -2899,8 +3441,8 @@ function buildChannelCard(ch) {
   link.href = ch.link;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
-  link.className = 'btn btn-outline';
-  link.style.marginTop = '1rem';
+  link.className = 'btn btn-outline btn-sm';
+  link.style.marginTop = '0.75rem';
   link.style.width = '100%';
   link.style.justifyContent = 'center';
   link.appendChild(createExternalLinkSvg());
@@ -3207,10 +3749,7 @@ function buildGameCard(g) {
 
   const body = document.createElement('div');
 
-  const gMeta = getGameVisualMeta(g);
-  body.appendChild(createCardVisualStrip(gMeta.src, gMeta.alt, gMeta.kicker, gMeta.sub));
-
-  // Header
+  // 1. Glanceable Header (Title + Developer + Calm Stimulus Score)
   const header = document.createElement('div');
   header.className = 'channel-header';
 
@@ -3236,12 +3775,12 @@ function buildGameCard(g) {
   header.appendChild(stimSpan);
   body.appendChild(header);
 
-  // Age + Monetization Badges
+  // 2. Glanceable Age + Monetization + Stopping-Cue Pills
   const metaRow = document.createElement('div');
   metaRow.style.display = 'flex';
   metaRow.style.flexWrap = 'wrap';
   metaRow.style.gap = '0.35rem';
-  metaRow.style.margin = '0.6rem 0';
+  metaRow.style.margin = '0.5rem 0';
 
   const ageBadge = document.createElement('span');
   ageBadge.className = 'tag-badge';
@@ -3258,7 +3797,6 @@ function buildGameCard(g) {
   metaRow.appendChild(monBadge);
   body.appendChild(metaRow);
 
-  // Game Systems Expert Lens: Stopping-Cue / Session-Exit Friction + Co-Play Mode Row
   const stopProfile = getGameStoppingProfile(g);
   const stopRow = document.createElement('div');
   stopRow.className = 'stopping-cue-row';
@@ -3275,23 +3813,16 @@ function buildGameCard(g) {
   stopRow.appendChild(coPlayPill);
   body.appendChild(stopRow);
 
-  // Cognitive Focus
+  // 3. Glanceable Summary
+  const descP = document.createElement('p');
+  descP.className = 'channel-desc card-summary-clamp';
+  descP.textContent = g.whyEducatorsApprove;
+  body.appendChild(descP);
+
+  // 4. Glanceable Cognitive Focus Chips
   if (g.cognitiveSkills && g.cognitiveSkills.length > 0) {
-    const cogSection = document.createElement('div');
-    cogSection.style.marginBottom = '0.75rem';
-
-    const cogTitle = document.createElement('div');
-    cogTitle.style.fontSize = '0.75rem';
-    cogTitle.style.fontWeight = '700';
-    cogTitle.style.color = 'var(--text-light)';
-    cogTitle.style.textTransform = 'uppercase';
-    cogTitle.style.marginBottom = '0.25rem';
-    cogTitle.textContent = 'Cognitive Focus:';
-
     const cogList = document.createElement('div');
-    cogList.style.display = 'flex';
-    cogList.style.flexWrap = 'wrap';
-    cogList.style.gap = '0.25rem';
+    cogList.className = 'quick-start-strip';
 
     g.cognitiveSkills.forEach(cs => {
       const span = document.createElement('span');
@@ -3299,24 +3830,17 @@ function buildGameCard(g) {
       span.textContent = cs;
       cogList.appendChild(span);
     });
-
-    cogSection.appendChild(cogTitle);
-    cogSection.appendChild(cogList);
-    body.appendChild(cogSection);
+    body.appendChild(cogList);
   }
 
-  // Educator Backing
+  // 5. Progressive-Disclosure Clinical Drawer Nodes
+  const drawerNodes = [];
+  const gMeta = getGameVisualMeta(g);
+  drawerNodes.push(createCardVisualStrip(gMeta.src, gMeta.alt, gMeta.kicker, gMeta.sub));
+
   if (g.endorsements && g.endorsements.length > 0) {
     const endSection = document.createElement('div');
-    endSection.style.marginBottom = '0.75rem';
-
-    const endTitle = document.createElement('div');
-    endTitle.style.fontSize = '0.72rem';
-    endTitle.style.fontWeight = '700';
-    endTitle.style.color = 'var(--text-light)';
-    endTitle.style.textTransform = 'uppercase';
-    endTitle.style.marginBottom = '0.25rem';
-    endTitle.textContent = 'Educator Backing:';
+    endSection.style.marginBottom = '0.6rem';
 
     const endList = document.createElement('div');
     endList.style.display = 'flex';
@@ -3329,23 +3853,10 @@ function buildGameCard(g) {
       span.textContent = `★ ${ed}`;
       endList.appendChild(span);
     });
-
-    endSection.appendChild(endTitle);
     endSection.appendChild(endList);
-    body.appendChild(endSection);
+    drawerNodes.push(endSection);
   }
 
-  // Why Educators Approve
-  const descP = document.createElement('p');
-  descP.className = 'channel-desc';
-  descP.style.marginBottom = '0.75rem';
-  const descStrong = document.createElement('strong');
-  descStrong.textContent = 'Why Educators Approve: ';
-  descP.appendChild(descStrong);
-  descP.appendChild(document.createTextNode(g.whyEducatorsApprove));
-  body.appendChild(descP);
-
-  // Citation Box
   const citBox = document.createElement('div');
   citBox.className = 'citation-box';
 
@@ -3367,22 +3878,14 @@ function buildGameCard(g) {
 
   citBox.appendChild(resDiv);
   citBox.appendChild(semDiv);
-  body.appendChild(citBox);
+  drawerNodes.push(citBox);
 
-  // Calm & Ethical Design Highlights
   if (g.calmHighlights && g.calmHighlights.length > 0) {
     const calmBox = document.createElement('div');
     calmBox.style.background = 'var(--bg-alt)';
-    calmBox.style.padding = '0.65rem';
+    calmBox.style.padding = '0.6rem';
     calmBox.style.borderRadius = 'var(--radius-sm)';
-    calmBox.style.marginBottom = '0.75rem';
-
-    const calmTitle = document.createElement('div');
-    calmTitle.style.fontSize = '0.75rem';
-    calmTitle.style.fontWeight = '700';
-    calmTitle.style.color = 'var(--text-main)';
-    calmTitle.style.marginBottom = '0.3rem';
-    calmTitle.textContent = '🛡️ Calm & Ethical Design:';
+    calmBox.style.marginBottom = '0.6rem';
 
     const ul = document.createElement('ul');
     ul.style.listStyle = 'none';
@@ -3406,13 +3909,11 @@ function buildGameCard(g) {
       ul.appendChild(li);
     });
 
-    calmBox.appendChild(calmTitle);
     calmBox.appendChild(ul);
-    body.appendChild(calmBox);
+    drawerNodes.push(calmBox);
   }
 
-  // Educational PhD Lens: Screen-to-Tabletop Transfer
-  body.appendChild(
+  drawerNodes.push(
     createExpertBridgeBox(
       'expert-bridge-phd',
       '🎓 Educational PhD • Screen-to-Tabletop Transfer (Papert / Vygotsky):',
@@ -3420,17 +3921,17 @@ function buildGameCard(g) {
     )
   );
 
-  // Platforms
   const platDiv = document.createElement('div');
   platDiv.style.fontSize = '0.78rem';
   platDiv.style.color = 'var(--text-muted)';
-  platDiv.style.marginBottom = '0.5rem';
+  platDiv.style.marginTop = '0.4rem';
   const platStrong = document.createElement('strong');
   platStrong.textContent = 'Platforms: ';
   platDiv.appendChild(platStrong);
   platDiv.appendChild(document.createTextNode((g.platforms || []).join(' • ')));
-  body.appendChild(platDiv);
+  drawerNodes.push(platDiv);
 
+  appendClinicalDrawer(body, card, drawerNodes);
   card.appendChild(body);
 
   // Action Link
@@ -3438,7 +3939,7 @@ function buildGameCard(g) {
   link.href = g.link;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
-  link.className = 'btn btn-outline';
+  link.className = 'btn btn-outline btn-sm';
   link.style.marginTop = '0.75rem';
   link.style.width = '100%';
   link.style.justifyContent = 'center';
@@ -3744,10 +4245,7 @@ function buildFoodCard(f) {
 
   const body = document.createElement('div');
 
-  const fMeta = getFoodVisualMeta(f);
-  body.appendChild(createCardVisualStrip(fMeta.src, fMeta.alt, fMeta.kicker, fMeta.sub));
-
-  // Header
+  // 1. Glanceable Header (Title + Category + NFI-10 Score)
   const header = document.createElement('div');
   header.className = 'channel-header';
 
@@ -3773,12 +4271,12 @@ function buildFoodCard(f) {
   header.appendChild(nfiSpan);
   body.appendChild(header);
 
-  // Age Badge
+  // 2. Glanceable Age + NOVA-1 Badge
   const metaRow = document.createElement('div');
   metaRow.style.display = 'flex';
   metaRow.style.flexWrap = 'wrap';
   metaRow.style.gap = '0.35rem';
-  metaRow.style.margin = '0.6rem 0';
+  metaRow.style.margin = '0.5rem 0';
 
   const ageBadge = document.createElement('span');
   ageBadge.className = 'tag-badge';
@@ -3795,27 +4293,27 @@ function buildFoodCard(f) {
   metaRow.appendChild(novaBadge);
   body.appendChild(metaRow);
 
-  // Swap Box: Trap Replaced -> Whole-Food Upgrade
+  // 3. Glanceable Swap Box: Trap Replaced -> Whole-Food Upgrade
   const swapBox = document.createElement('div');
   swapBox.style.background = '#f0fdf4';
   swapBox.style.border = '1px solid #bbf7d0';
   swapBox.style.borderRadius = 'var(--radius-sm)';
-  swapBox.style.padding = '0.65rem';
-  swapBox.style.marginBottom = '0.75rem';
-  swapBox.style.fontSize = '0.82rem';
+  swapBox.style.padding = '0.55rem 0.65rem';
+  swapBox.style.marginBottom = '0.6rem';
+  swapBox.style.fontSize = '0.8rem';
 
   const trapDiv = document.createElement('div');
   trapDiv.style.color = '#991b1b';
-  trapDiv.style.marginBottom = '0.35rem';
+  trapDiv.style.marginBottom = '0.25rem';
   const trapStrong = document.createElement('strong');
-  trapStrong.textContent = '❌ Replaces UPF Trap: ';
+  trapStrong.textContent = '❌ Replaces Trap: ';
   trapDiv.appendChild(trapStrong);
   trapDiv.appendChild(document.createTextNode(f.trapReplaced));
 
   const upgDiv = document.createElement('div');
   upgDiv.style.color = '#14532d';
   const upgStrong = document.createElement('strong');
-  upgStrong.textContent = '✅ Whole-Food Upgrade: ';
+  upgStrong.textContent = '✅ Whole-Food Swap: ';
   upgDiv.appendChild(upgStrong);
   upgDiv.appendChild(document.createTextNode(f.wholeFoodSwap));
 
@@ -3823,23 +4321,10 @@ function buildFoodCard(f) {
   swapBox.appendChild(upgDiv);
   body.appendChild(swapBox);
 
-  // Key Brain & Growth Nutrients
+  // 4. Glanceable Key Nutrients Chips
   if (f.keyNutrients && f.keyNutrients.length > 0) {
-    const nutSection = document.createElement('div');
-    nutSection.style.marginBottom = '0.75rem';
-
-    const nutTitle = document.createElement('div');
-    nutTitle.style.fontSize = '0.75rem';
-    nutTitle.style.fontWeight = '700';
-    nutTitle.style.color = 'var(--text-light)';
-    nutTitle.style.textTransform = 'uppercase';
-    nutTitle.style.marginBottom = '0.25rem';
-    nutTitle.textContent = 'Key Brain & Growth Nutrients:';
-
     const nutList = document.createElement('div');
-    nutList.style.display = 'flex';
-    nutList.style.flexWrap = 'wrap';
-    nutList.style.gap = '0.25rem';
+    nutList.className = 'quick-start-strip';
 
     f.keyNutrients.forEach(kn => {
       const span = document.createElement('span');
@@ -3847,29 +4332,29 @@ function buildFoodCard(f) {
       span.textContent = kn;
       nutList.appendChild(span);
     });
-
-    nutSection.appendChild(nutTitle);
-    nutSection.appendChild(nutList);
-    body.appendChild(nutSection);
+    body.appendChild(nutList);
   }
 
-  // Why Pediatric Clinicians Approve
+  // 5. Progressive-Disclosure Clinical Drawer Nodes
+  const drawerNodes = [];
+  const fMeta = getFoodVisualMeta(f);
+  drawerNodes.push(createCardVisualStrip(fMeta.src, fMeta.alt, fMeta.kicker, fMeta.sub));
+
   const descP = document.createElement('p');
   descP.className = 'channel-desc';
-  descP.style.marginBottom = '0.75rem';
+  descP.style.marginBottom = '0.6rem';
   const descStrong = document.createElement('strong');
   descStrong.textContent = 'Why Clinicians Approve: ';
   descP.appendChild(descStrong);
   descP.appendChild(document.createTextNode(f.whyCliniciansApprove));
-  body.appendChild(descP);
+  drawerNodes.push(descP);
 
-  // Bioavailability Synergy & Choking/Allergen Safety Box
   const synBox = document.createElement('div');
   synBox.style.background = '#eff6ff';
   synBox.style.border = '1px solid #bfdbfe';
   synBox.style.borderRadius = 'var(--radius-sm)';
-  synBox.style.padding = '0.65rem';
-  synBox.style.marginBottom = '0.75rem';
+  synBox.style.padding = '0.6rem';
+  synBox.style.marginBottom = '0.6rem';
   synBox.style.fontSize = '0.8rem';
   synBox.style.color = '#1e3a8a';
 
@@ -3877,9 +4362,8 @@ function buildFoodCard(f) {
   synStrong.textContent = '🧬 Bioavailability Synergy & Prep Safety: ';
   synBox.appendChild(synStrong);
   synBox.appendChild(document.createTextNode(f.synergySafety));
-  body.appendChild(synBox);
+  drawerNodes.push(synBox);
 
-  // Citation & NFI-10 Breakdown Box
   const citBox = document.createElement('div');
   citBox.className = 'citation-box';
 
@@ -3901,10 +4385,9 @@ function buildFoodCard(f) {
 
   citBox.appendChild(resDiv);
   citBox.appendChild(nfiDiv);
-  body.appendChild(citBox);
+  drawerNodes.push(citBox);
 
-  // Pediatric Feeding MD Lens: 3-Step Picky-Eater Sensory Bridge
-  body.appendChild(
+  drawerNodes.push(
     createExpertBridgeBox(
       'expert-bridge-md',
       '🩺 Pediatric Feeding MD • 3-Step Picky-Eater Sensory Bridge (SOS / Birch, 1999):',
@@ -3912,6 +4395,7 @@ function buildFoodCard(f) {
     )
   );
 
+  appendClinicalDrawer(body, card, drawerNodes);
   card.appendChild(body);
 
   // Action Link
@@ -3919,7 +4403,7 @@ function buildFoodCard(f) {
   link.href = f.link;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
-  link.className = 'btn btn-outline';
+  link.className = 'btn btn-outline btn-sm';
   link.style.marginTop = '0.75rem';
   link.style.width = '100%';
   link.style.justifyContent = 'center';
@@ -4014,6 +4498,356 @@ function setupFoodSearch() {
   });
 }
 
+// ==================== LISTEN & READ (SCREEN-FREE AUDIO, PODCASTS & LIVING BOOKS) ====================
+function getFilteredListenItems() {
+  return listenReadData.filter(item => {
+    const ageVal = Array.isArray(item.age) ? item.age : [item.age || ''];
+    const matchesAge = currentListenAgeFilter === 'all' || ageVal.includes(currentListenAgeFilter);
+    const matchesDomain = currentListenDomainFilter === 'all' || item.category === currentListenDomainFilter;
+
+    const matchesSearch = !currentListenSearch ||
+      (item.name && item.name.toLowerCase().includes(currentListenSearch)) ||
+      (item.creator && item.creator.toLowerCase().includes(currentListenSearch)) ||
+      (item.formatBadge && item.formatBadge.toLowerCase().includes(currentListenSearch)) ||
+      (item.categoryLabel && item.categoryLabel.toLowerCase().includes(currentListenSearch)) ||
+      (item.whyNeurologistsApprove && item.whyNeurologistsApprove.toLowerCase().includes(currentListenSearch)) ||
+      (item.dialogicPrompt && item.dialogicPrompt.toLowerCase().includes(currentListenSearch)) ||
+      (item.researchAnchor && item.researchAnchor.toLowerCase().includes(currentListenSearch)) ||
+      (item.ageLabel && item.ageLabel.toLowerCase().includes(currentListenSearch)) ||
+      (item.literacySkills && item.literacySkills.some(ls => ls.toLowerCase().includes(currentListenSearch))) ||
+      (item.startWith && item.startWith.some(sw => sw.toLowerCase().includes(currentListenSearch)));
+
+    return matchesAge && matchesDomain && matchesSearch;
+  });
+}
+
+function setupListenExport() {
+  const btnCopyListen = document.getElementById('btn-copy-listen-list');
+  const btnExportListenJson = document.getElementById('btn-export-listen-json');
+  const btnExportListenCsv = document.getElementById('btn-export-listen-csv');
+
+  if (btnCopyListen) {
+    btnCopyListen.addEventListener('click', () => {
+      const activeItems = getFilteredListenItems();
+      const text = activeItems.map(item => `${item.name} (${item.categoryLabel} • SEM-10: ${item.stimulusScore}): ${item.link}`).join('\n');
+      safeCopyText(
+        text,
+        () => {
+          flashButtonSuccess(btnCopyListen, `✓ Copied ${activeItems.length} Audio & Book Picks!`);
+          if (window.trackSafeKidsEvent) {
+            window.trackSafeKidsEvent('export_listen_read', { format: 'clipboard', count: activeItems.length });
+          }
+        },
+        () => {
+          flashButtonSuccess(btnCopyListen, `✓ Prepared ${activeItems.length} Picks`);
+        }
+      );
+    });
+  }
+
+  if (btnExportListenJson) {
+    btnExportListenJson.addEventListener('click', () => {
+      const activeItems = getFilteredListenItems();
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        ageFilterApplied: currentListenAgeFilter,
+        domainFilterApplied: currentListenDomainFilter,
+        itemCount: activeItems.length,
+        items: activeItems.map(item => ({
+          name: item.name,
+          creator: item.creator,
+          ageBands: item.age,
+          ageLabel: item.ageLabel,
+          domain: item.category,
+          domainLabel: item.categoryLabel,
+          formatBadge: item.formatBadge,
+          sem10Score: item.stimulusScore,
+          sem10Breakdown: item.semBreakdown,
+          literacySkills: item.literacySkills,
+          startWith: item.startWith,
+          dialogicPrompt: item.dialogicPrompt,
+          researchAnchor: item.researchAnchor,
+          url: item.link
+        }))
+      };
+      triggerFileDownload(
+        `safekids-listen-read-${currentListenAgeFilter}-${currentListenDomainFilter}.json`,
+        JSON.stringify(payload, null, 2),
+        'application/json'
+      );
+      flashButtonSuccess(btnExportListenJson, '✓ Downloaded JSON!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_listen_read', { format: 'json', count: activeItems.length });
+      }
+    });
+  }
+
+  if (btnExportListenCsv) {
+    btnExportListenCsv.addEventListener('click', () => {
+      const activeItems = getFilteredListenItems();
+      const header = ['Title', 'Creator / Author', 'Age Group', 'Format Domain', 'Delivery Format', 'SEM-10 Score', 'SEM-10 Breakdown', 'Literacy & Cognitive Skills', 'Start With', 'Dialogic Reading & Serve-and-Return Prompt', 'Clinical Research Anchor', 'Official / Library URL'].map(sanitizeCsvCell);
+      const rows = activeItems.map(item => [
+        sanitizeCsvCell(item.name),
+        sanitizeCsvCell(item.creator),
+        sanitizeCsvCell(item.ageLabel),
+        sanitizeCsvCell(item.categoryLabel),
+        sanitizeCsvCell(item.formatBadge),
+        sanitizeCsvCell(item.stimulusScore),
+        sanitizeCsvCell(item.semBreakdown),
+        sanitizeCsvCell((item.literacySkills || []).join(' | ')),
+        sanitizeCsvCell((item.startWith || []).join(' | ')),
+        sanitizeCsvCell(item.dialogicPrompt),
+        sanitizeCsvCell(item.researchAnchor),
+        sanitizeCsvCell(item.link)
+      ].join(','));
+      const csvContent = [header.join(','), ...rows].join('\n');
+      triggerFileDownload(
+        `safekids-listen-read-${currentListenAgeFilter}-${currentListenDomainFilter}.csv`,
+        csvContent,
+        'text/csv;charset=utf-8;'
+      );
+      flashButtonSuccess(btnExportListenCsv, '✓ Downloaded CSV!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_listen_read', { format: 'csv', count: activeItems.length });
+      }
+    });
+  }
+}
+
+function buildListenCard(item) {
+  const card = document.createElement('div');
+  card.className = 'card listen-card';
+
+  const body = document.createElement('div');
+
+  // 1. Glanceable Header (Title + Creator + Calm Stimulus Score)
+  const header = document.createElement('div');
+  header.className = 'channel-header';
+
+  const titleWrap = document.createElement('div');
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'channel-name';
+  nameDiv.textContent = item.name;
+
+  const creatorDiv = document.createElement('div');
+  creatorDiv.style.fontSize = '0.75rem';
+  creatorDiv.style.color = '#92400e';
+  creatorDiv.style.fontWeight = '600';
+  creatorDiv.textContent = `${item.categoryLabel} • ${item.creator}`;
+
+  titleWrap.appendChild(nameDiv);
+  titleWrap.appendChild(creatorDiv);
+
+  const stimSpan = document.createElement('span');
+  stimSpan.className = `stimulus-tag ${item.stimulusClass}`;
+  stimSpan.textContent = `SEM-10: ${item.stimulusScore}`;
+
+  header.appendChild(titleWrap);
+  header.appendChild(stimSpan);
+  body.appendChild(header);
+
+  // 2. Glanceable Age + Screen-Free Format Badges
+  const metaRow = document.createElement('div');
+  metaRow.style.display = 'flex';
+  metaRow.style.flexWrap = 'wrap';
+  metaRow.style.gap = '0.35rem';
+  metaRow.style.margin = '0.5rem 0';
+
+  const ageBadge = document.createElement('span');
+  ageBadge.className = 'tag-badge';
+  ageBadge.style.background = '#e0f2fe';
+  ageBadge.style.color = '#0369a1';
+  ageBadge.style.fontWeight = '600';
+  ageBadge.textContent = item.ageLabel;
+
+  const formatBadge = document.createElement('span');
+  formatBadge.className = 'monetization-badge monetization-free';
+  formatBadge.textContent = item.formatBadge || '100% Screen-Free';
+
+  metaRow.appendChild(ageBadge);
+  metaRow.appendChild(formatBadge);
+  body.appendChild(metaRow);
+
+  // 3. Glanceable Summary
+  const descP = document.createElement('p');
+  descP.className = 'channel-desc card-summary-clamp';
+  descP.textContent = item.whyNeurologistsApprove;
+  body.appendChild(descP);
+
+  // 4. Glanceable "Start With" Chips
+  if (item.startWith && item.startWith.length > 0) {
+    const swBox = document.createElement('div');
+    swBox.className = 'quick-start-strip';
+
+    const swTitle = document.createElement('span');
+    swTitle.className = 'quick-start-label';
+    swTitle.textContent = '🎧 Start With:';
+    swBox.appendChild(swTitle);
+
+    item.startWith.forEach(sw => {
+      const badge = document.createElement('span');
+      badge.className = 'tag-badge quick-start-chip';
+      badge.textContent = sw;
+      swBox.appendChild(badge);
+    });
+    body.appendChild(swBox);
+  }
+
+  // 5. Progressive-Disclosure Clinical Drawer Nodes
+  const drawerNodes = [];
+  const lMeta = getListenVisualMeta(item);
+  drawerNodes.push(createCardVisualStrip(lMeta.src, lMeta.alt, lMeta.kicker, lMeta.sub));
+
+  if (item.literacySkills && item.literacySkills.length > 0) {
+    const skillList = document.createElement('div');
+    skillList.style.display = 'flex';
+    skillList.style.flexWrap = 'wrap';
+    skillList.style.gap = '0.25rem';
+    skillList.style.marginBottom = '0.6rem';
+
+    item.literacySkills.forEach(ls => {
+      const span = document.createElement('span');
+      span.className = 'domain-badge';
+      span.textContent = ls;
+      skillList.appendChild(span);
+    });
+    drawerNodes.push(skillList);
+  }
+
+  const citBox = document.createElement('div');
+  citBox.className = 'citation-box';
+
+  const resDiv = document.createElement('div');
+  const resStrong = document.createElement('strong');
+  resStrong.textContent = '📚 Neuroscience & Literacy Anchor: ';
+  resDiv.appendChild(resStrong);
+  resDiv.appendChild(document.createTextNode(item.researchAnchor));
+
+  const semDiv = document.createElement('div');
+  semDiv.style.marginTop = '0.25rem';
+  const semStrong = document.createElement('strong');
+  semStrong.textContent = '🔬 SEM-10 Rubric: ';
+  const semBadge = document.createElement('span');
+  semBadge.className = 'sem-badge';
+  semBadge.textContent = item.semBreakdown;
+  semDiv.appendChild(semStrong);
+  semDiv.appendChild(semBadge);
+
+  citBox.appendChild(resDiv);
+  citBox.appendChild(semDiv);
+  drawerNodes.push(citBox);
+
+  drawerNodes.push(
+    createExpertBridgeBox(
+      'expert-bridge-phd',
+      '📖 Dialogic Reading & Serve-and-Return Prompt (Hutton et al., 2018 / Romeo et al., 2018):',
+      item.dialogicPrompt
+    )
+  );
+
+  appendClinicalDrawer(body, card, drawerNodes);
+  card.appendChild(body);
+
+  // Action Link
+  const link = document.createElement('a');
+  link.href = item.link;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.className = 'btn btn-outline btn-sm';
+  link.style.marginTop = '0.75rem';
+  link.style.width = '100%';
+  link.style.justifyContent = 'center';
+  link.appendChild(createExternalLinkSvg());
+  link.appendChild(document.createTextNode(' Listen / View Book Reference'));
+
+  link.addEventListener('click', () => {
+    if (window.trackSafeKidsEvent) {
+      window.trackSafeKidsEvent('click_listen_read', { name: item.name, url: item.link });
+    }
+  });
+
+  card.appendChild(link);
+  return card;
+}
+
+function renderListenItems() {
+  const container = document.getElementById('listen-grid');
+  if (!container) return;
+
+  const filtered = getFilteredListenItems();
+
+  const countBadge = document.getElementById('listen-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${filtered.length} audio & book picks`;
+  }
+
+  if (filtered.length === 0) {
+    container.replaceChildren(
+      createEmptyState(
+        'No podcasts, audiobooks, or books match your search criteria.',
+        "Try selecting 'All Audio & Books' or clearing the format and search filters."
+      )
+    );
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(item => {
+    fragment.appendChild(buildListenCard(item));
+  });
+  container.replaceChildren(fragment);
+}
+
+function setupListenFilterListeners() {
+  const ageButtons = document.querySelectorAll('#listen-age-filters .filter-btn');
+  ageButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const activeBtn = e.currentTarget || e.target;
+      ageButtons.forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+      const rawAge = activeBtn.getAttribute('data-filter') || 'all';
+      currentListenAgeFilter = ALLOWED_AGE_FILTERS.has(rawAge) ? rawAge : 'all';
+      writePersistedFilter(STORAGE_KEYS.LISTEN_AGE, currentListenAgeFilter, ALLOWED_AGE_FILTERS);
+      renderListenItems();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_listen_age', { age: currentListenAgeFilter });
+      }
+    });
+  });
+
+  const domainButtons = document.querySelectorAll('#listen-domain-filters .filter-btn');
+  domainButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const activeBtn = e.currentTarget || e.target;
+      domainButtons.forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+      const rawDomain = activeBtn.getAttribute('data-filter') || 'all';
+      currentListenDomainFilter = ALLOWED_LISTEN_DOMAINS.has(rawDomain) ? rawDomain : 'all';
+      writePersistedFilter(STORAGE_KEYS.LISTEN_DOMAIN, currentListenDomainFilter, ALLOWED_LISTEN_DOMAINS);
+      renderListenItems();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_listen_domain', { domain: currentListenDomainFilter });
+      }
+    });
+  });
+}
+
+function setupListenSearch() {
+  const input = document.getElementById('listen-search');
+  if (!input) return;
+  let lSearchTimer;
+  input.addEventListener('input', (e) => {
+    currentListenSearch = e.target.value.toLowerCase().trim();
+    renderListenItems();
+    clearTimeout(lSearchTimer);
+    if (currentListenSearch.length >= 3 && window.trackSafeKidsEvent) {
+      lSearchTimer = setTimeout(() => {
+        window.trackSafeKidsEvent('search_listen', { query: currentListenSearch });
+      }, 500);
+    }
+  });
+}
+
 // ==================== INTERACTIVE NFI-10 FOOD AUDITOR (MUST_RESET_ON_RELOAD) ====================
 function setupFoodCalculator() {
   const calcContainer = document.getElementById('food-calculator');
@@ -4092,45 +4926,51 @@ function setupFoodCalculator() {
 // ==================== LEFT-PANEL WORKSPACE TAB NAVIGATION & DEEP-LINK ROUTING ====================
 const WORKSPACE_TAB_METADATA = {
   overview: {
-    kicker: 'Tab 1 of 6 • Start Here',
-    title: 'Overview & Top 9 Parent Recommendations',
-    sub: 'Prioritized decision framework across screen media, constructivist gaming, and whole-food pediatric nutrition.',
-    shortLabel: 'Overview & 9 Pillars'
+    kicker: 'Tab 1 of 7 • Start Here',
+    title: 'Overview & Top 9 Parent Recommendations + Pillar 4 Audio',
+    sub: 'Calm daily age rhythm, printable 4-pillar fridge sheet, and core family guidelines.',
+    shortLabel: 'Daily Plan & Overview'
   },
   science: {
-    kicker: 'Tab 2 of 6 • Clinical Evidence & Rubrics',
+    kicker: 'Tab 2 of 7 • Clinical Evidence & Rubrics',
     title: 'Clinical Science, Dual 10-Point Auditors (SEM-10 & NFI-10) & 30 Citations',
     sub: 'Peer-reviewed neuroimaging, developmental psychology, pediatric nutrition RCTs, and interactive 60-second calculators.',
-    shortLabel: 'Clinical Science & Rubrics'
+    shortLabel: 'Science & Rubrics (30)'
   },
   channels: {
-    kicker: 'Tab 3 of 6 • Pillar 1 (Watch)',
+    kicker: 'Tab 3 of 7 • Pillar 1 (Watch)',
     title: 'Parent-Approved Low-Stimulus Channel Directory (28 Channels)',
     sub: 'Curated calm video channels scored on the SEM-10 rubric with 1-click JSON/CSV whitelist export.',
-    shortLabel: 'Safe Channels (28)'
+    shortLabel: 'Watch · Channels (28)'
   },
   games: {
-    kicker: 'Tab 4 of 6 • Pillar 2 (Play)',
+    kicker: 'Tab 4 of 7 • Pillar 2 (Play)',
     title: 'Educator-Approved Cognitive Games & Apps Directory (33 Games)',
     sub: 'Constructivist sandboxes, spatial puzzles, and Montessori apps with zero ads and zero loot boxes.',
-    shortLabel: 'Educator Games (33)'
+    shortLabel: 'Play · Games (33)'
   },
   nutrition: {
-    kicker: 'Tab 5 of 6 • Pillar 3 (Nourish)',
+    kicker: 'Tab 5 of 7 • Pillar 3 (Nourish)',
     title: 'Pediatrician- & Dietitian-Vetted Whole Foods & Lunchbox Swaps (32 Swaps)',
     sub: 'Concrete NOVA-1 whole-food upgrades replacing ultra-processed kid snacks, pouches, and synthetic dyes.',
-    shortLabel: 'Wholesome Food (32)'
+    shortLabel: 'Nourish · Foods (32)'
+  },
+  listen: {
+    kicker: 'Tab 6 of 7 • Pillar 4 (Listen & Read)',
+    title: 'Listen & Read: Screen-Free Audio, Podcasts & Living Books Directory (26 Picks)',
+    sub: 'Curated STEM & story podcasts, Yoto/Tonie audio cards, synthetic phonics decodables, and dialogic living books.',
+    shortLabel: 'Listen & Read (26)'
   },
   lockdown: {
-    kicker: 'Tab 6 of 6 • Technical Defense',
+    kicker: 'Tab 7 of 7 • Technical Defense',
     title: 'Open-Source Parental Tools & Step-by-Step Device/DNS Lockdown Guides',
     sub: '13 open-source parental control architectures plus Steps A–E for BrainRotGuard, KidTube, Family Link, Guided Access, and NextDNS.',
-    shortLabel: 'Tools & Lockdown Guides'
+    shortLabel: 'Device & DNS Lockdown'
   },
   all: {
-    kicker: 'Full Handbook Mode • All 6 Tabs Visible',
+    kicker: 'Full Handbook Mode • All 7 Tabs Visible',
     title: 'Complete SafeKids Parent Portal Reference (All Sections)',
-    sub: 'Showing all 9 recommendations, 30 clinical studies, 28 channels, 33 games, 32 whole-food swaps, and 5 lockdown guides on one page.',
+    sub: 'Showing all 10 recommendations, 30+ clinical studies, 28 channels, 33 games, 32 whole-food swaps, 26 audio/book picks, and 5 lockdown guides.',
     shortLabel: 'Full Guide (All Sections)'
   }
 };
@@ -4150,6 +4990,8 @@ const HASH_TO_TAB_MAP = {
   '#games-directory': 'games',
   '#nutrition': 'nutrition',
   '#nutrition-directory': 'nutrition',
+  '#listen': 'listen',
+  '#listen-directory': 'listen',
   '#lockdown': 'lockdown',
   '#solutions': 'lockdown',
   '#all': 'all'
@@ -4231,15 +5073,15 @@ function switchWorkspaceTab(rawTab, opts) {
     }
   } else {
     if (prevBtn) {
-      prevBtn.textContent = '\u2190 Back to Overview & 9 Pillars';
+      prevBtn.textContent = '\u2190 Back to Daily Plan & Overview';
       prevBtn.setAttribute('data-target-tab', 'overview');
     }
     if (nextBtn) {
-      nextBtn.textContent = 'Jump to Safe Channels (28) \u2192';
+      nextBtn.textContent = 'Jump to Watch · Channels (28) \u2192';
       nextBtn.setAttribute('data-target-tab', 'channels');
     }
     if (indicatorEl) {
-      indicatorEl.textContent = 'Full Handbook Mode • All 6 Tabs Visible';
+      indicatorEl.textContent = 'Full Handbook Mode • All 7 Tabs Visible';
     }
   }
 
@@ -4410,6 +5252,12 @@ function computeDailyBlueprint(rawAgeKey) {
         'Wild Alaskan Salmon Flakes & Avocado Mash (NFI 1/10 • Pin-Bone Checked Marine DHA)',
         'Pasture-Raised Soft-Scrambled Whole Egg Yolk (NFI 1/10 • 147mg Choline for Memory)',
         'Plain Whole-Milk Kefir & Mashed Berries (NFI 1/10 • Zero Added Sugar; No Honey <12m)'
+      ],
+      listen: [
+        'Goodnight Moon & Dear Zoo Board Books (SEM-10: 1/10 • Live Parent Point-and-Name)',
+        'Yoto Player / Mini (Nightlight Off) — Classical Lullabies & Acoustic Guitar Cards',
+        'Super Simple Songs Audio-Only Speaker Sing-Along (Zero Screen Serve-and-Return)',
+        'Frog and Toad Audio Collection (SEM-10: 1/10 • Gentle Acoustic Bedtime Stories)'
       ]
     };
   }
@@ -4432,6 +5280,11 @@ function computeDailyBlueprint(rawAgeKey) {
     .slice(0, 4)
     .map(f => `${f.name} (NFI-10: ${f.nfiScore} • Replaces: ${f.trapReplaced.split('(')[0].trim()})`);
 
+  const matchedListen = listenReadData
+    .filter(item => (Array.isArray(item.age) ? item.age : [item.age]).includes(ageKey))
+    .slice(0, 4)
+    .map(item => `${item.name} (SEM-10: ${item.stimulusScore} • ${item.categoryLabel})`);
+
   return {
     ageKey,
     ageLabelShort: stageMeta.ageLabelShort,
@@ -4443,7 +5296,8 @@ function computeDailyBlueprint(rawAgeKey) {
     mealRule: stageMeta.mealRule,
     channels: matchedChannels,
     games: matchedGames,
-    foods: matchedFoods
+    foods: matchedFoods,
+    listen: matchedListen
   };
 }
 
@@ -4456,6 +5310,43 @@ function renderBlueprintList(ulEl, items) {
     frag.appendChild(li);
   });
   ulEl.replaceChildren(frag);
+}
+
+let updateBlueprintViewRef = null;
+
+function syncAllDirectoriesToAge(targetDirAge) {
+  const validDirAge = ALLOWED_AGE_FILTERS.has(targetDirAge) ? targetDirAge : 'all';
+
+  currentChannelFilter = validDirAge;
+  currentGameAgeFilter = validDirAge;
+  currentFoodAgeFilter = validDirAge;
+  currentListenAgeFilter = validDirAge;
+
+  writePersistedFilter(STORAGE_KEYS.CHANNEL_AGE, currentChannelFilter, ALLOWED_AGE_FILTERS);
+  writePersistedFilter(STORAGE_KEYS.GAME_AGE, currentGameAgeFilter, ALLOWED_AGE_FILTERS);
+  writePersistedFilter(STORAGE_KEYS.FOOD_AGE, currentFoodAgeFilter, ALLOWED_AGE_FILTERS);
+  writePersistedFilter(STORAGE_KEYS.LISTEN_AGE, currentListenAgeFilter, ALLOWED_AGE_FILTERS);
+
+  syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
+  syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
+  syncFilterButtons('#food-age-filters .filter-btn', currentFoodAgeFilter);
+  syncFilterButtons('#listen-age-filters .filter-btn', currentListenAgeFilter);
+
+  renderChannels();
+  renderGames();
+  renderFoods();
+  renderListenItems();
+}
+
+function syncGlobalAgeBarButtons(activeGlobalAge) {
+  const globalBtns = document.querySelectorAll('#global-age-bar .global-age-btn');
+  globalBtns.forEach(btn => {
+    if (btn.getAttribute('data-global-age') === activeGlobalAge) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
 }
 
 function setupDailyBlueprintBuilder() {
@@ -4472,6 +5363,7 @@ function setupDailyBlueprintBuilder() {
   const channelsListEl = document.getElementById('bp-channels-list');
   const gamesListEl = document.getElementById('bp-games-list');
   const foodsListEl = document.getElementById('bp-foods-list');
+  const listenListEl = document.getElementById('bp-listen-list');
 
   const btnSync = document.getElementById('btn-sync-age-directories');
   const btnCopy = document.getElementById('btn-copy-blueprint');
@@ -4498,11 +5390,14 @@ function setupDailyBlueprintBuilder() {
     renderBlueprintList(channelsListEl, bp.channels);
     renderBlueprintList(gamesListEl, bp.games);
     renderBlueprintList(foodsListEl, bp.foods);
+    renderBlueprintList(listenListEl, bp.listen);
 
     if (clearSyncBanner && syncStatusEl) {
       syncStatusEl.textContent = '';
     }
   }
+
+  updateBlueprintViewRef = updateBlueprintView;
 
   ageBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -4511,6 +5406,7 @@ function setupDailyBlueprintBuilder() {
       const validAge = ALLOWED_BLUEPRINT_AGES.has(requestedAge) ? requestedAge : 'toddler';
       writePersistedFilter(STORAGE_KEYS.BLUEPRINT_AGE, validAge, ALLOWED_BLUEPRINT_AGES);
       updateBlueprintView(validAge, true);
+      syncGlobalAgeBarButtons(validAge);
       if (window.trackSafeKidsEvent) {
         window.trackSafeKidsEvent('select_blueprint_age', { age: validAge });
       }
@@ -4522,32 +5418,20 @@ function setupDailyBlueprintBuilder() {
       const bp = computeDailyBlueprint(currentBlueprintAge);
       const targetDirAge = ALLOWED_AGE_FILTERS.has(bp.directoryFilterAge) ? bp.directoryFilterAge : 'toddler';
 
-      currentChannelFilter = targetDirAge;
-      currentGameAgeFilter = targetDirAge;
-      currentFoodAgeFilter = targetDirAge;
-
-      writePersistedFilter(STORAGE_KEYS.CHANNEL_AGE, currentChannelFilter, ALLOWED_AGE_FILTERS);
-      writePersistedFilter(STORAGE_KEYS.GAME_AGE, currentGameAgeFilter, ALLOWED_AGE_FILTERS);
-      writePersistedFilter(STORAGE_KEYS.FOOD_AGE, currentFoodAgeFilter, ALLOWED_AGE_FILTERS);
-
-      syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
-      syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
-      syncFilterButtons('#food-age-filters .filter-btn', currentFoodAgeFilter);
-
-      renderChannels();
-      renderGames();
-      renderFoods();
+      syncAllDirectoriesToAge(targetDirAge);
+      syncGlobalAgeBarButtons(bp.ageKey);
 
       const chCount = getFilteredChannels().length;
       const gmCount = getFilteredGames().length;
       const fdCount = getFilteredFoods().length;
+      const lsCount = getFilteredListenItems().length;
 
       if (syncStatusEl) {
         syncStatusEl.textContent = bp.ageKey === 'under-2'
-          ? `✓ Synced Watch (${chCount}), Play (${gmCount}) & Nourish (${fdCount}) directories to Early-Years / Toddler prep mode (Note: 0 passive screen mins under 24m per AAP)!`
-          : `✓ Synced Watch (${chCount} channels), Play (${gmCount} games) & Nourish (${fdCount} swaps) directories to ${bp.ageLabelShort}!`;
+          ? `✓ Synced Watch (${chCount}), Play (${gmCount}), Nourish (${fdCount}) & Listen (${lsCount}) directories to Early-Years / Toddler prep mode (Note: 0 passive screen mins under 24m per AAP)!`
+          : `✓ Synced Watch (${chCount} channels), Play (${gmCount} games), Nourish (${fdCount} swaps) & Listen (${lsCount} picks) directories to ${bp.ageLabelShort}!`;
       }
-      flashButtonSuccess(btnSync, `✓ Synced All 3 Directories (${bp.ageLabelShort})!`);
+      flashButtonSuccess(btnSync, `✓ Synced All 4 Directories (${bp.ageLabelShort})!`);
     });
   }
 
@@ -4569,6 +5453,9 @@ function setupDailyBlueprintBuilder() {
         ``,
         `🥗 PILLAR 3: WHOLE-FOOD SWAPS & PREP SAFETY (NOURISH)`,
         ...bp.foods.map(f => `  - ${f}`),
+        ``,
+        `🎧 PILLAR 4: SCREEN-FREE AUDIO & LIVING BOOKS (LISTEN & READ)`,
+        ...bp.listen.map(l => `  - ${l}`),
         ``,
         `Source: SafeKids Parent Portal (https://safe-kids.web.app)`
       ];
@@ -4594,6 +5481,62 @@ function setupDailyBlueprintBuilder() {
   }
 
   updateBlueprintView(currentBlueprintAge, false);
+}
+
+// ==================== GLOBAL HEADER AGE BAR & CLINICAL DRAWER TOGGLE ====================
+function setupGlobalAgeBar() {
+  const globalBtns = document.querySelectorAll('#global-age-bar .global-age-btn');
+  if (!globalBtns || globalBtns.length === 0) return;
+
+  // Determine initial active state based on directory filters
+  const allDirsSameAge =
+    currentChannelFilter !== 'all' &&
+    currentChannelFilter === currentGameAgeFilter &&
+    currentChannelFilter === currentFoodAgeFilter;
+  const initialGlobalAge = allDirsSameAge ? currentChannelFilter : 'all';
+  syncGlobalAgeBarButtons(initialGlobalAge);
+
+  globalBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget || e.target;
+      const rawGlobalAge = targetBtn.getAttribute('data-global-age') || 'all';
+
+      if (rawGlobalAge === 'all') {
+        syncAllDirectoriesToAge('all');
+        syncGlobalAgeBarButtons('all');
+      } else if (ALLOWED_BLUEPRINT_AGES.has(rawGlobalAge)) {
+        writePersistedFilter(STORAGE_KEYS.BLUEPRINT_AGE, rawGlobalAge, ALLOWED_BLUEPRINT_AGES);
+        if (typeof updateBlueprintViewRef === 'function') {
+          updateBlueprintViewRef(rawGlobalAge, false);
+        }
+        const bp = computeDailyBlueprint(rawGlobalAge);
+        syncAllDirectoriesToAge(bp.directoryFilterAge);
+        syncGlobalAgeBarButtons(rawGlobalAge);
+      }
+    });
+  });
+}
+
+function setupClinicalDrawerToggleAll() {
+  const toggleBtn = document.getElementById('btn-toggle-clinical-details');
+  if (!toggleBtn) return;
+
+  toggleBtn.addEventListener('click', () => {
+    expandAllClinicalDrawers = !expandAllClinicalDrawers;
+    toggleBtn.textContent = expandAllClinicalDrawers
+      ? '🔬 Hide Clinical Details'
+      : '🔬 Expand All Science';
+    if (expandAllClinicalDrawers) {
+      toggleBtn.classList.add('active');
+    } else {
+      toggleBtn.classList.remove('active');
+    }
+
+    renderChannels();
+    renderGames();
+    renderFoods();
+    renderListenItems();
+  });
 }
 
 // ==================== COPY CODE BUTTONS ====================

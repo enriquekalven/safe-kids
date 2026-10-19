@@ -10,22 +10,24 @@
 
 ## 📌 Project Overview
 
-**SafeKids Parent Portal** is an open-source, non-commercial research summary, media & whole-food directory, and technical lockdown guide designed to help parents protect children's developing brains across **three foundational daily inputs: Video Media, Interactive Games, and Wholesome Pediatric Nutrition**.
+**SafeKids Parent Portal** is an open-source, non-commercial research summary, media & whole-food directory, and technical lockdown guide designed to help parents protect children's developing brains across **four foundational daily inputs: Video Media (Watch), Interactive Games (Play), Wholesome Pediatric Nutrition (Nourish), and Screen-Free Audio & Living Books (Listen & Read)**.
 
 It addresses automated recommendation algorithms (hyper-stimulation, "brain rot" pacing, CoComelon-style dopamine loops), predatory mobile game mechanics (Skinner-box loot drops, artificial timers, unvetted UGC chat), and commercial ultra-processed "kid-food" traps (synthetic petroleum dyes, high-GI extruded starches, liquid sugar pouches) by offering:
 1. **Curated, low-stimulus video channels (28 Unique Channels)** categorized by developmental stage (Ages 2–12) with one-click JSON/CSV/Clipboard whitelist export.
-2. **Educator-approved, cognitive skill-building games (33 Curated Games)** free of dark patterns and commercial ads.
+2. **Educator-approved, cognitive skill-building games (33 Curated Games)** free of dark patterns and commercial ads, filterable by stopping-cue transition taxonomy.
 3. **Pediatrician- & Dietitian-Vetted Whole Foods & Lunchbox Swaps (32 Whole-Food Swaps & Staples)** across 6 neuro-developmental nutrient domains, pairing every ultra-processed supermarket trap with a concrete whole-food upgrade, bioavailability synergy, and CDC/AAP choking & allergen safety rules.
-4. **Dual 10-Point Audit Rubrics (SEM-10 & NFI-10) & Interactive Self-Audit Calculators**: Objective, peer-reviewed 1–10 scoring rubrics and interactive 60-second calculators for both Screen Media (`#sem-calculator`) and Food/Snack Labels (`#food-calculator`).
-5. **Primary Academic Bibliography (30 Studies & Statutes)**: Peer-reviewed clinical neuroimaging studies, pediatric nutrition RCTs (AAP, NIH, Lancet, ESPGHAN, OEHHA), longitudinal cohorts, and global regulatory frameworks (FTC COPPA 2025, EU DSA Art. 28, UK Online Safety Act).
-6. **Open-source parental control alternatives, DNS/Router shields, and hardware lockdown blueprints.**
+4. **Screen-Free Audio, Podcasts & Living Books (26 Screen-Free Audio & Living Books)** across 6 formats (`stem-podcast`, `story-podcast`, `audiobook-card`, `phonics-decodable`, `living-book`, `hardware-player`) that activate the brain's Default Mode Network and Tier-2 vocabulary without blue light.
+5. **Calm Tech & Progressive Disclosure UX**: A global header **"My Child's Age" Selector Bar** (`#global-age-bar`) that filters all 4 directories + the Printable Caregiver Fridge Sheet simultaneously, plus **3-Second Glance** compact cards with 1-click expandable clinical drawers (`#btn-toggle-clinical-details`).
+6. **Dual 10-Point Audit Rubrics (SEM-10 & NFI-10) & Interactive Self-Audit Calculators**: Objective, peer-reviewed 1–10 scoring rubrics and interactive 60-second calculators for both Screen Media (`#sem-calculator`) and Food/Snack Labels (`#food-calculator`).
+7. **Primary Academic Bibliography (30 Studies & Statutes)**: Peer-reviewed clinical neuroimaging studies, pediatric nutrition RCTs (AAP, NIH, Lancet, ESPGHAN, OEHHA), longitudinal cohorts, and global regulatory frameworks (FTC COPPA 2025, EU DSA Art. 28, UK Online Safety Act).
+8. **Open-source parental control alternatives, DNS/Router shields, and hardware lockdown blueprints.**
 
 ---
 
 ## 📑 Portal Features & Content Breakdown
 
 ### 1. Top Parent Recommendations & Action Framework
-A prioritized 9-pillar decision matrix based on developmental age and household environment:
+A prioritized 10-pillar decision matrix based on developmental age and household environment:
 1. **Zero Screen Time (Gold Standard for 0–3):** Eliminates Electronic Screen Syndrome (ESS) risk and protects white-matter myelination and speech acquisition from the Video Deficit Effect.
 2. **Curated Platforms (PBS Kids / Jellyfin / Local Plex Server):** High-trust, closed ecosystems with zero recommendation engines.
 3. **Interactive Phone Approval Bot (BrainRotGuard):** Child searches on tablet; parent approves/denies via 1-tap Telegram bot message.
@@ -35,6 +37,7 @@ A prioritized 9-pillar decision matrix based on developmental age and household 
 7. **Calm Cognitive Gaming:** Replace fast-twitch mobile titles with constructivist sandboxes, Montessori digital playrooms, and discrete logic puzzles.
 8. **Living Room & DNS-Level Shield (NextDNS / AdGuard Home / SmartTube):** Block `youtubei.googleapis.com` Shorts feeds, telemetry trackers, and ad networks at the home router or DNS profile layer.
 9. **Wholesome Brain Fuel (NOVA-1 Whole Foods):** Replace high-GI ultra-processed kid snacks, pouches, and synthetic food dyes with intact whole foods rich in DHA, choline, heme/non-heme iron, prebiotic fiber, and K2/D3/calcium.
+10. **Screen-Free Audio, Podcasts & Living Books (Yoto / Tonie / Dialogic Reading):** Replace car-ride tablets and bedtime blue-light screens with physical audio cards, STEM podcasts, synthetic phonics decodables, and dialogic read-alouds (*Hutton et al., 2018; Montag et al., 2015*).
 
 ---
 
@@ -186,14 +189,26 @@ Filterable by **Age Band** (including CDC/AAP toddler choking-safe preparation r
 
 ---
 
-### 8. Games, Platforms & Commercial "Kid-Food" Traps to Avoid (Red Flags)
+### 8. Screen-Free Audio, Podcasts & Living Books Directory (26 Screen-Free Audio & Living Books)
+
+Filterable by **Age Band** and **Audio/Literacy Format** (`stem-podcast`, `story-podcast`, `audiobook-card`, `phonics-decodable`, `living-book`, `hardware-player`), with 1-click Reading/Audio List / JSON / CSV export:
+* **STEM & Curiosity Podcasts (`stem-podcast` — 5 items):** *Brains On!* (2/10), *But Why: A Podcast for Curious Kids* (1/10), *Wow in the World* (2/10), *Tumble Science Podcast* (1/10), *Molly of Denali Podcast* (1/10).
+* **Calm Folklore & Bedtime Podcasts (`story-podcast` — 5 items):** *Circle Round* (1/10), *Stories Podcast* (1/10), *Julie's Library: Storytime with Julie Andrews* (1/10), *Greeking Out from National Geographic Kids* (2/10), *Sleep Tight Stories* (1/10).
+* **Screen-Free Audio Cards (`audiobook-card` — 4 items):** *Frog and Toad Audio Collection* (1/10), *The World of Beatrix Potter* (1/10), *Winnie-the-Pooh Complete BBC Dramatized Collection* (1/10), *Charlotte's Web Unabridged read by E.B. White* (1/10).
+* **Synthetic Phonics Decodable Readers (`phonics-decodable` — 4 items):** *Bob Books Set 1: Beginning Readers* (1/10), *Primary Phonics Storybook Sets 1–6* (1/10), *All About Reading Decodable Activity Readers* (1/10), *Flyleaf Publishing Emergent Reader Series* (1/10).
+* **Dialogic Picture & Living Books (`living-book` — 5 items):** *Goodnight Moon & Dear Zoo Board Books* (1/10), *Make Way for Ducklings & Blueberries for Sal* (1/10), *The Story of Ferdinand & Madeline* (1/10), *The Wild Robot* (1/10), *The Phantom Tollbooth & D'Aulaires' Greek Myths* (1/10).
+* **Screen-Free Tactile Audio Players (`hardware-player` — 3 items):** *Yoto Player (3rd Gen) & Yoto Mini* (1/10), *Toniebox Screen-Free Audio Player* (1/10), *Voxblock Screen-Free Audiobook Player* (1/10).
+
+---
+
+### 9. Games, Platforms & Commercial "Kid-Food" Traps to Avoid (Red Flags)
 * ❌ **Roblox / Subway Surfers / Brawl Stars / Talking Tom:** Unmoderated chat, virtual casino loot boxes, rapid flashing sensory overload, and deceptive ad hitboxes *(King & Delfabbro, 2018; Dunckley, 2015)*.
 * ❌ **"Real Fruit" Gummies, Pouches & Extruded Veggie Straws:** Destroyed plant cell-wall matrix, high free-sugar bolus, sticky enamel caries risk, and zero masticatory jaw loading *(Hall et al., 2019; Koletzko et al., 2019)*.
 * ❌ **Sweetened Kids' Yogurts, Neon Sports Drinks & Nitrite Lunch Kits:** Synthetic petroleum dyes (Red 40, Yellow 5, Yellow 6, Blue 1), emulsifiers (carrageenan, polysorbate 80), and sodium nitrite *(McCann et al., 2007; OEHHA, 2021)*.
 
 ---
 
-### 9. Open-Source Parental Control & DNS Tools Comparison
+### 10. Open-Source Parental Control & DNS Tools Comparison
 Comprehensive comparison table featuring:
 * [**`BrainRotGuard`**](https://github.com/GHJJ123/brainrotguard): Self-hosted Docker PWA + Telegram approval bot for 1-tap remote phone approvals.
 * [**`KidTube`**](https://github.com/SecFathy/KidTube): Flutter cross-platform app mimicking the real YouTube dark mode UI with PIN whitelist control.
@@ -206,7 +221,7 @@ Comprehensive comparison table featuring:
 
 ---
 
-### 10. Step-by-Step Device & Network Lockdown Guides
+### 11. Step-by-Step Device & Network Lockdown Guides
 Setup walk-throughs covering:
 * **Option A: BrainRotGuard Deployment** (Docker Compose + Telegram Bot Token configuration).
 * **Option B: Mobile Open-Source Apps** (KidTube, YouTubeWhitelist, KidzTV APK builds).
@@ -227,13 +242,13 @@ safe-kids-portal/
 ├── STATE.md            # Truthful delivery status, Correction log, and open risks by role
 ├── assumptions.json    # Explicitly labeled unverified domain assumptions (verified: false)
 ├── public/
-│   ├── index.html      # Responsive Single Page Application (Rubrics, Calculators, Channels, Games, Foods)
-│   ├── styles.css      # WCAG AA compliant CSS design system with tabular-nums & editorial visual styles
+│   ├── index.html      # Responsive Single Page Application (Rubrics, Calculators, Watch, Play, Nourish, Listen)
+│   ├── styles.css      # WCAG AA compliant CSS design system with Calm Tech progressive disclosure drawers
 │   ├── app.js          # Canonical SEM-10 & NFI-10 oracles, XSS-safe DOM, & OWASP-safe exporter
-│   └── images/         # 10 Web-optimized editorial illustrations (9 Recommendations + UPF Swap Guide)
+│   └── images/         # 11 Web-optimized editorial illustrations (10 Recommendations + UPF Swap Guide)
 ├── docs/
 │   ├── PLAN.md         # Veteran SME grill, Why These Pieces, and What Moves vs. Stays Behind
-│   ├── REVIEW_CHECKLIST.md # 8 Fixed Review Axes & Regression Ledger (R-1..R-7)
+│   ├── REVIEW_CHECKLIST.md # 8 Fixed Review Axes & Regression Ledger (R-1..R-9)
 │   ├── TESTING.md      # Offline test inventory, parity matrix, and 7-mutant harness documentation
 │   ├── DEMO_SCRIPT.md  # 3-minute smoking-gun walkthrough script
 │   └── adr/
