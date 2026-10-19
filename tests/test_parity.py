@@ -385,6 +385,39 @@ const foodDomainFilterBtns = ['all', 'brain-dha', 'iron-focus', 'steady-glucose'
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
 
+// Parse real [data-tab-panel] sections and [data-tab] buttons from index.html
+const tabPanels = [];
+const panelRegex = /<section\s+([^>]*data-tab-panel="([^"]+)"[^>]*)>/g;
+let pMatch;
+while ((pMatch = panelRegex.exec(html)) !== null) {
+  const fullAttrs = pMatch[1];
+  const panelKey = pMatch[2];
+  const idMatch = fullAttrs.match(/id="([^"]+)"/);
+  const clsMatch = fullAttrs.match(/class="([^"]+)"/);
+  const el = new MockElement('section', idMatch ? idMatch[1] : '', clsMatch ? clsMatch[1] : '', { 'data-tab-panel': panelKey });
+  registerEl(el);
+  tabPanels.push(el);
+}
+
+const tabSwitchBtns = [];
+const tabBtnRegex = /<button\s+([^>]*data-tab="([^"]+)"[^>]*)>/g;
+let tbMatch;
+while ((tbMatch = tabBtnRegex.exec(html)) !== null) {
+  const fullAttrs = tbMatch[1];
+  const tabKey = tbMatch[2];
+  const idMatch = fullAttrs.match(/id="([^"]+)"/);
+  const clsMatch = fullAttrs.match(/class="([^"]+)"/);
+  const btn = new MockElement('button', idMatch ? idMatch[1] : '', clsMatch ? clsMatch[1] : '', { 'data-tab': tabKey });
+  registerEl(btn);
+  tabSwitchBtns.push(btn);
+}
+
+registerEl(new MockElement('span', 'workspace-context-title', 'workspace-context-title'));
+registerEl(new MockElement('span', 'workspace-context-badge', 'tag-badge'));
+registerEl(new MockElement('span', 'workspace-pager-indicator', 'workspace-pager-indicator'));
+registerEl(new MockElement('button', 'btn-prev-tab', 'btn btn-outline btn-sm'));
+registerEl(new MockElement('button', 'btn-next-tab', 'btn btn-outline btn-sm'));
+
 const storageMap = { ...(payload.initialStorage || {}) };
 const localStorageMock = {
   getItem: (k) => Object.prototype.hasOwnProperty.call(storageMap, k) ? storageMap[k] : null,
@@ -405,6 +438,10 @@ const documentMock = {
     if (sel === '#game-domain-filters .filter-btn') return gameDomainFilterBtns;
     if (sel === '#food-age-filters .filter-btn') return foodAgeFilterBtns;
     if (sel === '#food-domain-filters .filter-btn') return foodDomainFilterBtns;
+    if (sel === '[data-tab-panel]') return tabPanels;
+    if (sel === '.sidebar-nav-btn') return tabSwitchBtns.filter(b => b.classList.contains('sidebar-nav-btn'));
+    if (sel === '[data-tab]') return tabSwitchBtns;
+    if (sel === 'a[href^="#"]') return [];
     if (sel === '.copy-btn') return [];
     return [];
   },
@@ -417,7 +454,7 @@ const documentMock = {
 
 const sandbox = {
   document: documentMock,
-  window: { localStorage: localStorageMock },
+  window: { localStorage: localStorageMock, scrollTo: () => {}, location: { hash: payload.initialHash || '' } },
   localStorage: localStorageMock,
   navigator: {
     clipboard: {
@@ -508,6 +545,23 @@ if (payload.clickFoodDomainFilter) {
   if (btn) btn.click();
 }
 
+if (payload.clickWorkspaceTab) {
+  const btn = tabSwitchBtns.find(b => b.getAttribute('data-tab') === payload.clickWorkspaceTab);
+  if (btn) btn.click();
+}
+
+if (payload.clickNextTabCount) {
+  for (let i = 0; i < payload.clickNextTabCount; i++) {
+    if (elementsById['btn-next-tab']) elementsById['btn-next-tab'].click();
+  }
+}
+
+if (payload.clickPrevTabCount) {
+  for (let i = 0; i < payload.clickPrevTabCount; i++) {
+    if (elementsById['btn-prev-tab']) elementsById['btn-prev-tab'].click();
+  }
+}
+
 if (payload.triggerExports) {
   if (elementsById['btn-export-csv']) elementsById['btn-export-csv'].click();
   if (elementsById['btn-export-json']) elementsById['btn-export-json'].click();
@@ -578,6 +632,11 @@ const out = {
     elementsById['btn-export-foods-json'] &&
     elementsById['btn-export-foods-csv']
   ),
+  visibleTabPanels: tabPanels.filter(p => !p.classList.contains('tab-hidden')).map(p => p.getAttribute('data-tab-panel')),
+  allTabPanelsCount: tabPanels.length,
+  workspaceContextTitle: elementsById['workspace-context-title'].textContent,
+  workspaceContextBadge: elementsById['workspace-context-badge'].textContent,
+  workspacePagerIndicator: elementsById['workspace-pager-indicator'].textContent,
   evalResults,
   evalFoodResults,
   csvSanitizeResults
@@ -991,6 +1050,39 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             img_path = REPO_ROOT / "public" / rel_src
             self.assertTrue(img_path.is_file(), f"Referenced image does not exist on disk: {rel_src}")
             self.assertGreater(img_path.stat().st_size, 10_000, f"Image file unexpectedly tiny: {rel_src}")
+
+    def test_workspace_left_panel_tabs_and_persistence(self) -> None:
+        """Left-panel app-shell workspace must isolate 6 categorized tabs, support 'all' mode, and persist safely."""
+        # Default initial load shows only 'overview' panels (hero + recommendations = 2 sections)
+        res_default = run_node_harness()
+        self.assertEqual(res_default["allTabPanelsCount"], 9)
+        self.assertEqual(res_default["visibleTabPanels"], ["overview", "overview"])
+        self.assertIn("Overview & Top 9 Parent Recommendations", res_default["workspaceContextTitle"])
+        self.assertIn("Viewing Tab 1 of 6", res_default["workspacePagerIndicator"])
+
+        # Clicking 'nutrition' tab shows only the Wholesome Food section and persists to localStorage
+        res_nutrition = run_node_harness({"clickWorkspaceTab": "nutrition"})
+        self.assertEqual(res_nutrition["visibleTabPanels"], ["nutrition"])
+        self.assertEqual(res_nutrition["storageAfter"].get("safekids_active_tab"), "nutrition")
+        self.assertIn("Whole Foods & Lunchbox Swaps", res_nutrition["workspaceContextTitle"])
+        self.assertIn("Viewing Tab 5 of 6", res_nutrition["workspacePagerIndicator"])
+
+        # Clicking 'all' shows all 9 sections for full-page reading/printing
+        res_all = run_node_harness({"clickWorkspaceTab": "all"})
+        self.assertEqual(len(res_all["visibleTabPanels"]), 9)
+        self.assertEqual(res_all["storageAfter"].get("safekids_active_tab"), "all")
+        self.assertIn("Complete SafeKids Parent Portal Reference", res_all["workspaceContextTitle"])
+
+        # Next/Prev pager buttons step cleanly through the 6 ordered tabs
+        res_pager = run_node_harness({"clickNextTabCount": 2})
+        self.assertEqual(res_pager["visibleTabPanels"], ["channels"])
+        self.assertEqual(res_pager["storageAfter"].get("safekids_active_tab"), "channels")
+
+        # Corrupted localStorage tab value safely falls back to 'overview'
+        res_corrupt_tab = run_node_harness(
+            {"initialStorage": {"safekids_active_tab": "javascript:alert(1)"}}
+        )
+        self.assertEqual(res_corrupt_tab["visibleTabPanels"], ["overview", "overview"])
 
 
 if __name__ == "__main__":

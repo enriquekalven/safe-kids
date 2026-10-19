@@ -2,6 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   restorePersistedDirectoryFilters();
+  setupWorkspaceTabs();
   renderChannels();
   setupChannelFilterListeners();
   setupChannelSearch();
@@ -2260,13 +2261,16 @@ const foodsData = [
 const ALLOWED_AGE_FILTERS = new Set(['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
 const ALLOWED_GAME_DOMAINS = new Set(['all', 'logic', 'spatial', 'coding', 'sandbox', 'stem', 'sel']);
 const ALLOWED_FOOD_DOMAINS = new Set(['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps']);
+const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'lockdown', 'all']);
+const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'lockdown'];
 
 const STORAGE_KEYS = {
   CHANNEL_AGE: 'safekids_channel_age_filter',
   GAME_AGE: 'safekids_game_age_filter',
   GAME_DOMAIN: 'safekids_game_domain_filter',
   FOOD_AGE: 'safekids_food_age_filter',
-  FOOD_DOMAIN: 'safekids_food_domain_filter'
+  FOOD_DOMAIN: 'safekids_food_domain_filter',
+  ACTIVE_TAB: 'safekids_active_tab'
 };
 
 function clampSemDimension(val) {
@@ -3857,12 +3861,243 @@ function setupFoodCalculator() {
   updateFoodCalculatorView();
 }
 
+// ==================== LEFT-PANEL WORKSPACE TAB NAVIGATION & DEEP-LINK ROUTING ====================
+const WORKSPACE_TAB_METADATA = {
+  overview: {
+    kicker: 'Tab 1 of 6 • Start Here',
+    title: 'Overview & Top 9 Parent Recommendations',
+    sub: 'Prioritized decision framework across screen media, constructivist gaming, and whole-food pediatric nutrition.',
+    shortLabel: 'Overview & 9 Pillars'
+  },
+  science: {
+    kicker: 'Tab 2 of 6 • Clinical Evidence & Rubrics',
+    title: 'Clinical Science, Dual 10-Point Auditors (SEM-10 & NFI-10) & 30 Citations',
+    sub: 'Peer-reviewed neuroimaging, developmental psychology, pediatric nutrition RCTs, and interactive 60-second calculators.',
+    shortLabel: 'Clinical Science & Rubrics'
+  },
+  channels: {
+    kicker: 'Tab 3 of 6 • Pillar 1 (Watch)',
+    title: 'Parent-Approved Low-Stimulus Channel Directory (28 Channels)',
+    sub: 'Curated calm video channels scored on the SEM-10 rubric with 1-click JSON/CSV whitelist export.',
+    shortLabel: 'Safe Channels (28)'
+  },
+  games: {
+    kicker: 'Tab 4 of 6 • Pillar 2 (Play)',
+    title: 'Educator-Approved Cognitive Games & Apps Directory (33 Games)',
+    sub: 'Constructivist sandboxes, spatial puzzles, and Montessori apps with zero ads and zero loot boxes.',
+    shortLabel: 'Educator Games (33)'
+  },
+  nutrition: {
+    kicker: 'Tab 5 of 6 • Pillar 3 (Nourish)',
+    title: 'Pediatrician- & Dietitian-Vetted Whole Foods & Lunchbox Swaps (32 Swaps)',
+    sub: 'Concrete NOVA-1 whole-food upgrades replacing ultra-processed kid snacks, pouches, and synthetic dyes.',
+    shortLabel: 'Wholesome Food (32)'
+  },
+  lockdown: {
+    kicker: 'Tab 6 of 6 • Technical Defense',
+    title: 'Open-Source Parental Tools & Step-by-Step Device/DNS Lockdown Guides',
+    sub: '13 open-source parental control architectures plus Steps A–E for BrainRotGuard, KidTube, Family Link, Guided Access, and NextDNS.',
+    shortLabel: 'Tools & Lockdown Guides'
+  },
+  all: {
+    kicker: 'Full Handbook Mode • All 6 Tabs Visible',
+    title: 'Complete SafeKids Parent Portal Reference (All Sections)',
+    sub: 'Showing all 9 recommendations, 30 clinical studies, 28 channels, 33 games, 32 whole-food swaps, and 5 lockdown guides on one page.',
+    shortLabel: 'Full Guide (All Sections)'
+  }
+};
+
+const HASH_TO_TAB_MAP = {
+  '#overview': 'overview',
+  '#recommendations': 'overview',
+  '#science': 'science',
+  '#research': 'science',
+  '#methodology': 'science',
+  '#sem-calculator': 'science',
+  '#food-calculator': 'science',
+  '#channels': 'channels',
+  '#directory': 'channels',
+  '#games': 'games',
+  '#games-directory': 'games',
+  '#nutrition': 'nutrition',
+  '#nutrition-directory': 'nutrition',
+  '#lockdown': 'lockdown',
+  '#solutions': 'lockdown',
+  '#all': 'all'
+};
+
+let currentWorkspaceTab = 'overview';
+
+function switchWorkspaceTab(rawTab, opts) {
+  const options = opts && typeof opts === 'object' ? opts : {};
+  const tab = ALLOWED_WORKSPACE_TABS.has(rawTab) ? rawTab : 'overview';
+  currentWorkspaceTab = tab;
+
+  if (options.persist !== false) {
+    writePersistedFilter(STORAGE_KEYS.ACTIVE_TAB, tab, ALLOWED_WORKSPACE_TABS);
+  }
+
+  const panels = document.querySelectorAll('[data-tab-panel]');
+  panels.forEach(panel => {
+    const panelTab = panel.getAttribute('data-tab-panel');
+    if (tab === 'all' || panelTab === tab) {
+      panel.classList.remove('tab-hidden');
+    } else {
+      panel.classList.add('tab-hidden');
+    }
+  });
+
+  const navBtns = document.querySelectorAll('.sidebar-nav-btn');
+  navBtns.forEach(btn => {
+    const btnTab = btn.getAttribute('data-tab');
+    if (btnTab === tab) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+    } else {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    }
+  });
+
+  const meta = WORKSPACE_TAB_METADATA[tab] || WORKSPACE_TAB_METADATA.overview;
+  const kickerEl = document.getElementById('workspace-context-kicker');
+  const titleEl = document.getElementById('workspace-context-title');
+  const subEl = document.getElementById('workspace-context-sub');
+  const headerPill = document.getElementById('header-active-pill');
+  const contextToggleBtn = document.getElementById('btn-context-view-all');
+  const headerToggleBtn = document.getElementById('btn-header-view-all');
+
+  if (kickerEl) kickerEl.textContent = meta.kicker;
+  if (titleEl) titleEl.textContent = meta.title;
+  if (subEl) subEl.textContent = meta.sub;
+  if (headerPill) headerPill.textContent = `Active: ${meta.shortLabel}`;
+
+  if (contextToggleBtn) {
+    contextToggleBtn.textContent = tab === 'all' ? 'Return to Focused Tabs' : 'Show All Sections';
+    contextToggleBtn.setAttribute('data-tab', tab === 'all' ? 'overview' : 'all');
+  }
+  if (headerToggleBtn) {
+    headerToggleBtn.textContent = tab === 'all' ? '🎯 Focused Tabs' : '📖 View Full Guide';
+    headerToggleBtn.setAttribute('data-tab', tab === 'all' ? 'overview' : 'all');
+  }
+
+  const prevBtn = document.getElementById('btn-prev-tab');
+  const nextBtn = document.getElementById('btn-next-tab');
+  const indicatorEl = document.getElementById('workspace-pager-indicator');
+  const idx = ORDERED_WORKSPACE_TABS.indexOf(tab);
+
+  if (idx !== -1) {
+    const prevTab = ORDERED_WORKSPACE_TABS[(idx - 1 + ORDERED_WORKSPACE_TABS.length) % ORDERED_WORKSPACE_TABS.length];
+    const nextTab = ORDERED_WORKSPACE_TABS[(idx + 1) % ORDERED_WORKSPACE_TABS.length];
+    if (prevBtn) {
+      prevBtn.textContent = `\u2190 Prev: ${WORKSPACE_TAB_METADATA[prevTab].shortLabel}`;
+      prevBtn.setAttribute('data-target-tab', prevTab);
+    }
+    if (nextBtn) {
+      nextBtn.textContent = `Next: ${WORKSPACE_TAB_METADATA[nextTab].shortLabel} \u2192`;
+      nextBtn.setAttribute('data-target-tab', nextTab);
+    }
+    if (indicatorEl) {
+      indicatorEl.textContent = `Viewing Tab ${idx + 1} of ${ORDERED_WORKSPACE_TABS.length} • ${meta.shortLabel}`;
+    }
+  } else {
+    if (prevBtn) {
+      prevBtn.textContent = '\u2190 Back to Overview & 9 Pillars';
+      prevBtn.setAttribute('data-target-tab', 'overview');
+    }
+    if (nextBtn) {
+      nextBtn.textContent = 'Jump to Safe Channels (28) \u2192';
+      nextBtn.setAttribute('data-target-tab', 'channels');
+    }
+    if (indicatorEl) {
+      indicatorEl.textContent = 'Full Handbook Mode • All 6 Tabs Visible';
+    }
+  }
+
+  if (options.scrollTargetId) {
+    const targetEl = document.getElementById(options.scrollTargetId);
+    if (targetEl && typeof targetEl.scrollIntoView === 'function') {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  } else if (options.scrollToTop && typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function setupWorkspaceTabs() {
+  const persistedTab = readPersistedFilter(STORAGE_KEYS.ACTIVE_TAB, ALLOWED_WORKSPACE_TABS, 'overview');
+  let initialTab = persistedTab;
+  let initialScrollId = null;
+
+  if (typeof window !== 'undefined' && window.location && typeof window.location.hash === 'string') {
+    const rawHash = window.location.hash.trim();
+    if (HASH_TO_TAB_MAP[rawHash]) {
+      initialTab = HASH_TO_TAB_MAP[rawHash];
+      initialScrollId = rawHash.slice(1);
+    }
+  }
+
+  switchWorkspaceTab(initialTab, { persist: false, scrollTargetId: initialScrollId });
+
+  const tabBtns = document.querySelectorAll('.sidebar-nav-btn');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget || e.target;
+      const requestedTab = targetBtn.getAttribute('data-tab') || 'overview';
+      switchWorkspaceTab(requestedTab, { persist: true, scrollToTop: true });
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('switch_workspace_tab', { tab: currentWorkspaceTab });
+      }
+    });
+  });
+
+  const toggleAllBtns = [
+    document.getElementById('btn-context-view-all'),
+    document.getElementById('btn-header-view-all')
+  ];
+  toggleAllBtns.forEach(btn => {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const nextMode = currentWorkspaceTab === 'all' ? 'overview' : 'all';
+      switchWorkspaceTab(nextMode, { persist: true, scrollToTop: true });
+    });
+  });
+
+  const prevBtn = document.getElementById('btn-prev-tab');
+  const nextBtn = document.getElementById('btn-next-tab');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      const target = prevBtn.getAttribute('data-target-tab') || 'overview';
+      switchWorkspaceTab(target, { persist: true, scrollToTop: true });
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const target = nextBtn.getAttribute('data-target-tab') || 'science';
+      switchWorkspaceTab(target, { persist: true, scrollToTop: true });
+    });
+  }
+
+  const hashLinks = document.querySelectorAll('a[href^="#"]');
+  hashLinks.forEach(anchor => {
+    anchor.addEventListener('click', (e) => {
+      const href = anchor.getAttribute('href') || '';
+      const mappedTab = HASH_TO_TAB_MAP[href];
+      if (mappedTab) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        const targetId = href.slice(1);
+        switchWorkspaceTab(mappedTab, { persist: true, scrollTargetId: targetId });
+      }
+    });
+  });
+}
+
 // ==================== COPY CODE BUTTONS ====================
 function setupCopyButtons() {
   const btns = document.querySelectorAll('.copy-btn');
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const codeId = btn.getAttribute('data-target');
+      const codeId = btn.getAttribute('data-target') || btn.getAttribute('data-copy-target');
       const codeEl = document.getElementById(codeId);
       if (codeEl) {
         safeCopyText(
@@ -3885,5 +4120,3 @@ function setupCopyButtons() {
     });
   });
 }
-
-

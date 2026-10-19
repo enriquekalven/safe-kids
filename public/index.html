@@ -45,28 +45,165 @@
   <!-- Sticky Header -->
   <header class="header">
     <div class="nav-container">
-      <a href="#" class="logo-group">
+      <a href="#recommendations" class="logo-group" data-tab-jump="overview">
         <div class="logo-icon">SK</div>
         <div class="logo-text">
           <h1>SafeKids Portal</h1>
-          <span>Algorithm-Free Media Hub</span>
+          <span>Algorithm-Free Media, Play &amp; Whole-Food Hub</span>
         </div>
       </a>
-      <ul class="nav-links">
-        <li><a href="#recommendations">Recommendations</a></li>
-        <li><a href="#research">Research</a></li>
-        <li><a href="#methodology">Rubrics &amp; Citations</a></li>
-        <li><a href="#directory">Approved Channels</a></li>
-        <li><a href="#games-directory">Approved Games</a></li>
-        <li><a href="#nutrition-directory">Wholesome Food</a></li>
-        <li><a href="#solutions">Open Source Tools</a></li>
-        <li><a href="#lockdown">Lockdown Guides</a></li>
-      </ul>
+      <div class="header-workspace-actions">
+        <span class="header-mode-pill" id="header-active-pill">Focused Workspace • 6 Pillars</span>
+        <button type="button" class="btn btn-outline btn-sm" id="btn-header-view-all" data-tab="all">
+          📖 View Full Guide
+        </button>
+      </div>
     </div>
   </header>
 
+  <!-- Two-Column Left-Panel App Shell -->
+  <div class="app-shell">
+
+    <!-- Left Sidebar Navigation Panel -->
+    <aside id="sidebar-nav" class="sidebar-panel" aria-label="SafeKids Portal Sections">
+      <div class="sidebar-brand-summary">
+        <div class="sidebar-brand-title">Watch • Play • Nourish</div>
+        <div class="sidebar-brand-sub">Select a focused section below instead of scrolling one long page.</div>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">1. Start Here &amp; Science</div>
+        <ul class="sidebar-nav-list">
+          <li>
+            <button type="button" class="sidebar-nav-btn active" data-tab="overview" aria-selected="true">
+              <span class="sidebar-nav-left">
+                <span class="sidebar-nav-icon">🏠</span>
+                <span class="sidebar-nav-label-wrap">
+                  <span class="sidebar-nav-title">Overview &amp; 9 Pillars</span>
+                  <span class="sidebar-nav-caption">Action plan &amp; age matrix</span>
+                </span>
+              </span>
+              <span class="sidebar-count-pill">9 Recs</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sidebar-nav-btn" data-tab="science" aria-selected="false">
+              <span class="sidebar-nav-left">
+                <span class="sidebar-nav-icon">🔬</span>
+                <span class="sidebar-nav-label-wrap">
+                  <span class="sidebar-nav-title">Clinical Science &amp; Rubrics</span>
+                  <span class="sidebar-nav-caption">SEM-10 auditor &amp; 30 studies</span>
+                </span>
+              </span>
+              <span class="sidebar-count-pill">30 Cited</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">2. Curated Daily Directories</div>
+        <ul class="sidebar-nav-list">
+          <li>
+            <button type="button" class="sidebar-nav-btn" data-tab="channels" aria-selected="false">
+              <span class="sidebar-nav-left">
+                <span class="sidebar-nav-icon">📺</span>
+                <span class="sidebar-nav-label-wrap">
+                  <span class="sidebar-nav-title">Safe Channels</span>
+                  <span class="sidebar-nav-caption">Low-stimulus video whitelist</span>
+                </span>
+              </span>
+              <span class="sidebar-count-pill">28</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sidebar-nav-btn" data-tab="games" aria-selected="false">
+              <span class="sidebar-nav-left">
+                <span class="sidebar-nav-icon">🎮</span>
+                <span class="sidebar-nav-label-wrap">
+                  <span class="sidebar-nav-title">Educator Games</span>
+                  <span class="sidebar-nav-caption">Ad-free logic &amp; STEM play</span>
+                </span>
+              </span>
+              <span class="sidebar-count-pill">33</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sidebar-nav-btn" data-tab="nutrition" aria-selected="false">
+              <span class="sidebar-nav-left">
+                <span class="sidebar-nav-icon">🥦</span>
+                <span class="sidebar-nav-label-wrap">
+                  <span class="sidebar-nav-title">Wholesome Food</span>
+                  <span class="sidebar-nav-caption">Whole-food swaps &amp; NFI-10</span>
+                </span>
+              </span>
+              <span class="sidebar-count-pill">32</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">3. Device &amp; Network Defense</div>
+        <ul class="sidebar-nav-list">
+          <li>
+            <button type="button" class="sidebar-nav-btn" data-tab="lockdown" aria-selected="false">
+              <span class="sidebar-nav-left">
+                <span class="sidebar-nav-icon">🛡️</span>
+                <span class="sidebar-nav-label-wrap">
+                  <span class="sidebar-nav-title">Tools &amp; Lockdown Guides</span>
+                  <span class="sidebar-nav-caption">FOSS apps, OS &amp; DNS shields</span>
+                </span>
+              </span>
+              <span class="sidebar-count-pill">13 Tools</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-quick-auditors">
+        <div class="sidebar-group-label" style="padding-left:0.2rem;">60-Second Self-Auditors</div>
+        <a href="#sem-calculator" class="sidebar-quick-link">
+          <span>🧮 SEM-10 Screen Media Auditor</span>
+          <span>&rarr;</span>
+        </a>
+        <a href="#food-calculator" class="sidebar-quick-link">
+          <span>🥗 NFI-10 Food Label Auditor</span>
+          <span>&rarr;</span>
+        </a>
+      </div>
+
+      <div class="sidebar-footer-toggle">
+        <button type="button" class="sidebar-nav-btn" data-tab="all" aria-selected="false">
+          <span class="sidebar-nav-left">
+            <span class="sidebar-nav-icon">📖</span>
+            <span class="sidebar-nav-label-wrap">
+              <span class="sidebar-nav-title">View Full Guide / Print All</span>
+              <span class="sidebar-nav-caption">Show all sections on one page</span>
+            </span>
+          </span>
+          <span class="sidebar-count-pill">All</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Right Workspace Content Pane -->
+    <div class="workspace-content">
+
+      <!-- Active Tab Context Bar -->
+      <div class="workspace-context-bar" id="workspace-context-bar">
+        <div class="workspace-context-meta">
+          <span class="workspace-context-kicker" id="workspace-context-kicker">Tab 1 of 6 • Start Here</span>
+          <div class="workspace-context-title" id="workspace-context-title">Overview &amp; Top 9 Parent Recommendations</div>
+          <div class="workspace-context-sub" id="workspace-context-sub">Prioritized decision framework across screen media, constructivist gaming, and whole-food pediatric nutrition.</div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="btn-context-view-all" data-tab="all">
+          Show All Sections
+        </button>
+      </div>
+
   <!-- Hero Section -->
-  <section class="hero">
+  <section class="hero" data-tab-panel="overview">
     <div class="hero-content">
       <span class="badge-pill">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
@@ -149,7 +286,7 @@
   <main class="main-wrapper">
 
     <!-- SECTION 0: PARENT RECOMMENDATIONS & ACTION PLAN -->
-    <section id="recommendations" class="section-block">
+    <section id="recommendations" class="section-block" data-tab-panel="overview">
       <div class="section-header">
         <h3>
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -271,7 +408,7 @@
 
 
     <!-- SECTION 1: RESEARCH SUMMARY & LESSONS LEARNED -->
-    <section id="research" class="section-block">
+    <section id="research" class="section-block tab-hidden" data-tab-panel="science">
       <div class="section-header">
         <h3>
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
@@ -491,7 +628,7 @@
     </section>
 
     <!-- SECTION 2: SCORING METHODOLOGY, STIMULUS MATRIX & ACADEMIC CITATIONS -->
-    <section id="methodology" class="section-block">
+    <section id="methodology" class="section-block tab-hidden" data-tab-panel="science">
       <div class="section-header">
         <h3>
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -993,7 +1130,7 @@
     </section>
 
     <!-- SECTION 3: APPROVED CHANNEL DIRECTORY -->
-    <section id="directory" class="section-block">
+    <section id="directory" class="section-block tab-hidden" data-tab-panel="channels">
       <div class="section-header">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
           <h3>
@@ -1079,7 +1216,7 @@
     </section>
 
     <!-- SECTION 4: EDUCATOR-APPROVED KIDS GAMES & COGNITIVE APPS DIRECTORY -->
-    <section id="games-directory" class="section-block">
+    <section id="games-directory" class="section-block tab-hidden" data-tab-panel="games">
       <div class="section-header">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
           <h3>
@@ -1191,7 +1328,7 @@
     </section>
 
     <!-- SECTION 5: WHOLESOME PEDIATRIC NUTRITION & LUNCHBOX SWAPS DIRECTORY -->
-    <section id="nutrition-directory" class="section-block">
+    <section id="nutrition-directory" class="section-block tab-hidden" data-tab-panel="nutrition">
       <div class="section-header">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
           <h3>
@@ -1311,7 +1448,7 @@
     </section>
 
     <!-- SECTION 6: OPEN SOURCE PARENTAL TOOLS COMPARISON -->
-    <section id="solutions" class="section-block">
+    <section id="solutions" class="section-block tab-hidden" data-tab-panel="lockdown">
       <div class="section-header">
         <h3>
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -1419,7 +1556,7 @@
     </section>
 
     <!-- SECTION 7: STEP-BY-STEP LOCKDOWN GUIDES -->
-    <section id="lockdown" class="section-block">
+    <section id="lockdown" class="section-block tab-hidden" data-tab-panel="lockdown">
       <div class="section-header">
         <h3>
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -1522,6 +1659,22 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
 
   </main>
 
+      <!-- Bottom Workspace Pager (Step Between the 6 Focused Tabs) -->
+      <div class="workspace-pager" id="workspace-pager">
+        <button type="button" class="workspace-pager-btn" id="btn-prev-tab">
+          &larr; Previous Section
+        </button>
+        <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;" id="workspace-pager-indicator">
+          Viewing Tab 1 of 6 • Overview &amp; 9 Pillars
+        </span>
+        <button type="button" class="workspace-pager-btn" id="btn-next-tab">
+          Next: Clinical Science &amp; Rubrics &rarr;
+        </button>
+      </div>
+
+    </div><!-- /.workspace-content -->
+  </div><!-- /.app-shell -->
+
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-container">
@@ -1559,7 +1712,7 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
     </div>
   </footer>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>
 
