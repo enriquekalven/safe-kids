@@ -12,7 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
   setupGameSearch();
   setupGamesExport();
 
+  renderFoods();
+  setupFoodFilterListeners();
+  setupFoodSearch();
+  setupFoodsExport();
+
   setupSemCalculator();
+  setupFoodCalculator();
   setupCopyButtons();
 });
 
@@ -1691,14 +1697,576 @@ const gamesData = [
   }
 ];
 
-// ==================== DETERMINISTIC SEM-10 ORACLE & SECURITY HELPERS ====================
+// Comprehensive Database of 32 Pediatrician- & Dietitian-Vetted Whole Foods & Lunchbox Swaps
+const foodsData = [
+  // --- DOMAIN 1: BRAIN MYELINATION (DHA, CHOLINE & LUTEIN) ---
+  {
+    name: "Wild Alaskan Salmon Flakes & Avocado Mash",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Deboned Flakes for Toddlers)",
+    category: "brain-dha",
+    categoryLabel: "Brain Myelination (DHA, Choline & Lutein)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Breaded Fast-Food Fish Sticks & Commercial Tartar Sauce (Refined seed oils, <15% actual fish, high sodium)",
+    wholeFoodSwap: "Wild-caught sockeye or pink salmon flakes gently folded with ripe Hass avocado, lemon juice, and extra-virgin olive oil",
+    keyNutrients: ["Preformed Marine DHA & EPA", "Natural Vitamin D3", "Monounsaturated Oleic Acid", "Selenium & Iodine"],
+    synergySafety: "Avocado lipids maximize fat-soluble Vitamin D3 absorption; rub salmon flakes between fingers to verify zero pin bones before serving to toddlers (Ages 2–3). Low-mercury FDA/EPA 'Best Choice' species.",
+    whyCliniciansApprove: "DHA comprises over 90% of the omega-3 fatty acids in the developing cerebral cortex and retina. Pairing wild salmon with avocado delivers preformed structural phospholipids alongside fat-soluble Vitamin D3 without inflammatory breading.",
+    researchAnchor: "Schwarzenberg et al. (2018) AAP First 1,000 Days Policy; Richardson & Montgomery (2005) Oxford-Durham Trial",
+    link: "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/"
+  },
+  {
+    name: "Pasture-Raised Whole Eggs (Soft-Scrambled or Hard-Boiled Halves)",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "brain-dha",
+    categoryLabel: "Brain Myelination (DHA, Choline & Lutein)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Toaster Breakfast Pastries, Sweetened Waffle Mixes & Liquid Egg-White Cartons (Stripped of yolk choline)",
+    wholeFoodSwap: "Whole pasture-raised eggs cooked gently in olive oil or grass-fed butter with the nutrient-dense yolk completely intact",
+    keyNutrients: ["Choline (147mg/egg for Acetylcholine)", "Macular Lutein & Zeaxanthin", "Vitamin B12 & D3", "Complete Bioavailable Protein"],
+    synergySafety: "Over 99% of an egg's choline and neural lutein reside in the lipid-rich yolk; cook both white and yolk thoroughly for young children and maintain regular dietary exposure per NIAID/AAP guidance.",
+    whyCliniciansApprove: "Choline is the direct biochemical precursor to acetylcholine—the primary neurotransmitter governing memory encoding, hippocampal neurogenesis, and rapid synaptic signaling in school-age children.",
+    researchAnchor: "Schwarzenberg et al. (2018) AAP Policy Statement; NIH Office of Dietary Supplements (Choline)",
+    link: "https://ods.od.nih.gov/factsheets/Choline-HealthProfessional/"
+  },
+  {
+    name: "Sardine & Lemon-Herb Ricotta Toast Strips",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Cut into Finger Strips for Ages 2–3)",
+    category: "brain-dha",
+    categoryLabel: "Brain Myelination (DHA, Choline & Lutein)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Commercial Lunch-Kit Tuna Packets with Sweet Corn-Syrup Relish & Soybean-Oil Mayonnaise",
+    wholeFoodSwap: "Wild Atlantic sardines in extra-virgin olive oil mashed with whole-milk ricotta and lemon zest on sprouted whole-grain toast strips",
+    keyNutrients: ["Marine DHA & EPA", "Soft-Bone Hydroxyapatite Calcium", "Vitamin B12 & D3", "Coenzyme Q10 & Selenium"],
+    synergySafety: "Mash sardines thoroughly with creamy ricotta into a mild, spreadable pâté and slice toast into narrow finger strips for toddlers; lowest trophic-level forage fish with virtually zero methylmercury accumulation.",
+    whyCliniciansApprove: "Delivers one of the highest natural concentrations of marine DHA, Vitamin D3, and bioavailable calcium in a single whole food while avoiding predatory-fish heavy metals.",
+    researchAnchor: "USDA & HHS (2020) Dietary Guidelines for Americans; Richardson & Montgomery (2005)",
+    link: "https://www.fda.gov/food/consumers/advice-about-eating-fish"
+  },
+  {
+    name: "Walnut-Flax-Hemp 'Brain Dust' Porridge & Yogurt Topper",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Finely Milled for Under Age 4)",
+    category: "brain-dha",
+    categoryLabel: "Brain Myelination (DHA, Choline & Lutein)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Rainbow Sprinkles, Marshmallow Bits & Artificial-Dye Yogurt Toppers (Red 40, Yellow 5, Blue 1)",
+    wholeFoodSwap: "Cold-milled raw walnuts, hulled hemp hearts, and ground golden flaxseed stirred into warm oatmeal or plain Greek yogurt",
+    keyNutrients: ["Plant Alpha-Linolenic Acid (ALA Omega-3)", "Magnesium & Manganese", "Polyphenol Ellagitannins", "Complete Hemp Edestin Protein"],
+    synergySafety: "CRITICAL CDC/AAP CHOKING RULE: Whole nuts are a leading aspiration hazard under age 4—always serve finely milled into a powder/meal or thinned nut butter for toddlers and preschoolers.",
+    whyCliniciansApprove: "Combines the highest plant sources of omega-3 ALA, magnesium (essential for NMDA receptor regulation and calm focus), and prebiotic lignans without a single gram of added sugar.",
+    researchAnchor: "Jacka et al. (2017) Nutritional Psychiatry; AAP Policy on Prevention of Choking Among Children",
+    link: "https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/choking-hazards.html"
+  },
+  {
+    name: "Hass Avocado, Hemp Heart & Lime Mash on Sprouted Grain Toast",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "brain-dha",
+    categoryLabel: "Brain Myelination (DHA, Choline & Lutein)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Margarine / Interesterified Vegetable-Oil Spread on Refined White Sandwich Bread",
+    wholeFoodSwap: "Fresh Hass avocado mashed with hulled hemp hearts, lime juice, and a pinch of sea salt on sprouted whole-grain toast",
+    keyNutrients: ["Neural & Retinal Lutein", "Monounsaturated Oleic Acid", "Folate (Vitamin B9) & Potassium", "Magnesium & Zinc"],
+    synergySafety: "Avocado's monounsaturated lipid matrix increases intestinal carotenoid (lutein and zeaxanthin) absorption by 3x to 5x while lime Vitamin C protects against oxidation.",
+    whyCliniciansApprove: "Lutein selectively accumulates in pediatric neural tissue and the macula, where higher macular pigment optical density correlates directly with superior academic and executive performance.",
+    researchAnchor: "Schwarzenberg et al. (2018) AAP Neuro-Nutrition Policy; USDA & HHS (2020) Dietary Guidelines",
+    link: "https://nutritionsource.hsph.harvard.edu/avocados/"
+  },
+  {
+    name: "Wild Blueberry, Baby Spinach & Pre-Hydrated Chia Kefir Bowl",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Served in Open Bowl with Spoon)",
+    category: "brain-dha",
+    categoryLabel: "Brain Myelination (DHA, Choline & Lutein)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Shelf-Stable 'Fruit & Veggie' Squeeze Pouches (Boiled High-Fructose Slurry with Zero Chewing Resistance)",
+    wholeFoodSwap: "Thick spoonable bowl of plain whole-milk kefir blended with frozen wild blueberries, baby spinach, and pre-hydrated chia seeds",
+    keyNutrients: ["Wild Berry Anthocyanins (Flavonoids)", "Non-Heme Iron & Folate", "Pre-Hydrated Chia Omega-3 ALA", "Live Probiotic Cultures"],
+    synergySafety: "Serve with a spoon topped with whole/halved berries to engage oral-motor chewing (never a suckable nozzle pouch per ESPGHAN); pre-soak chia seeds 15+ minutes in liquid so they never expand dry in the throat.",
+    whyCliniciansApprove: "Double-blind trials by Whyte et al. (2016) demonstrated that wild blueberry anthocyanins acutely improve memory accuracy, delayed word recall, and conflict-resolution reaction time in 7–10-year-old children.",
+    researchAnchor: "Whyte et al. (2016) Wild Blueberry Flavonoid RCT; Koletzko et al. (2019) ESPGHAN Pouch Position Paper",
+    link: "https://pubmed.ncbi.nlm.nih.gov/26437830/"
+  },
+
+  // --- DOMAIN 2: ATTENTION & DOPAMINE (HEME/NON-HEME IRON, ZINC & B12) ---
+  {
+    name: "Slow-Simmered Grass-Fed Beef & Red Lentil Bolognese",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "iron-focus",
+    categoryLabel: "Attention & Dopamine (Iron, Zinc & B12)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Canned Pasta Shapes in High-Fructose Tomato Syrup with Mechanically Separated Poultry Meatballs",
+    wholeFoodSwap: "Finely minced grass-fed beef and split red lentils simmered in crushed whole tomatoes, garlic, oregano, and extra-virgin olive oil",
+    keyNutrients: ["High-Bioavailability Heme Iron", "Zinc & Vitamin B12", "Prebiotic Lentil Soluble Fiber", "Olive-Oil-Unlocked Lycopene"],
+    synergySafety: "The 'MFP Factor' (meat peptide) plus tomato Vitamin C doubles intestinal uptake of non-heme iron from the red lentils; soft minced texture is naturally choking-safe for toddlers (Ages 2–3).",
+    whyCliniciansApprove: "Iron is the rate-limiting cofactor for tyrosine hydroxylase (dopamine synthesis) and oligodendrocyte myelination. Lozoff et al. (2006) showed early iron deficiency leaves lasting executive-function deficits.",
+    researchAnchor: "Lozoff et al. (2006) Iron Deficiency & Dopamine Transmission; Hallberg et al. (1989) Iron Absorption",
+    link: "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/"
+  },
+  {
+    name: "Tender Chickpeas & Red Bell Pepper Strips with Lemon-Garlic Tahini",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Mash Chickpeas & Steam Peppers for Ages 2–3)",
+    category: "iron-focus",
+    categoryLabel: "Attention & Dopamine (Iron, Zinc & B12)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Artificially Flavored Nacho-Cheese Tortilla Chips & Jarred 'Cheese' Dip (Yellow 6, Red 40, Maltodextrin)",
+    wholeFoodSwap: "Warm tender chickpeas and julienned red bell pepper strips dipped in creamy lemon-garlic sesame tahini dressing",
+    keyNutrients: ["Plant Non-Heme Iron & Folate", "High-Dose Vitamin C (Ascorbic Acid)", "Sesame Zinc, Copper & Calcium", "Galacto-Oligosaccharide Prebiotics"],
+    synergySafety: "Vitamin C in raw red bell pepper (3x more Vitamin C than an orange) and lemon juice reduces ferric iron (Fe3+) to ferrous iron (Fe2+), tripling plant iron absorption; slightly flatten chickpeas and steam pepper strips for toddlers.",
+    whyCliniciansApprove: "Exemplifies clinical nutrient synergy: pairing legume/seed non-heme iron with high-ascorbic-acid produce overcomes phytic acid inhibition without requiring synthetic fortification.",
+    researchAnchor: "Hallberg et al. (1989) Ascorbic Acid & Non-Heme Iron Uptake; Schwarzenberg et al. (2018) AAP Policy",
+    link: "https://ods.od.nih.gov/factsheets/VitaminC-HealthProfessional/"
+  },
+  {
+    name: "Hull-Less Pumpkin Seeds (Pepitas) & Unsulphured Apricot Trail Mix",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 4–12 Whole • Ages 2–3 Ground into Seed Butter",
+    category: "iron-focus",
+    categoryLabel: "Attention & Dopamine (Iron, Zinc & B12)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 1/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Candy-Coated Chocolate Trail Mix & Bright-Orange Sulfite-Treated Gummy Snacks",
+    wholeFoodSwap: "Raw or lightly toasted green pumpkin seeds paired with finely diced dark unsulphured dried apricots (or smooth pumpkin-seed butter for toddlers)",
+    keyNutrients: ["Concentrated Plant Zinc & Magnesium", "Non-Heme Iron", "Pro-Vitamin A Carotenoids", "L-Tryptophan (Serotonin/Melatonin Precursor)"],
+    synergySafety: "Choose naturally dark-brown unsulphured apricots to avoid E220 sulfur dioxide preservative (a known bronchospasm trigger in asthmatic children); grind pepitas into butter for children under age 4.",
+    whyCliniciansApprove: "Zinc is co-released with glutamate in hippocampal mossy fibers to regulate synaptic plasticity and attention; pumpkin seeds and apricots provide a portable, nut-free-classroom-compatible iron and zinc boost.",
+    researchAnchor: "Schwarzenberg et al. (2018) AAP Priority Nutrients; CDC Choking Prevention Guidelines",
+    link: "https://ods.od.nih.gov/factsheets/Zinc-HealthProfessional/"
+  },
+  {
+    name: "Pasture-Raised Chicken Thigh Strips & Lemon-Olive Oil Broccoli Florets",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "iron-focus",
+    categoryLabel: "Attention & Dopamine (Iron, Zinc & B12)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Deep-Fried Fast-Food Chicken Nuggets (45% Refined Flour/Starch Breading, Fried in Oxidized Seed Oils)",
+    wholeFoodSwap: "Oven-baked dark-meat chicken thigh strips tossed with lightly steamed broccoli florets, fresh lemon juice, and extra-virgin olive oil",
+    keyNutrients: ["Myoglobin Heme Iron & Zinc", "Sulforaphane & Vitamin C", "Vitamin B6, B12 & Niacin", "Choline & Taurine"],
+    synergySafety: "Dark-meat chicken thighs contain nearly twice the iron and zinc of dry white breast meat and shred into moist, tender strips safe for toddler chewing; broccoli Vitamin C further enhances iron uptake.",
+    whyCliniciansApprove: "Replaces ultra-processed nugget breading and phosphate binders with intact muscle protein, bioavailable heme iron, and cruciferous sulforaphane that supports cellular antioxidant pathways.",
+    researchAnchor: "Lozoff et al. (2006) Pediatric Iron & Executive Function; Monteiro et al. (2019) NOVA-1 Whole Foods",
+    link: "https://fdc.nal.usda.gov/"
+  },
+  {
+    name: "Black Bean, Sweet Potato & Avocado Quesadilla on Nixtamalized Corn Tortilla",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "iron-focus",
+    categoryLabel: "Attention & Dopamine (Iron, Zinc & B12)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Frozen Microwave Taco Roll-Ups (Textured Soy Protein Isolate, Maltodextrin, Artificial Smoke & Preservatives)",
+    wholeFoodSwap: "Mashed black beans, roasted orange sweet potato, and real cheddar melted inside a 100% stone-ground nixtamalized corn tortilla with lime-avocado mash",
+    keyNutrients: ["Nixtamalized Calcium & Unbound Niacin (B3)", "Black Bean Iron, Folate & Molybdenum", "Lipid-Unlocked Beta-Carotene", "Soluble Prebiotic Fiber"],
+    synergySafety: "Traditional alkaline lime nixtamalization unlocks bound niacin (Vitamin B3), reduces mycotoxins, and triples corn calcium bioavailability; avocado fats maximize sweet potato Vitamin A uptake.",
+    whyCliniciansApprove: "A traditional Mesoamerican food-matrix synergy combining legume amino acids with nixtamalized whole corn for complete protein, steady blood sugar, and iron-rich cognitive stamina.",
+    researchAnchor: "USDA & HHS (2020) Dietary Guidelines for Americans; Hallberg et al. (1989)",
+    link: "https://www.dietaryguidelines.gov/"
+  },
+  {
+    name: "Steamed Edamame Beans with Sea Salt & Fresh Mandarin Segments",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Shell & Halve/Mash Beans for Ages 2–3)",
+    category: "iron-focus",
+    categoryLabel: "Attention & Dopamine (Iron, Zinc & B12)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Extruded Soy/Potato Crisps & Artificially Flavored Savory Snack Crackers",
+    wholeFoodSwap: "Warm steamed whole green soybeans (edamame) paired with fresh peeled mandarin or clementine segments",
+    keyNutrients: ["Complete Plant Protein (All 9 Essential Amino Acids)", "Non-Heme Iron & Folate", "Mandarin Vitamin C & Hesperidin", "Choline & Vitamin K1"],
+    synergySafety: "Mandarin Vitamin C unlocks soy non-heme iron against phytates; shell edamame pods, flatten/halve the beans, and remove mandarin seeds/membranes for toddlers (Ages 2–3).",
+    whyCliniciansApprove: "Whole green soybeans provide intact plant protein, folate, choline, and iron in a fibrous matrix that requires active hand-to-mouth coordination and chewing rather than mindless snacking.",
+    researchAnchor: "Hallberg et al. (1989) Vitamin C Iron Synergy; Schwarzenberg et al. (2018) AAP Policy",
+    link: "https://nutritionsource.hsph.harvard.edu/soy/"
+  },
+
+  // --- DOMAIN 3: STEADY CLASSROOM GLUCOSE (SLOW OATS, LEGUMES & TUBERS) ---
+  {
+    name: "Steel-Cut Oats Simmered with Ceylon Cinnamon, Diced Apple & Almond Butter",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "steady-glucose",
+    categoryLabel: "Steady Classroom Glucose (Slow Oats, Legumes & Tubers)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Instant Flavored Oatmeal Packets & Frosted Flake Cereals (14–18g Added Sugar + Pulverized Starch)",
+    wholeFoodSwap: "Intact steel-cut or thick old-fashioned rolled oats simmered with Ceylon cinnamon, skin-on diced apple, and 100% roasted almond butter",
+    keyNutrients: ["Viscous Beta-Glucan Soluble Fiber", "Almond Vitamin E & Magnesium", "Apple Pectin & Quercetin", "Slow-Release Complex Carbohydrates"],
+    synergySafety: "Swirl almond butter thoroughly into warm porridge so it is smooth and non-sticky, and simmer apple dices until fork-tender for toddlers (Ages 2–3); use Ceylon cinnamon (low coumarin).",
+    whyCliniciansApprove: "Randomized school trials (Ingwersen et al., 2007; Micha et al., 2011) prove that low-GI intact-grain breakfasts preserve secondary memory and sustained classroom attention at 90–150 minutes post-meal.",
+    researchAnchor: "Micha et al. (2011) Low-GI Breakfast & Adolescent Cognition; Ingwersen et al. (2007) Appetite",
+    link: "https://pubmed.ncbi.nlm.nih.gov/17267070/"
+  },
+  {
+    name: "Cooled & Reheated Sweet Potato Wedges with Grass-Fed Butter & Rosemary",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "steady-glucose",
+    categoryLabel: "Steady Classroom Glucose (Slow Oats, Legumes & Tubers)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Frozen Extruded Tater Tots & Fast-Food French Fries (Modified Potato Starch, Dextrose & Industrial Frying Oils)",
+    wholeFoodSwap: "Oven-roasted skin-on orange or purple sweet potato wedges cooled in the fridge and gently reheated with grass-fed butter and rosemary",
+    keyNutrients: ["Retrograded Type-3 Resistant Starch", "Lipid-Soluble Beta-Carotene", "Potassium & Manganese", "Colonic Butyrate Prebiotics"],
+    synergySafety: "Cooling cooked tubers and reheating retrogrades amylose into Type-3 resistant starch (lowering glycemic impact while feeding gut bacteria); butter lipids maximize pro-Vitamin A absorption.",
+    whyCliniciansApprove: "Delivers steady complex glucose to the brain (which consumes ~50% of a 5-year-old's daily bodily glucose) while avoiding the glycemic spike-and-crash of extruded potato starch.",
+    researchAnchor: "Micha et al. (2011) Glycemic Load & Executive Function; Jacka et al. (2017) Gut-Brain Axis",
+    link: "https://nutritionsource.hsph.harvard.edu/carbohydrates/glycemic-index/"
+  },
+  {
+    name: "Sprouted Grain or Long-Fermented Sourdough Toast with 100% Peanut Butter & Smashed Raspberries",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Thin Peanut Butter Layer for Ages 2–3)",
+    category: "steady-glucose",
+    categoryLabel: "Steady Classroom Glucose (Slow Oats, Legumes & Tubers)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Refined White Bread PB&J with Hydrogenated-Oil Sugar-Sweetened Peanut Spread & High-Fructose Jelly",
+    wholeFoodSwap: "Sprouted whole-grain or 24-hour sourdough toast spread thinly with 100% dry-roasted peanuts + fresh fork-smashed raspberries",
+    keyNutrients: ["Phytase-Unlocked Grain Zinc & Magnesium", "Raspberry Ellagic Acid & Fiber (8g/cup)", "Peanut Niacin (B3), Vitamin E & Arginine", "Low-Glycemic Organic Acids"],
+    synergySafety: "Grain sprouting and sourdough lacto-fermentation activate endogenous phytase to break down phytic acid; thin peanut butter with warm water or berry mash for toddlers so globs never obstruct the airway.",
+    whyCliniciansApprove: "Replaces 22g of refined jelly/bread sugar with intact berry seeds/pectin and organic sourdough acids that slow gastric emptying and sustain morning working memory.",
+    researchAnchor: "NIAID (2017) LEAP Peanut Allergy Prevention; Micha et al. (2011) Low-GI Breakfasts",
+    link: "https://www.niaid.nih.gov/Zero-Peanut-Allergy-Guidelines"
+  },
+  {
+    name: "Warm Quinoa, Black Bean, Sweet Corn & Avocado School Thermos Bowl",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "steady-glucose",
+    categoryLabel: "Steady Classroom Glucose (Slow Oats, Legumes & Tubers)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Instant Fried Ramen / Cup Noodles (Palm-Oil-Fried Refined Flour, 1,100mg Sodium, Maltodextrin & TBHQ)",
+    wholeFoodSwap: "Fluffy tri-color quinoa tossed with black beans, roasted sweet corn, diced avocado, cilantro, and lime in an insulated lunchbox thermos",
+    keyNutrients: ["Complete Quinoa-Legume Protein (All 9 Amino Acids)", "Magnesium, Iron & Folate", "Corn Lutein & Zeaxanthin", "High-Satiety Soluble & Insoluble Fiber"],
+    synergySafety: "Rinse quinoa before cooking to remove bitter saponins; gently mash beans and corn kernels for toddlers (Ages 2–3) to ensure safe mastication.",
+    whyCliniciansApprove: "Prevents the afternoon post-lunch glycemic dip and irritability associated with refined-flour school lunches, supplying magnesium and B-vitamins for afternoon problem solving.",
+    researchAnchor: "Zahedi et al. (2014) Junk Food vs. Whole Dietary Quality; Ingwersen et al. (2007)",
+    link: "https://nutritionsource.hsph.harvard.edu/food-features/quinoa/"
+  },
+  {
+    name: "Whole-Buckwheat, Ripe Banana & Pasture-Egg Silver-Dollar Pancakes",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "steady-glucose",
+    categoryLabel: "Steady Classroom Glucose (Slow Oats, Legumes & Tubers)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Boxed White-Flour Pancake Mix Drenched in High-Fructose 'Pancake Syrup' (Caramel Color & Artificial Maple)",
+    wholeFoodSwap: "Blender batter of 100% whole buckwheat groats/flour, mashed ripe banana, pasture-raised eggs, and cinnamon topped with warm crushed berries",
+    keyNutrients: ["Buckwheat Rutin & D-Chiro-Inositol", "Egg Choline & Vitamin B12", "Banana Potassium & Vitamin B6", "Naturally Gluten-Free Resistant Starch"],
+    synergySafety: "Buckwheat is a dicot pseudocereal (unrelated to wheat) rich in D-chiro-inositol that supports insulin signaling; soft silver-dollar cakes are easy for toddlers to self-feed without sticky syrup.",
+    whyCliniciansApprove: "Eliminates the 35–45g liquid high-fructose corn syrup bolus of commercial pancake breakfasts while delivering choline, bioflavonoids, and steady glucose.",
+    researchAnchor: "Vos et al. (2017) AHA Added Sugars Statement; Micha et al. (2011) Low-GI Cognition",
+    link: "https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/sugar/sugar-recommendation-healthy-kids-and-teens-infographic"
+  },
+
+  // --- DOMAIN 4: SKELETAL & CRANIOFACIAL GROWTH (CA, D3, K2 & MG) ---
+  {
+    name: "Plain Full-Fat (5%) Greek Yogurt Parfait with Mashed Strawberries & Hemp Hearts",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "bone-growth",
+    categoryLabel: "Skeletal & Craniofacial Growth (Ca, D3, K2 & Mg)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Sweetened Kids' Yogurt Tubes & Cookie-Crumble Flip Cups (14–18g Added Sugar, Red 40, Blue 1 & Carrageenan)",
+    wholeFoodSwap: "Unsweetened plain whole-milk Greek yogurt swirled with fresh mashed strawberries, hulled hemp hearts, and a dash of vanilla bean or cinnamon",
+    keyNutrients: ["Bioavailable Calcium & Phosphorus", "Menaquinone-4 (Vitamin K2 in Full-Fat Dairy)", "Dense Casein & Whey Protein", "Live Lactic Acid Probiotics"],
+    synergySafety: "Full-fat dairy retains fat-soluble Vitamin K2 (MK-4), which activates osteocalcin to direct calcium into growing bone matrix; hemp hearts add magnesium required for parathyroid hormone regulation.",
+    whyCliniciansApprove: "Commercial kids' yogurts often contain more sugar per ounce than cola plus synthetic dyes (McCann et al., 2007). Plain whole-milk Greek yogurt delivers double the protein and zero added sugar.",
+    researchAnchor: "Golden et al. (2014) AAP Bone Building Clinical Report; McCann et al. (2007) Lancet",
+    link: "https://publications.aap.org/pediatrics/article/134/4/e1229/32964/Optimizing-Bone-Health-in-Children-and-Adolescents"
+  },
+  {
+    name: "Aged Grass-Fed Cheddar Slices, Crisp Skin-On Apple & Seeded Whole-Grain Crackers",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 4–12 Crisp Wedges • Ages 2–3 Paper-Thin or Grated Apple",
+    category: "bone-growth",
+    categoryLabel: "Skeletal & Craniofacial Growth (Ca, D3, K2 & Mg)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Pre-Packaged 'Lunch Kits' (Pasteurized Prepared Cheese Product with Sodium Phosphate + Nitrite Ham + Candy)",
+    wholeFoodSwap: "Real aged grass-fed cheddar slices, crisp skin-on apple wedges, and high-fiber flax/sesame whole-grain crackers",
+    keyNutrients: ["Calcium & Long-Chain Vitamin K2 (MK-7/MK-9 from Aging)", "Apple Pectin & Quercetin", "Phosphorus & Vitamin A", "Masticatory Jaw-Arch Loading"],
+    synergySafety: "Chewing firm raw apple and aged cheddar stimulates alkaline saliva (buffering dental plaque acids) and loads the mandible for healthy dental arch growth; grate or slice apples paper-thin for toddlers under 4.",
+    whyCliniciansApprove: "Bacterial fermentation during traditional cheese aging synthesizes menaquinones (Vitamin K2) and degrades lactose, while avoiding the endocrine-disrupting phthalates and phosphates of processed cheese slices.",
+    researchAnchor: "Golden et al. (2014) AAP Bone Report; Koletzko et al. (2019) Oral-Motor & Dental Health",
+    link: "https://ods.od.nih.gov/factsheets/Calcium-HealthProfessional/"
+  },
+  {
+    name: "Canned Wild Pink Salmon Salad (with Soft Crushable Bones) in Cucumber Boats",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "bone-growth",
+    categoryLabel: "Skeletal & Craniofacial Growth (Ca, D3, K2 & Mg)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Imitation Crab Sticks (Pulverized Surimi Starch, Sorbitol, MSG, Carmine/Paprika Color & Phosphate Binders)",
+    wholeFoodSwap: "Wild pink salmon (with its pressure-softened calcium-rich bones mashed right in) mixed with Greek yogurt, dill, and lemon in crisp cucumber boats",
+    keyNutrients: ["Microcrystalline Hydroxyapatite Bone Calcium", "Natural Cholecalciferol (Vitamin D3: 500+ IU)", "Marine DHA & EPA", "Phosphorus & Iodine"],
+    synergySafety: "Pressure canning renders salmon bones completely soft and crushable with a fork—mashing them into the yogurt dressing makes them imperceptible and 100% choking-safe while adding ~200mg natural bone calcium.",
+    whyCliniciansApprove: "Very few whole foods naturally contain high-dose Vitamin D3 alongside hydroxyapatite calcium and phosphorus in the exact physiological ratio required for pediatric skeletal mineralization.",
+    researchAnchor: "Golden et al. (2014) AAP Calcium & Vitamin D Report; Schwarzenberg et al. (2018)",
+    link: "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/"
+  },
+  {
+    name: "Calcium-Set Organic Tofu, Baby Bok Choy & UV-Shiitake Miso-Sesame Bowl",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "bone-growth",
+    categoryLabel: "Skeletal & Craniofacial Growth (Ca, D3, K2 & Mg)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "High-Sodium Flavored Instant Noodle Bricks (Fried in Palm Oil with TBHQ & Artificial Flavor Packets)",
+    wholeFoodSwap: "Organic firm tofu set with calcium sulfate, steamed baby bok choy, and sunlight/UV-exposed shiitake mushrooms in a mild miso-sesame broth with buckwheat soba",
+    keyNutrients: ["Low-Oxalate Bioavailable Calcium (Bok Choy + Tofu)", "Ergocalciferol Vitamin D2 (UV-Shiitake)", "Vitamin K1 (Osteocalcin Cofactor)", "Fermented Miso Isoflavones & Zinc"],
+    synergySafety: "Unlike spinach (whose high oxalic acid binds 95% of its calcium), baby bok choy is low-oxalate with >50% calcium absorption—making it the premier plant-based bone builder for dairy-free children.",
+    whyCliniciansApprove: "Provides a complete dairy-free skeletal growth matrix combining high-absorption cruciferous calcium, tofu calcium/protein, Vitamin K1, and mushroom Vitamin D.",
+    researchAnchor: "Golden et al. (2014) AAP Bone Health Report; USDA & HHS (2020) Dietary Guidelines",
+    link: "https://ods.od.nih.gov/factsheets/Calcium-HealthProfessional/"
+  },
+  {
+    name: "Homemade Bone Broth & Chickpea Pastina Soup with Sweet Peas & Parmigiano-Reggiano",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "bone-growth",
+    categoryLabel: "Skeletal & Craniofacial Growth (Ca, D3, K2 & Mg)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Canned Condensed Noodle Soups (High Sodium, Autolyzed Yeast Extract, Disodium Inosinate & Mushy White Noodles)",
+    wholeFoodSwap: "Slow-simmered chicken or beef bone broth with chickpea/whole-wheat pastina stars, sweet green peas, diced carrots, and 24-month aged Parmigiano-Reggiano",
+    keyNutrients: ["Collagen Peptides (Glycine, Proline & Hydroxyproline)", "Aged Parmesan Calcium & Phosphorus", "Vitamin K1 & Beta-Carotene", "Legume Iron & Fiber"],
+    synergySafety: "Simmering bone broth with a splash of apple cider vinegar leaches trace minerals while extracting gelatin/collagen; small pastina stars and tender peas are ideal for toddlers.",
+    whyCliniciansApprove: "Growing bones are ~30% flexible Type-1 collagen matrix (osteoid) by volume before calcium mineralizes onto them; pairing collagen amino acids with aged Parmesan calcium supports both tensile strength and bone density.",
+    researchAnchor: "Golden et al. (2014) AAP Bone Building; Monteiro et al. (2019) NOVA-1 Culinary Preparations",
+    link: "https://www.dietaryguidelines.gov/"
+  },
+
+  // --- DOMAIN 5: MICROBIOME & POLYPHENOLS (FERMENTED FOODS & BERRIES) ---
+  {
+    name: "Plain Whole-Milk Kefir & Mango-Turmeric Golden Probiotic Cup",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Served in Open Cup or Straw Cup)",
+    category: "gut-immune",
+    categoryLabel: "Microbiome & Polyphenols (Fermented Foods & Berries)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Commercial Sweetened 'Kids Probiotic' Shots (15g Cane Sugar, Carrageenan, Polysorbate 80 & Red 40)",
+    wholeFoodSwap: "Plain fermented whole-milk kefir (12+ live bacterial and beneficial yeast strains) blended with frozen mango chunks, a pinch of turmeric, and black pepper",
+    keyNutrients: ["Multi-Strain Live Probiotics (Lactobacillus & Kefiran)", "Piperine-Activated Curcuminoids", "Mango Vitamin C, Vitamin A & Folate", "Bioavailable Calcium"],
+    synergySafety: "A tiny pinch of black pepper piperine increases turmeric curcumin bioavailability by up to 2,000%, while kefir lipids aid fat-soluble absorption; zero emulsifiers that erode the gut mucus layer.",
+    whyCliniciansApprove: "Over 90% of peripheral serotonin is synthesized by enterochromaffin cells in the gut regulated by commensal microbes. Fermented whole kefir colonizes the gut-brain axis without refined sugar.",
+    researchAnchor: "Jacka et al. (2017) Gut-Brain Microbiome Axis; Hall et al. (2019) NIH Ultra-Processed Trial",
+    link: "https://pubmed.ncbi.nlm.nih.gov/31105044/"
+  },
+  {
+    name: "Rainbow Veggie Crudités (Carrots, Snap Peas & Bell Peppers) with Lemon-Garlic Hummus",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 4–12 Raw Crunch • Ages 2–3 Par-Steamed or Ribbon-Grated",
+    category: "gut-immune",
+    categoryLabel: "Microbiome & Polyphenols (Fermented Foods & Berries)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Extruded 'Veggie Straws' & Ranch Potato Crisps (Potato Starch Fried in Canola/Corn Oil with Trace Spinach Powder)",
+    wholeFoodSwap: "Crisp rainbow carrot sticks, sugar snap peas, and cucumber spears dipped in extra-virgin-olive-oil chickpea-tahini hummus",
+    keyNutrients: ["Intact Plant Cell-Wall Prebiotic Fibers", "Alpha- & Beta-Carotene + Lutein", "Chickpea Galacto-Oligosaccharides", "Tahini Sesame Lignans & Calcium"],
+    synergySafety: "CRITICAL CDC/AAP CHOKING RULE: Raw hard carrot rounds/sticks are a top choking hazard under age 4—always par-steam carrots until fork-tender or grate into thin ribbons for toddlers (Ages 2–3).",
+    whyCliniciansApprove: "Exposes the deception of 'Veggie Straws' (which contain zero intact plant cells) by delivering true cellular fiber that feeds short-chain fatty acid (butyrate) production and exercises chewing muscles.",
+    researchAnchor: "Hall et al. (2019) NIH Intact Matrix vs. UPF; CDC Infant & Toddler Choking Prevention",
+    link: "https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/choking-hazards.html"
+  },
+  {
+    name: "Firm Green-Tipped Banana Halves with Almond Butter, Hemp Hearts & Ceylon Cinnamon",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "gut-immune",
+    categoryLabel: "Microbiome & Polyphenols (Fermented Foods & Berries)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Packaged Mini Frosted Donuts & Snack Cakes (Partially Hydrogenated Oils, Mono- & Diglycerides, Polysorbate 60)",
+    wholeFoodSwap: "Lengthwise-split firm (barely ripe) banana spread thinly with 100% roasted almond butter and sprinkled with hemp hearts and Ceylon cinnamon",
+    keyNutrients: ["Type-2 Resistant Starch & Inulin Prebiotics", "Pyridoxine (Vitamin B6 for GABA/Serotonin)", "Potassium & Magnesium", "Tocopherol (Vitamin E)"],
+    synergySafety: "Barely-ripe bananas retain high Type-2 resistant starch that resists small-intestine amylase to ferment into anti-inflammatory butyrate in the colon; almond fats further blunt glucose rise.",
+    whyCliniciansApprove: "Provides prebiotic inulin and Vitamin B6 (essential cofactor for converting tryptophan to serotonin and glutamate to calming GABA) without synthetic emulsifiers that disrupt tight junctions.",
+    researchAnchor: "Jacka et al. (2017) Nutritional Psychiatry; Monteiro et al. (2019) NOVA Classification",
+    link: "https://nutritionsource.hsph.harvard.edu/bananas/"
+  },
+  {
+    name: "Warm Stewed Cinnamon Apples (Peel-On Pectin Gel) with Toasted Rolled Oats",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "gut-immune",
+    categoryLabel: "Microbiome & Polyphenols (Fermented Foods & Berries)",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Sweetened Commercial Applesauce Cups & Squeeze Pouches (Peeled, Boiled & Sweetened with High-Fructose Corn Syrup)",
+    wholeFoodSwap: "Unpeeled diced apples gently stewed with water, Ceylon cinnamon, and vanilla bean until tender and glossy—topped with toasted rolled oats and yogurt",
+    keyNutrients: ["Cross-Linked Soluble Apple Pectin", "Apple-Peel Quercetin & Catechin Polyphenols", "Oat Beta-Glucan", "Akkermansia-Supporting Prebiotics"],
+    synergySafety: "Keeping the crimson apple peel intact preserves 300% more quercetin flavonoids, while gentle stewing releases soluble pectin gel and makes the fruit completely soft and choking-safe for toddlers.",
+    whyCliniciansApprove: "Cooked apple pectin acts as a selective prebiotic substrate for *Akkermansia muciniphila* and *Faecalibacterium prausnitzii*, strengthening intestinal barrier integrity after illness or antibiotics.",
+    researchAnchor: "Hall et al. (2019) NIH Study; Zahedi et al. (2014) Dietary Quality & Behavior",
+    link: "https://nutritionsource.hsph.harvard.edu/food-features/apples/"
+  },
+  {
+    name: "Refrigerated Lacto-Fermented Dill Pickles, Castelvetrano Olives & Hummus Mezze",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 4–12 Spears • Ages 2–3 Finely Quartered Lengthwise",
+    category: "gut-immune",
+    categoryLabel: "Microbiome & Polyphenols (Fermented Foods & Berries)",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 1/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Neon-Green Relish & Shelf-Stable Dill Pickles (Yellow 5 Tartrazine, Blue 1, Polysorbate 80 & Sodium Benzoate)",
+    wholeFoodSwap: "Refrigerated brine-fermented cucumber pickles (water, cucumbers, garlic, dill, sea salt—zero vinegar or dye), pitted olives, and hummus",
+    keyNutrients: ["Live Lacto-Fermented Lactic Acid Bacteria", "Olive Hydroxytyrosol Polyphenols & Oleic Acid", "Vitamin K1", "Chickpea Prebiotic Fiber"],
+    synergySafety: "Scored 1/2 on Additives solely for natural fermentation sea-salt brine (pair with potassium-rich fresh cucumber/tomatoes); always pit and slice olives and pickles lengthwise into thin strips for children under 4.",
+    whyCliniciansApprove: "Commercial shelf-stable pickles are dead pasteurized cucumbers dyed with Tartrazine (Yellow 5—implicated in McCann et al., 2007). Refrigerated salt-brine pickles deliver live *Lactiplantibacillus plantarum*.",
+    researchAnchor: "McCann et al. (2007) Lancet Southampton Trial; OEHHA (2021) Synthetic Food Dye Assessment",
+    link: "https://oehha.ca.gov/risk-assessment/report/health-effects-assessment-potential-neurobehavioral-effects-synthetic-food-dyes-children"
+  },
+
+  // --- DOMAIN 6: SUPERMARKET & LUNCHBOX UPF TRAP SWAPS ---
+  {
+    name: "Whole Fresh Strawberries, 100% Freeze-Dried Berry Crisps & 70% Dark Cacao Chips",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Quarter Berries for Ages 2–3)",
+    category: "lunchbox-swaps",
+    categoryLabel: "Supermarket & Lunchbox UPF Trap Swaps",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 1/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "'Real Fruit' Gummies, Fruit Roll-Ups & Chewable Fruit Snacks (Corn Syrup, Red 40, Yellow 5, Carnauba Wax)",
+    wholeFoodSwap: "Fresh whole strawberries or single-ingredient freeze-dried strawberry slices paired with a few 70%+ dark chocolate chips and pumpkin seeds",
+    keyNutrients: ["Intact Vitamin C, Folate & Ellagic Acid", "Cacao Flavanols, Iron & Magnesium", "Zero Petroleum Dyes (No Red 40 / Yellow 5)", "Non-Sticky Dental Clearance"],
+    synergySafety: "Commercial gummy 'fruit snacks' cement sucrose into molar fissures for hours and drive dental caries; fresh berries and dark cacao flavanols clear rapidly from enamel while Vitamin C boosts cacao iron uptake.",
+    whyCliniciansApprove: "Directly replaces the #1 deceptive 'health halo' lunchbox snack with real cellular fruit polyphenols and dark cacao flavanols that support cerebral blood flow without synthetic dye hyperactivity triggers.",
+    researchAnchor: "Vos et al. (2017) AHA Added Sugars Statement; OEHHA (2021) Synthetic Food Dye Report",
+    link: "https://oehha.ca.gov/risk-assessment/report/health-effects-assessment-potential-neurobehavioral-effects-synthetic-food-dyes-children"
+  },
+  {
+    name: "Stovetop Popcorn in Avocado Oil with Savory B-Vitamin Nutritional Yeast ('Cheesy' Crunch)",
+    age: ["preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "Ages 4–12 Only (Strict AAP Choking Gate: Not for Under Age 4)",
+    category: "lunchbox-swaps",
+    categoryLabel: "Supermarket & Lunchbox UPF Trap Swaps",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 1/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Extruded 'Cheese' Puffs, Doritos & Neon Goldfish Crackers (Maltodextrin, MSG, Yellow 5 Tartrazine & Yellow 6 Sunset Yellow)",
+    wholeFoodSwap: "Organic butterfly popcorn kernels popped on the stovetop in avocado/coconut oil and dusted with savory unfortified/B-complex nutritional yeast and sea salt",
+    keyNutrients: ["100% Intact Whole-Grain Pericarp Polyphenols (Ferulic Acid)", "Natural B-Complex Vitamins (B1, B2, B6, B12)", "Complete Yeast Amino Acids & Beta-Glucans", "Zero Synthetic Azo Dyes"],
+    synergySafety: "STRICT AAP AGE GATE: Popcorn hulls and kernels are a leading aspiration hazard for children under age 4—restricted to Preschool (Ages 4–5) through Pre-Teen (10–12). For Toddlers (2–3), serve thin whole-grain sesame flatbread crackers.",
+    whyCliniciansApprove: "Gives elementary kids the savory, 'cheesy' finger-food crunch they crave in lunchboxes while replacing extruded starch and Yellow 5/6 neuro-irritants with whole-grain fiber and B-vitamins.",
+    researchAnchor: "McCann et al. (2007) Lancet Southampton Trial; AAP Policy on Prevention of Choking Among Children",
+    link: "https://publications.aap.org/pediatrics/article/125/3/601/72642/Policy-Statement-Prevention-of-Choking-Among"
+  },
+  {
+    name: "Chilled Sparkling Water Infused with Crushed Pomegranate Arils, Orange Wheels & Mint",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Flat Filtered Infused Water for Ages 2–3)",
+    category: "lunchbox-swaps",
+    categoryLabel: "Supermarket & Lunchbox UPF Trap Swaps",
+    nfiScore: "1/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 1/10)",
+    trapReplaced: "Neon Sports Drinks, 'Fruit Punch' Pouches & Diet Sodas (35g Liquid Fructose/Sucrose or Sucralose + Red 40 / Blue 1)",
+    wholeFoodSwap: "Cold filtered or lightly sparkling water infused with a splash of crushed pomegranate arils, fresh orange slices, and crushed mint leaves",
+    keyNutrients: ["Zero Liquid Free Sugars (0g Added Sugar)", "Pomegranate Punicalagin Antioxidants", "Citrus Vitamin C & Bioflavonoids", "Optimal Cellular & Cerebral Hydration"],
+    synergySafety: "Serve flat fruit-infused water or open-cup milk to toddlers (Ages 2–3) per RWJF/AAP/AND consensus; even 2% mild dehydration impairs pediatric working memory and visual-motor tracking.",
+    whyCliniciansApprove: "The American Heart Association (Vos et al., 2017) and Healthy Eating Research consensus (Lott et al., 2019) identify sugar-sweetened beverages as the single largest source of hepatic fructose overload in children.",
+    researchAnchor: "Vos et al. (2017) AHA Added Sugars Statement; Lott et al. (2019) Healthy Beverage Consensus",
+    link: "https://healthyeatingresearch.org/research/consensus-statement-healthy-beverage-consumption-in-early-childhood-recommendations-from-key-national-health-and-nutrition-organizations/"
+  },
+  {
+    name: "No-Bake Rolled Oat, SunButter, Chia & Whole-Date Energy Bites (100% Nut-Free School Safe)",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12 (Roll Soft & Bite-Sized for Ages 2–3)",
+    category: "lunchbox-swaps",
+    categoryLabel: "Supermarket & Lunchbox UPF Trap Swaps",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 0/2 • Glycemic: 1/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Commercial Dip-Coated Granola Bars (High-Fructose Brown Rice Syrup, Palm Kernel Oil, Soy Lecithin & Caramel Color)",
+    wholeFoodSwap: "Old-fashioned rolled oats, unsweetened sunflower seed butter, chia seeds, shredded coconut, and whole Medjool dates pulsed into soft bite-sized spheres",
+    keyNutrients: ["Sunflower Seed Vitamin E, Selenium & Zinc", "Oat Beta-Glucan & Chia Omega-3 ALA", "Whole-Date Fiber, Potassium & Magnesium", "Zero Refined Syrups or Emulsifiers"],
+    synergySafety: "100% peanut-free and tree-nut-free to comply with strict classroom allergy policies; blending whole Medjool dates retains their cellular fiber matrix, blunting the glycemic spike of liquid syrups.",
+    whyCliniciansApprove: "Replaces ultra-processed candy-bar masqueraders ('granola bars') with an intact seed-and-oat matrix rich in Vitamin E and slow-release complex carbohydrates.",
+    researchAnchor: "Hall et al. (2019) NIH Ultra-Processed Trial; Micha et al. (2011) Low-GI School Nutrition",
+    link: "https://www.cell.com/cell-metabolism/fulltext/S1550-4131(19)30248-7"
+  },
+  {
+    name: "Oven-Roasted Rosemary Turkey Breast, Cucumber Rounds & Hummus in Whole-Wheat Pita",
+    age: ["toddler", "preschool", "early-elementary", "middle-elementary", "preteen"],
+    ageLabel: "All Ages 2–12",
+    category: "lunchbox-swaps",
+    categoryLabel: "Supermarket & Lunchbox UPF Trap Swaps",
+    nfiScore: "2/10",
+    stimulusClass: "stimulus-low",
+    nfiBreakdown: "Base 1 + Matrix: 1/2 • Glycemic: 0/2 • Nutrients: 0/2 • Additives: 0/2 • Texture: 0/2 (Total: 2/10)",
+    trapReplaced: "Pre-Packaged Nitrite-Cured Deli Combos (Bologna/Ham Preserved with Sodium Nitrite, Sodium Phosphate & Carrageenan)",
+    wholeFoodSwap: "Thick-sliced real oven-roasted turkey breast (seasoned only with olive oil, rosemary, and garlic—zero nitrites or celery-powder nitrates) in a whole-wheat pita with hummus and cucumber",
+    keyNutrients: ["Complete Lean Protein & L-Tryptophan", "Vitamin B6, B12, Niacin & Selenium", "Zero N-Nitroso Carcinogen Precursors", "Whole-Wheat Arabinoxylan Fiber"],
+    synergySafety: "Avoids both synthetic sodium nitrite (E250) and deceptive 'uncured' celery-juice-powder nitrates (which form identical endogenous nitrosamines in the stomach); shred turkey thinly for toddlers.",
+    whyCliniciansApprove: "Pediatric oncology and WHO/IARC guidelines advise minimizing nitrite-cured processed meats in children's daily school lunches; real roasted poultry with hummus delivers clean iron, zinc, and B-vitamins.",
+    researchAnchor: "Monteiro et al. (2019) NOVA Classification; USDA & HHS (2020) Dietary Guidelines for Americans",
+    link: "https://www.who.int/news-room/questions-and-answers/item/cancer-carcinogenicity-of-the-consumption-of-red-meat-and-processed-meat"
+  }
+];
+
+// ==================== DETERMINISTIC SEM-10 & NFI-10 ORACLES & SECURITY HELPERS ====================
 const ALLOWED_AGE_FILTERS = new Set(['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
 const ALLOWED_GAME_DOMAINS = new Set(['all', 'logic', 'spatial', 'coding', 'sandbox', 'stem', 'sel']);
+const ALLOWED_FOOD_DOMAINS = new Set(['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps']);
 
 const STORAGE_KEYS = {
   CHANNEL_AGE: 'safekids_channel_age_filter',
   GAME_AGE: 'safekids_game_age_filter',
-  GAME_DOMAIN: 'safekids_game_domain_filter'
+  GAME_DOMAIN: 'safekids_game_domain_filter',
+  FOOD_AGE: 'safekids_food_age_filter',
+  FOOD_DOMAIN: 'safekids_food_domain_filter'
 };
 
 function clampSemDimension(val) {
@@ -1751,6 +2319,43 @@ function computeSem10Score(dims) {
     tier,
     stimulusClass,
     semBreakdown
+  };
+}
+
+function computeNfi10Score(dims) {
+  const safeDims = dims && typeof dims === 'object' ? dims : {};
+  const matrix = clampSemDimension(safeDims.matrix);
+  const glycemic = clampSemDimension(safeDims.glycemic);
+  const nutrients = clampSemDimension(safeDims.nutrients);
+  const additives = clampSemDimension(safeDims.additives);
+  const texture = clampSemDimension(safeDims.texture);
+
+  const rawSum = matrix + glycemic + nutrients + additives + texture;
+  const totalScore = Math.min(10, 1 + rawSum);
+
+  let tier = 'high';
+  let stimulusClass = 'stimulus-high';
+  if (totalScore <= 3) {
+    tier = 'low';
+    stimulusClass = 'stimulus-low';
+  } else if (totalScore <= 6) {
+    tier = 'med';
+    stimulusClass = 'stimulus-med';
+  }
+
+  const nfiBreakdown = `Base 1 + Matrix: ${matrix}/2 \u2022 Glycemic: ${glycemic}/2 \u2022 Nutrients: ${nutrients}/2 \u2022 Additives: ${additives}/2 \u2022 Texture: ${texture}/2 (Total: ${totalScore}/10)`;
+  return {
+    matrix,
+    glycemic,
+    nutrients,
+    additives,
+    texture,
+    rawSum,
+    score: totalScore,
+    scoreLabel: `${totalScore}/10`,
+    tier,
+    stimulusClass,
+    nfiBreakdown
   };
 }
 
@@ -1837,12 +2442,15 @@ function createEmptyState(primaryMsg, secondaryMsg) {
   return wrapper;
 }
 
-// ==================== CHANNEL & GAME STATE INITIALIZATION ====================
+// ==================== CHANNEL, GAME & FOOD STATE INITIALIZATION ====================
 let currentChannelFilter = 'all';
 let currentChannelSearch = '';
 let currentGameAgeFilter = 'all';
 let currentGameDomainFilter = 'all';
 let currentGameSearch = '';
+let currentFoodAgeFilter = 'all';
+let currentFoodDomainFilter = 'all';
+let currentFoodSearch = '';
 
 function syncFilterButtons(selector, activeValue) {
   const buttons = document.querySelectorAll(selector);
@@ -1859,10 +2467,14 @@ function restorePersistedDirectoryFilters() {
   currentChannelFilter = readPersistedFilter(STORAGE_KEYS.CHANNEL_AGE, ALLOWED_AGE_FILTERS, 'all');
   currentGameAgeFilter = readPersistedFilter(STORAGE_KEYS.GAME_AGE, ALLOWED_AGE_FILTERS, 'all');
   currentGameDomainFilter = readPersistedFilter(STORAGE_KEYS.GAME_DOMAIN, ALLOWED_GAME_DOMAINS, 'all');
+  currentFoodAgeFilter = readPersistedFilter(STORAGE_KEYS.FOOD_AGE, ALLOWED_AGE_FILTERS, 'all');
+  currentFoodDomainFilter = readPersistedFilter(STORAGE_KEYS.FOOD_DOMAIN, ALLOWED_FOOD_DOMAINS, 'all');
 
   syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
   syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
   syncFilterButtons('#game-domain-filters .filter-btn', currentGameDomainFilter);
+  syncFilterButtons('#food-age-filters .filter-btn', currentFoodAgeFilter);
+  syncFilterButtons('#food-domain-filters .filter-btn', currentFoodDomainFilter);
 }
 
 // ==================== CHANNEL CONTROLS & RENDERING ====================
@@ -2691,6 +3303,459 @@ function setupSemCalculator() {
   }
 
   updateCalculatorView();
+}
+
+// ==================== WHOLESOME FOOD CONTROLS, EXPORT & RENDERING ====================
+function getFilteredFoods() {
+  return foodsData.filter(f => {
+    const ageVal = Array.isArray(f.age) ? f.age : [f.age || ''];
+    const matchesAge = currentFoodAgeFilter === 'all' || ageVal.includes(currentFoodAgeFilter);
+    const matchesDomain = currentFoodDomainFilter === 'all' || f.category === currentFoodDomainFilter;
+
+    const matchesSearch = !currentFoodSearch ||
+      (f.name && f.name.toLowerCase().includes(currentFoodSearch)) ||
+      (f.trapReplaced && f.trapReplaced.toLowerCase().includes(currentFoodSearch)) ||
+      (f.wholeFoodSwap && f.wholeFoodSwap.toLowerCase().includes(currentFoodSearch)) ||
+      (f.synergySafety && f.synergySafety.toLowerCase().includes(currentFoodSearch)) ||
+      (f.whyCliniciansApprove && f.whyCliniciansApprove.toLowerCase().includes(currentFoodSearch)) ||
+      (f.researchAnchor && f.researchAnchor.toLowerCase().includes(currentFoodSearch)) ||
+      (f.nfiBreakdown && f.nfiBreakdown.toLowerCase().includes(currentFoodSearch)) ||
+      (f.ageLabel && f.ageLabel.toLowerCase().includes(currentFoodSearch)) ||
+      (f.categoryLabel && f.categoryLabel.toLowerCase().includes(currentFoodSearch)) ||
+      (f.keyNutrients && f.keyNutrients.some(kn => kn.toLowerCase().includes(currentFoodSearch)));
+
+    return matchesAge && matchesDomain && matchesSearch;
+  });
+}
+
+function setupFoodsExport() {
+  const btnCopyFoods = document.getElementById('btn-copy-foods-swaps');
+  const btnExportFoodsJson = document.getElementById('btn-export-foods-json');
+  const btnExportFoodsCsv = document.getElementById('btn-export-foods-csv');
+
+  if (btnCopyFoods) {
+    btnCopyFoods.addEventListener('click', () => {
+      const activeFoods = getFilteredFoods();
+      const text = activeFoods.map(f => `${f.name} (NFI ${f.nfiScore}) — Swap Out: ${f.trapReplaced} -> Upgrade: ${f.wholeFoodSwap}`).join('\n');
+      safeCopyText(
+        text,
+        () => {
+          flashButtonSuccess(btnCopyFoods, `✓ Copied ${activeFoods.length} Swaps!`);
+          if (window.trackSafeKidsEvent) {
+            window.trackSafeKidsEvent('export_foods', { format: 'clipboard', count: activeFoods.length });
+          }
+        },
+        () => {
+          flashButtonSuccess(btnCopyFoods, `✓ Prepared ${activeFoods.length} Swaps`);
+        }
+      );
+    });
+  }
+
+  if (btnExportFoodsJson) {
+    btnExportFoodsJson.addEventListener('click', () => {
+      const activeFoods = getFilteredFoods();
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        ageFilterApplied: currentFoodAgeFilter,
+        domainFilterApplied: currentFoodDomainFilter,
+        foodCount: activeFoods.length,
+        foods: activeFoods.map(f => ({
+          name: f.name,
+          ageBands: f.age,
+          ageLabel: f.ageLabel,
+          domain: f.category,
+          domainLabel: f.categoryLabel,
+          nfi10Score: f.nfiScore,
+          nfi10Breakdown: f.nfiBreakdown,
+          trapReplaced: f.trapReplaced,
+          wholeFoodSwap: f.wholeFoodSwap,
+          keyNutrients: f.keyNutrients,
+          synergySafety: f.synergySafety,
+          researchAnchor: f.researchAnchor,
+          url: f.link
+        }))
+      };
+      triggerFileDownload(
+        `safekids-wholesome-foods-${currentFoodAgeFilter}-${currentFoodDomainFilter}.json`,
+        JSON.stringify(payload, null, 2),
+        'application/json'
+      );
+      flashButtonSuccess(btnExportFoodsJson, '✓ Downloaded JSON!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_foods', { format: 'json', count: activeFoods.length });
+      }
+    });
+  }
+
+  if (btnExportFoodsCsv) {
+    btnExportFoodsCsv.addEventListener('click', () => {
+      const activeFoods = getFilteredFoods();
+      const header = ['Whole-Food & Swap Name', 'Age Group', 'Nutrient Domain', 'NFI-10 Score', 'NFI-10 Breakdown', 'UPF Trap Replaced', 'Whole-Food Upgrade', 'Key Brain & Growth Nutrients', 'Bioavailability Synergy & Choking/Allergen Safety', 'Clinical Anchor', 'Reference URL'].map(sanitizeCsvCell);
+      const rows = activeFoods.map(f => [
+        sanitizeCsvCell(f.name),
+        sanitizeCsvCell(f.ageLabel),
+        sanitizeCsvCell(f.categoryLabel),
+        sanitizeCsvCell(f.nfiScore),
+        sanitizeCsvCell(f.nfiBreakdown),
+        sanitizeCsvCell(f.trapReplaced),
+        sanitizeCsvCell(f.wholeFoodSwap),
+        sanitizeCsvCell((f.keyNutrients || []).join(' | ')),
+        sanitizeCsvCell(f.synergySafety),
+        sanitizeCsvCell(f.researchAnchor),
+        sanitizeCsvCell(f.link)
+      ].join(','));
+      const csvContent = [header.join(','), ...rows].join('\n');
+      triggerFileDownload(
+        `safekids-wholesome-foods-${currentFoodAgeFilter}-${currentFoodDomainFilter}.csv`,
+        csvContent,
+        'text/csv;charset=utf-8;'
+      );
+      flashButtonSuccess(btnExportFoodsCsv, '✓ Downloaded CSV!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_foods', { format: 'csv', count: activeFoods.length });
+      }
+    });
+  }
+}
+
+function buildFoodCard(f) {
+  const card = document.createElement('div');
+  card.className = 'card food-card';
+
+  const body = document.createElement('div');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'channel-header';
+
+  const titleWrap = document.createElement('div');
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'channel-name';
+  nameDiv.textContent = f.name;
+
+  const catDiv = document.createElement('div');
+  catDiv.style.fontSize = '0.75rem';
+  catDiv.style.color = '#15803d';
+  catDiv.style.fontWeight = '600';
+  catDiv.textContent = f.categoryLabel;
+
+  titleWrap.appendChild(nameDiv);
+  titleWrap.appendChild(catDiv);
+
+  const nfiSpan = document.createElement('span');
+  nfiSpan.className = `stimulus-tag ${f.stimulusClass}`;
+  nfiSpan.textContent = `NFI-10: ${f.nfiScore}`;
+
+  header.appendChild(titleWrap);
+  header.appendChild(nfiSpan);
+  body.appendChild(header);
+
+  // Age Badge
+  const metaRow = document.createElement('div');
+  metaRow.style.display = 'flex';
+  metaRow.style.flexWrap = 'wrap';
+  metaRow.style.gap = '0.35rem';
+  metaRow.style.margin = '0.6rem 0';
+
+  const ageBadge = document.createElement('span');
+  ageBadge.className = 'tag-badge';
+  ageBadge.style.background = '#e0f2fe';
+  ageBadge.style.color = '#0369a1';
+  ageBadge.style.fontWeight = '600';
+  ageBadge.textContent = f.ageLabel;
+
+  const novaBadge = document.createElement('span');
+  novaBadge.className = 'monetization-badge monetization-free';
+  novaBadge.textContent = 'NOVA-1 Whole Matrix';
+
+  metaRow.appendChild(ageBadge);
+  metaRow.appendChild(novaBadge);
+  body.appendChild(metaRow);
+
+  // Swap Box: Trap Replaced -> Whole-Food Upgrade
+  const swapBox = document.createElement('div');
+  swapBox.style.background = '#f0fdf4';
+  swapBox.style.border = '1px solid #bbf7d0';
+  swapBox.style.borderRadius = 'var(--radius-sm)';
+  swapBox.style.padding = '0.65rem';
+  swapBox.style.marginBottom = '0.75rem';
+  swapBox.style.fontSize = '0.82rem';
+
+  const trapDiv = document.createElement('div');
+  trapDiv.style.color = '#991b1b';
+  trapDiv.style.marginBottom = '0.35rem';
+  const trapStrong = document.createElement('strong');
+  trapStrong.textContent = '❌ Replaces UPF Trap: ';
+  trapDiv.appendChild(trapStrong);
+  trapDiv.appendChild(document.createTextNode(f.trapReplaced));
+
+  const upgDiv = document.createElement('div');
+  upgDiv.style.color = '#14532d';
+  const upgStrong = document.createElement('strong');
+  upgStrong.textContent = '✅ Whole-Food Upgrade: ';
+  upgDiv.appendChild(upgStrong);
+  upgDiv.appendChild(document.createTextNode(f.wholeFoodSwap));
+
+  swapBox.appendChild(trapDiv);
+  swapBox.appendChild(upgDiv);
+  body.appendChild(swapBox);
+
+  // Key Brain & Growth Nutrients
+  if (f.keyNutrients && f.keyNutrients.length > 0) {
+    const nutSection = document.createElement('div');
+    nutSection.style.marginBottom = '0.75rem';
+
+    const nutTitle = document.createElement('div');
+    nutTitle.style.fontSize = '0.75rem';
+    nutTitle.style.fontWeight = '700';
+    nutTitle.style.color = 'var(--text-light)';
+    nutTitle.style.textTransform = 'uppercase';
+    nutTitle.style.marginBottom = '0.25rem';
+    nutTitle.textContent = 'Key Brain & Growth Nutrients:';
+
+    const nutList = document.createElement('div');
+    nutList.style.display = 'flex';
+    nutList.style.flexWrap = 'wrap';
+    nutList.style.gap = '0.25rem';
+
+    f.keyNutrients.forEach(kn => {
+      const span = document.createElement('span');
+      span.className = 'domain-badge';
+      span.textContent = kn;
+      nutList.appendChild(span);
+    });
+
+    nutSection.appendChild(nutTitle);
+    nutSection.appendChild(nutList);
+    body.appendChild(nutSection);
+  }
+
+  // Why Pediatric Clinicians Approve
+  const descP = document.createElement('p');
+  descP.className = 'channel-desc';
+  descP.style.marginBottom = '0.75rem';
+  const descStrong = document.createElement('strong');
+  descStrong.textContent = 'Why Clinicians Approve: ';
+  descP.appendChild(descStrong);
+  descP.appendChild(document.createTextNode(f.whyCliniciansApprove));
+  body.appendChild(descP);
+
+  // Bioavailability Synergy & Choking/Allergen Safety Box
+  const synBox = document.createElement('div');
+  synBox.style.background = '#eff6ff';
+  synBox.style.border = '1px solid #bfdbfe';
+  synBox.style.borderRadius = 'var(--radius-sm)';
+  synBox.style.padding = '0.65rem';
+  synBox.style.marginBottom = '0.75rem';
+  synBox.style.fontSize = '0.8rem';
+  synBox.style.color = '#1e3a8a';
+
+  const synStrong = document.createElement('strong');
+  synStrong.textContent = '🧬 Bioavailability Synergy & Prep Safety: ';
+  synBox.appendChild(synStrong);
+  synBox.appendChild(document.createTextNode(f.synergySafety));
+  body.appendChild(synBox);
+
+  // Citation & NFI-10 Breakdown Box
+  const citBox = document.createElement('div');
+  citBox.className = 'citation-box';
+
+  const resDiv = document.createElement('div');
+  const resStrong = document.createElement('strong');
+  resStrong.textContent = '📚 Clinical Anchor: ';
+  resDiv.appendChild(resStrong);
+  resDiv.appendChild(document.createTextNode(f.researchAnchor));
+
+  const nfiDiv = document.createElement('div');
+  nfiDiv.style.marginTop = '0.25rem';
+  const nfiStrong = document.createElement('strong');
+  nfiStrong.textContent = '🥗 NFI-10 Rubric: ';
+  const nfiBadge = document.createElement('span');
+  nfiBadge.className = 'sem-badge';
+  nfiBadge.textContent = f.nfiBreakdown;
+  nfiDiv.appendChild(nfiStrong);
+  nfiDiv.appendChild(nfiBadge);
+
+  citBox.appendChild(resDiv);
+  citBox.appendChild(nfiDiv);
+  body.appendChild(citBox);
+
+  card.appendChild(body);
+
+  // Action Link
+  const link = document.createElement('a');
+  link.href = f.link;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.className = 'btn btn-outline';
+  link.style.marginTop = '0.75rem';
+  link.style.width = '100%';
+  link.style.justifyContent = 'center';
+  link.appendChild(createExternalLinkSvg());
+  link.appendChild(document.createTextNode(' View Clinical & Nutrient Reference'));
+
+  link.addEventListener('click', () => {
+    if (window.trackSafeKidsEvent) {
+      window.trackSafeKidsEvent('click_food_reference', { name: f.name, url: f.link });
+    }
+  });
+
+  card.appendChild(link);
+  return card;
+}
+
+function renderFoods() {
+  const container = document.getElementById('food-grid');
+  if (!container) return;
+
+  const filtered = getFilteredFoods();
+
+  const countBadge = document.getElementById('food-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${filtered.length} whole foods & swaps`;
+  }
+
+  if (filtered.length === 0) {
+    container.replaceChildren(
+      createEmptyState(
+        'No whole foods or swaps match your search criteria.',
+        "Try selecting 'All Whole Foods & Swaps' or clearing the nutrient domain and search filters."
+      )
+    );
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(f => {
+    fragment.appendChild(buildFoodCard(f));
+  });
+  container.replaceChildren(fragment);
+}
+
+function setupFoodFilterListeners() {
+  const ageButtons = document.querySelectorAll('#food-age-filters .filter-btn');
+  ageButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const activeBtn = e.currentTarget || e.target;
+      ageButtons.forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+      const rawAge = activeBtn.getAttribute('data-filter') || 'all';
+      currentFoodAgeFilter = ALLOWED_AGE_FILTERS.has(rawAge) ? rawAge : 'all';
+      writePersistedFilter(STORAGE_KEYS.FOOD_AGE, currentFoodAgeFilter, ALLOWED_AGE_FILTERS);
+      renderFoods();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_foods_age', { age: currentFoodAgeFilter });
+      }
+    });
+  });
+
+  const domainButtons = document.querySelectorAll('#food-domain-filters .filter-btn');
+  domainButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const activeBtn = e.currentTarget || e.target;
+      domainButtons.forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+      const rawDomain = activeBtn.getAttribute('data-filter') || 'all';
+      currentFoodDomainFilter = ALLOWED_FOOD_DOMAINS.has(rawDomain) ? rawDomain : 'all';
+      writePersistedFilter(STORAGE_KEYS.FOOD_DOMAIN, currentFoodDomainFilter, ALLOWED_FOOD_DOMAINS);
+      renderFoods();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_foods_domain', { domain: currentFoodDomainFilter });
+      }
+    });
+  });
+}
+
+function setupFoodSearch() {
+  const input = document.getElementById('food-search');
+  if (!input) return;
+  let fSearchTimer;
+  input.addEventListener('input', (e) => {
+    currentFoodSearch = e.target.value.toLowerCase().trim();
+    renderFoods();
+    clearTimeout(fSearchTimer);
+    if (currentFoodSearch.length >= 3 && window.trackSafeKidsEvent) {
+      fSearchTimer = setTimeout(() => {
+        window.trackSafeKidsEvent('search_foods', { query: currentFoodSearch });
+      }, 500);
+    }
+  });
+}
+
+// ==================== INTERACTIVE NFI-10 FOOD AUDITOR (MUST_RESET_ON_RELOAD) ====================
+function setupFoodCalculator() {
+  const calcContainer = document.getElementById('food-calculator');
+  if (!calcContainer) return;
+
+  const scores = {
+    matrix: 0,
+    glycemic: 0,
+    nutrients: 0,
+    additives: 0,
+    texture: 0
+  };
+
+  const scoreBadge = document.getElementById('food-calc-score-badge');
+  const breakdownText = document.getElementById('food-calc-breakdown-text');
+  const verdictDesc = document.getElementById('food-calc-verdict-desc');
+  const resetBtn = document.getElementById('food-calc-reset-btn');
+
+  function updateFoodCalculatorView() {
+    const result = computeNfi10Score(scores);
+
+    if (breakdownText) {
+      breakdownText.textContent = result.nfiBreakdown;
+    }
+
+    if (scoreBadge && verdictDesc) {
+      scoreBadge.className = `stimulus-tag ${result.stimulusClass}`;
+      if (result.tier === 'low') {
+        scoreBadge.textContent = `NFI-10 Score: ${result.scoreLabel} — Whole-Food Matrix (Approved Daily Staple)`;
+        verdictDesc.textContent = 'Intact cellular matrix, zero synthetic dyes/emulsifiers, and steady glycemic release. Supports brain myelination, dopamine synthesis, and microbiome health (Schwarzenberg et al., 2018; Hall et al., 2019).';
+      } else if (result.tier === 'med') {
+        scoreBadge.textContent = `NFI-10 Score: ${result.scoreLabel} — Culinary / Mildly Processed (Pair with Protein & Fiber)`;
+        verdictDesc.textContent = 'Acceptable culinary or lightly processed food. Pair with intact protein, healthy fat, or raw produce to slow gastric emptying and buffer postprandial glucose.';
+      } else {
+        scoreBadge.textContent = `NFI-10 Score: ${result.scoreLabel} — Ultra-Processed Trap (Replace with Whole-Food Swap)`;
+        verdictDesc.textContent = 'High risk of rapid glycemic spike-and-crash, neurobehavioral dye/additive reactivity (McCann et al., 2007; OEHHA, 2021), and hyper-palatable satiety bypass. See Section 5 for a 1-to-1 whole-food swap.';
+      }
+    }
+  }
+
+  const dimGroups = calcContainer.querySelectorAll('.food-dim-box');
+  dimGroups.forEach(group => {
+    const dim = group.getAttribute('data-food-dim');
+    const buttons = group.querySelectorAll('.food-opt-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        scores[dim] = clampSemDimension(btn.getAttribute('data-pts') || '0');
+        updateFoodCalculatorView();
+        if (window.trackSafeKidsEvent) {
+          const currentResult = computeNfi10Score(scores);
+          window.trackSafeKidsEvent('use_nfi_calculator', { dimension: dim, total: currentResult.score });
+        }
+      });
+    });
+  });
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      Object.keys(scores).forEach(k => { scores[k] = 0; });
+      dimGroups.forEach(group => {
+        const buttons = group.querySelectorAll('.food-opt-btn');
+        buttons.forEach((b, idx) => {
+          if (idx === 0) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      });
+      updateFoodCalculatorView();
+    });
+  }
+
+  updateFoodCalculatorView();
 }
 
 // ==================== COPY CODE BUTTONS ====================

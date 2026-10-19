@@ -39,16 +39,16 @@ MUTANTS: tuple[Mutant, ...] = (
     Mutant(
         name="r2_drop_base_1_screen_floor_in_sem10_oracle",
         file="public/app.js",
-        original="const totalScore = Math.min(10, 1 + rawSum);",
-        mutated="const totalScore = Math.min(10, rawSum === 0 ? 1 : rawSum);",
+        original="const rawSum = pacing + visual + audio + pressure + reward;\n  const totalScore = Math.min(10, 1 + rawSum);",
+        mutated="const rawSum = pacing + visual + audio + pressure + reward;\n  const totalScore = Math.min(10, rawSum === 0 ? 1 : rawSum);",
         test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r2_exhaustive_243_grid_and_400_fuzz_parity_python_vs_js",
         why="Simulates R-2 bug where 1-pt rawSum collapses to 1/10 instead of 2/10.",
     ),
     Mutant(
         name="r2_shift_low_stimulus_tier_boundary",
         file="public/app.js",
-        original="if (totalScore <= 3) {",
-        mutated="if (totalScore < 3) {",
+        original="const rawSum = pacing + visual + audio + pressure + reward;\n  const totalScore = Math.min(10, 1 + rawSum);\n\n  let tier = 'high';\n  let stimulusClass = 'stimulus-high';\n  if (totalScore <= 3) {",
+        mutated="const rawSum = pacing + visual + audio + pressure + reward;\n  const totalScore = Math.min(10, 1 + rawSum);\n\n  let tier = 'high';\n  let stimulusClass = 'stimulus-high';\n  if (totalScore < 3) {",
         test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r2_exhaustive_243_grid_and_400_fuzz_parity_python_vs_js",
         why="Proves boundary check on SEM-10 Low Stimulus tier (3/10) is locked.",
     ),
@@ -67,6 +67,22 @@ MUTANTS: tuple[Mutant, ...] = (
         mutated="return stored || fallback;",
         test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r4_intent_aware_persistence_and_allowlist_validation",
         why="Simulates R-4 bug where corrupted/injected localStorage filter state bypasses allow-list validation.",
+    ),
+    Mutant(
+        name="r7_drop_base_1_floor_in_nfi10_oracle",
+        file="public/app.js",
+        original="const rawSum = matrix + glycemic + nutrients + additives + texture;\n  const totalScore = Math.min(10, 1 + rawSum);",
+        mutated="const rawSum = matrix + glycemic + nutrients + additives + texture;\n  const totalScore = Math.min(10, rawSum === 0 ? 1 : rawSum);",
+        test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r7_nfi10_exhaustive_243_grid_and_400_fuzz_parity_python_vs_js",
+        why="Proves NFI-10 whole-food oracle Base 1 + 5x2 math is locked against off-by-one drift.",
+    ),
+    Mutant(
+        name="r7_break_food_calculator_selector",
+        file="public/app.js",
+        original="const dimGroups = calcContainer.querySelectorAll('.food-dim-box');",
+        mutated="const dimGroups = calcContainer.querySelectorAll('.food-options');",
+        test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r7_food_calculator_buttons_persistence_and_csv_export",
+        why="Proves NFI-10 interactive food label auditor button binding is locked.",
     ),
 )
 

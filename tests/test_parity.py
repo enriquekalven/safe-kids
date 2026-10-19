@@ -37,11 +37,14 @@ VALID_AGE_FILTERS = frozenset(
     {"all", "toddler", "preschool", "early-elementary", "middle-elementary", "preteen"}
 )
 VALID_GAME_DOMAINS = frozenset({"all", "logic", "spatial", "coding", "sandbox", "stem", "sel"})
+VALID_FOOD_DOMAINS = frozenset(
+    {"all", "brain-dha", "iron-focus", "steady-glucose", "bone-growth", "gut-immune", "lunchbox-swaps"}
+)
 FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 
 
 # ---------------------------------------------------------------------------
-# Python Reference Oracle for SEM-10 & CSV Sanitization (Law 7)
+# Python Reference Oracles for SEM-10, NFI-10 & CSV Sanitization (Law 7)
 # ---------------------------------------------------------------------------
 def clamp_dim(val: Any) -> int:
     """Deterministic dimension sanitizer: maps any input to integer in {0, 1, 2}."""
@@ -99,6 +102,47 @@ def python_compute_sem10(dims: dict[str, Any]) -> dict[str, Any]:
         "tier": tier,
         "stimulusClass": css_class,
         "semBreakdown": breakdown,
+    }
+
+
+def python_compute_nfi10(dims: dict[str, Any]) -> dict[str, Any]:
+    """Reference NFI-10 oracle: Base 1 intake baseline + 5 food dimensions (0..2 each), capped at 10."""
+    matrix = clamp_dim(dims.get("matrix", 0))
+    glycemic = clamp_dim(dims.get("glycemic", 0))
+    nutrients = clamp_dim(dims.get("nutrients", 0))
+    additives = clamp_dim(dims.get("additives", 0))
+    texture = clamp_dim(dims.get("texture", 0))
+
+    raw_sum = matrix + glycemic + nutrients + additives + texture
+    total_score = min(10, 1 + raw_sum)
+
+    if total_score <= 3:
+        tier = "low"
+        css_class = "stimulus-low"
+    elif total_score <= 6:
+        tier = "med"
+        css_class = "stimulus-med"
+    else:
+        tier = "high"
+        css_class = "stimulus-high"
+
+    breakdown = (
+        f"Base 1 + Matrix: {matrix}/2 \u2022 Glycemic: {glycemic}/2 \u2022 "
+        f"Nutrients: {nutrients}/2 \u2022 Additives: {additives}/2 \u2022 "
+        f"Texture: {texture}/2 (Total: {total_score}/10)"
+    )
+    return {
+        "matrix": matrix,
+        "glycemic": glycemic,
+        "nutrients": nutrients,
+        "additives": additives,
+        "texture": texture,
+        "rawSum": raw_sum,
+        "score": total_score,
+        "scoreLabel": f"{total_score}/10",
+        "tier": tier,
+        "stimulusClass": css_class,
+        "nfiBreakdown": breakdown,
     }
 
 
@@ -280,6 +324,51 @@ if (html.includes('id="btn-export-games-csv"')) {
   registerEl(new MockElement('button', 'btn-export-games-csv', 'btn'));
 }
 
+// Parse #food-calculator and #food-grid from index.html
+const foodCalcContainer = registerEl(new MockElement('div', 'food-calculator', 'calc-card'));
+const foodDimBoxHeaderRegex = /<div\s+class="([^"]*food-dim-box[^"]*)"\s+data-food-dim="([^"]+)">/g;
+const allFoodBtnRegex = /<button[^>]*class="([^"]*food-opt-btn[^"]*)"[^>]*data-food-dim="([^"]+)"[^>]*data-pts="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g;
+const allFoodButtonsByDim = {};
+let fbMatch;
+while ((fbMatch = allFoodBtnRegex.exec(html)) !== null) {
+  const fd = fbMatch[2];
+  if (!allFoodButtonsByDim[fd]) allFoodButtonsByDim[fd] = [];
+  allFoodButtonsByDim[fd].push({ cls: fbMatch[1], dim: fd, pts: fbMatch[3], text: fbMatch[4] });
+}
+let fMatch;
+while ((fMatch = foodDimBoxHeaderRegex.exec(html)) !== null) {
+  const boxCls = fMatch[1];
+  const dim = fMatch[2];
+  const boxEl = new MockElement('div', '', boxCls, { 'data-food-dim': dim });
+  const optGroup = new MockElement('div', '', 'calc-opt-group');
+  for (const bInfo of (allFoodButtonsByDim[dim] || [])) {
+    const btn = new MockElement('button', '', bInfo.cls, { 'data-food-dim': bInfo.dim, 'data-pts': bInfo.pts });
+    btn.textContent = bInfo.text;
+    optGroup.appendChild(btn);
+  }
+  boxEl.appendChild(optGroup);
+  foodCalcContainer.appendChild(boxEl);
+}
+
+registerEl(new MockElement('span', 'food-calc-score-badge', 'stimulus-tag stimulus-low'));
+registerEl(new MockElement('span', 'food-calc-breakdown-text', 'sem-badge'));
+registerEl(new MockElement('p', 'food-calc-verdict-desc', ''));
+registerEl(new MockElement('button', 'food-calc-reset-btn', 'btn btn-outline btn-sm'));
+
+registerEl(new MockElement('div', 'food-grid', 'grid-3'));
+registerEl(new MockElement('span', 'food-count-badge', 'tag-badge'));
+registerEl(new MockElement('input', 'food-search', 'search-input'));
+
+if (html.includes('id="btn-copy-foods-swaps"')) {
+  registerEl(new MockElement('button', 'btn-copy-foods-swaps', 'btn'));
+}
+if (html.includes('id="btn-export-foods-json"')) {
+  registerEl(new MockElement('button', 'btn-export-foods-json', 'btn'));
+}
+if (html.includes('id="btn-export-foods-csv"')) {
+  registerEl(new MockElement('button', 'btn-export-foods-csv', 'btn'));
+}
+
 const channelFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen'].map(
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
@@ -287,6 +376,12 @@ const gameAgeFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'm
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
 const gameDomainFilterBtns = ['all', 'logic', 'spatial', 'coding', 'sandbox', 'stem', 'sel'].map(
+  (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
+);
+const foodAgeFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen'].map(
+  (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
+);
+const foodDomainFilterBtns = ['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps'].map(
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
 
@@ -308,6 +403,8 @@ const documentMock = {
     if (sel === '#channel-filters .filter-btn') return channelFilterBtns;
     if (sel === '#game-age-filters .filter-btn') return gameAgeFilterBtns;
     if (sel === '#game-domain-filters .filter-btn') return gameDomainFilterBtns;
+    if (sel === '#food-age-filters .filter-btn') return foodAgeFilterBtns;
+    if (sel === '#food-domain-filters .filter-btn') return foodDomainFilterBtns;
     if (sel === '.copy-btn') return [];
     return [];
   },
@@ -345,7 +442,9 @@ vm.runInNewContext(jsCode + `\n;
 globalThis.__exports = {
   channelsData,
   gamesData,
+  foodsData: typeof foodsData !== 'undefined' ? foodsData : [],
   computeSem10Score: typeof computeSem10Score === 'function' ? computeSem10Score : null,
+  computeNfi10Score: typeof computeNfi10Score === 'function' ? computeNfi10Score : null,
   sanitizeCsvCell: typeof sanitizeCsvCell === 'function' ? sanitizeCsvCell : null,
 };`, sandbox);
 
@@ -368,6 +467,22 @@ if (payload.clickResetAfter) {
   elementsById['calc-reset-btn'].click();
 }
 
+if (payload.clickFoodCalc) {
+  for (const [dim, pts] of Object.entries(payload.clickFoodCalc)) {
+    const boxes = foodCalcContainer.querySelectorAll('.food-dim-box');
+    const box = boxes.find(b => b.getAttribute('data-food-dim') === dim);
+    if (box) {
+      const btns = box.querySelectorAll('.food-opt-btn');
+      const targetBtn = btns.find(b => b.getAttribute('data-pts') === String(pts));
+      if (targetBtn) targetBtn.click();
+    }
+  }
+}
+
+if (payload.clickFoodResetAfter) {
+  elementsById['food-calc-reset-btn'].click();
+}
+
 if (payload.clickChannelFilter) {
   const btn = channelFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickChannelFilter);
   if (btn) btn.click();
@@ -383,6 +498,16 @@ if (payload.clickGameDomainFilter) {
   if (btn) btn.click();
 }
 
+if (payload.clickFoodAgeFilter) {
+  const btn = foodAgeFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickFoodAgeFilter);
+  if (btn) btn.click();
+}
+
+if (payload.clickFoodDomainFilter) {
+  const btn = foodDomainFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickFoodDomainFilter);
+  if (btn) btn.click();
+}
+
 if (payload.triggerExports) {
   if (elementsById['btn-export-csv']) elementsById['btn-export-csv'].click();
   if (elementsById['btn-export-json']) elementsById['btn-export-json'].click();
@@ -390,12 +515,22 @@ if (payload.triggerExports) {
   if (elementsById['btn-export-games-csv']) elementsById['btn-export-games-csv'].click();
   if (elementsById['btn-export-games-json']) elementsById['btn-export-games-json'].click();
   if (elementsById['btn-copy-games-urls']) elementsById['btn-copy-games-urls'].click();
+  if (elementsById['btn-export-foods-csv']) elementsById['btn-export-foods-csv'].click();
+  if (elementsById['btn-export-foods-json']) elementsById['btn-export-foods-json'].click();
+  if (elementsById['btn-copy-foods-swaps']) elementsById['btn-copy-foods-swaps'].click();
 }
 
 const evalResults = [];
 if (payload.evalDimsList && sandbox.__exports.computeSem10Score) {
   for (const d of payload.evalDimsList) {
     evalResults.push(sandbox.__exports.computeSem10Score(d));
+  }
+}
+
+const evalFoodResults = [];
+if (payload.evalFoodDimsList && sandbox.__exports.computeNfi10Score) {
+  for (const d of payload.evalFoodDimsList) {
+    evalFoodResults.push(sandbox.__exports.computeNfi10Score(d));
   }
 }
 
@@ -409,18 +544,27 @@ if (payload.csvInputs && sandbox.__exports.sanitizeCsvCell) {
 const out = {
   channelsCount: sandbox.__exports.channelsData.length,
   gamesCount: sandbox.__exports.gamesData.length,
+  foodsCount: sandbox.__exports.foodsData.length,
   channelsData: sandbox.__exports.channelsData,
   gamesData: sandbox.__exports.gamesData,
+  foodsData: sandbox.__exports.foodsData,
   hasComputeSem10Score: Boolean(sandbox.__exports.computeSem10Score),
+  hasComputeNfi10Score: Boolean(sandbox.__exports.computeNfi10Score),
   hasSanitizeCsvCell: Boolean(sandbox.__exports.sanitizeCsvCell),
   calcScoreBadge: elementsById['calc-score-badge'].textContent,
   calcScoreClass: elementsById['calc-score-badge'].className,
   calcBreakdownText: elementsById['calc-breakdown-text'].textContent,
   calcVerdictDesc: elementsById['calc-verdict-desc'].textContent,
+  foodCalcScoreBadge: elementsById['food-calc-score-badge'].textContent,
+  foodCalcScoreClass: elementsById['food-calc-score-badge'].className,
+  foodCalcBreakdownText: elementsById['food-calc-breakdown-text'].textContent,
+  foodCalcVerdictDesc: elementsById['food-calc-verdict-desc'].textContent,
   renderedChannelCount: elementsById['channel-grid'].children.length,
   renderedGameCount: elementsById['game-grid'].children.length,
+  renderedFoodCount: elementsById['food-grid'].children.length,
   channelBadgeText: elementsById['channel-count-badge'].textContent,
   gameBadgeText: elementsById['game-count-badge'].textContent,
+  foodBadgeText: elementsById['food-count-badge'].textContent,
   storageAfter: storageMap,
   downloads: downloads.map(d => ({ type: d.type, content: d.content })),
   lastClipboardText,
@@ -429,7 +573,13 @@ const out = {
     elementsById['btn-export-games-json'] &&
     elementsById['btn-export-games-csv']
   ),
+  hasFoodExportButtons: Boolean(
+    elementsById['btn-copy-foods-swaps'] &&
+    elementsById['btn-export-foods-json'] &&
+    elementsById['btn-export-foods-csv']
+  ),
   evalResults,
+  evalFoodResults,
   csvSanitizeResults
 };
 
@@ -609,11 +759,11 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             ok, reason = verify_csv_export_safety(js_cell)
             self.assertTrue(ok, f"Sanitized cell failed safety verifier ({reason}): {js_cell}")
 
-        # Verify both Channel and Game CSV/JSON exports triggered and pass safety check
+        # Verify Channel, Game, and Wholesome Food CSV/JSON exports triggered and pass safety check
         csv_downloads = [d["content"] for d in res["downloads"] if "text/csv" in (d["type"] or "")]
         json_downloads = [d["content"] for d in res["downloads"] if "application/json" in (d["type"] or "")]
-        self.assertEqual(len(csv_downloads), 2, "Expected both Channel CSV and Game CSV downloads")
-        self.assertEqual(len(json_downloads), 2, "Expected both Channel JSON and Game JSON downloads")
+        self.assertEqual(len(csv_downloads), 3, "Expected Channel, Game, and Wholesome Food CSV downloads")
+        self.assertEqual(len(json_downloads), 3, "Expected Channel, Game, and Wholesome Food JSON downloads")
         for csv_doc in csv_downloads:
             ok, reason = verify_csv_export_safety(csv_doc)
             self.assertTrue(ok, reason)
@@ -671,6 +821,155 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertIn("SIMULATED", html, "index.html must include SIMULATED preview badge on SEM-10 calculator")
         self.assertNotRegex(js, r"\.(innerHTML|outerHTML)\s*=")
         self.assertNotRegex(js, r"\b(alert|confirm|prompt)\s*\(")
+
+    # -----------------------------------------------------------------------
+    # R-7: Wholesome Pediatric Nutrition & NFI-10 3-Pillar Parity
+    # -----------------------------------------------------------------------
+    def test_r7_nfi10_exhaustive_243_grid_and_400_fuzz_parity_python_vs_js(self) -> None:
+        """All 243 (3^5) NFI-10 grid states and 400 seeded fuzz cases match between Python and JS."""
+        grid_cases = [
+            {"matrix": m, "glycemic": g, "nutrients": n, "additives": a, "texture": t}
+            for m, g, n, a, t in itertools.product([0, 1, 2], repeat=5)
+        ]
+        self.assertEqual(len(grid_cases), 243)
+
+        rng = random.Random(20261019)
+        weird_scalars: list[Any] = [
+            0, 1, 2, -1, -999, 3, 42, 1.0, 1.9, -0.5,
+            "0", "1", "2", " 1 ", "\u00a02\u3000", "\u200b1", "abc", "",
+            None, True, False, [], {},
+        ]
+        fuzz_cases = [
+            {
+                k: rng.choice(weird_scalars)
+                for k in ("matrix", "glycemic", "nutrients", "additives", "texture")
+            }
+            for _ in range(400)
+        ]
+
+        all_cases = grid_cases + fuzz_cases
+        res = run_node_harness({"evalFoodDimsList": all_cases})
+        self.assertTrue(res["hasComputeNfi10Score"], "computeNfi10Score must be exposed in app.js")
+        js_results = res["evalFoodResults"]
+        self.assertEqual(len(js_results), len(all_cases))
+
+        tiers_seen: set[str] = set()
+        for idx, case in enumerate(all_cases):
+            expected = python_compute_nfi10(case)
+            actual = js_results[idx]
+            tiers_seen.add(expected["tier"])
+            self.assertEqual(
+                actual,
+                expected,
+                f"NFI-10 parity mismatch at case {idx} ({case}): JS={actual} vs PY={expected}",
+            )
+        self.assertEqual(tiers_seen, {"low", "med", "high"})
+
+    def test_r7_all_32_whole_food_swaps_reconcile_with_nfi10_oracle_and_citations(self) -> None:
+        """All 32 curated whole-food staple & swap items reconcile with NFI-10 oracle and carry trap/swap metadata."""
+        res = run_node_harness()
+        self.assertEqual(res["foodsCount"], 32)
+        self.assertEqual(res["renderedFoodCount"], 32)
+        self.assertEqual(res["foodBadgeText"], "32 whole foods & swaps")
+
+        canonical_nfi_re = re.compile(
+            r"^Base 1 \+ Matrix: ([012])/2 • Glycemic: ([012])/2 • "
+            r"Nutrients: ([012])/2 • Additives: ([012])/2 • Texture: ([012])/2 \(Total: (\d+)/10\)$"
+        )
+
+        for item in res["foodsData"]:
+            name = item["name"]
+            breakdown = item.get("nfiBreakdown", "")
+            m = canonical_nfi_re.match(breakdown)
+            self.assertIsNotNone(
+                m,
+                f"Food item '{name}' does not match canonical NFI-10 format: {breakdown!r}",
+            )
+            assert m is not None
+            dims = {
+                "matrix": int(m.group(1)),
+                "glycemic": int(m.group(2)),
+                "nutrients": int(m.group(3)),
+                "additives": int(m.group(4)),
+                "texture": int(m.group(5)),
+            }
+            oracle = python_compute_nfi10(dims)
+            self.assertEqual(item["nfiScore"], oracle["scoreLabel"], f"Food '{name}' nfiScore mismatch")
+            self.assertEqual(item["stimulusClass"], oracle["stimulusClass"], f"Food '{name}' stimulusClass mismatch")
+            self.assertEqual(breakdown, oracle["nfiBreakdown"], f"Food '{name}' nfiBreakdown mismatch")
+            self.assertIn(item["category"], VALID_FOOD_DOMAINS - {"all"}, f"Invalid food domain for '{name}'")
+            for age_tag in item["age"]:
+                self.assertIn(age_tag, VALID_AGE_FILTERS - {"all"}, f"Invalid age tag '{age_tag}' for '{name}'")
+            # Every food card must include the ultra-processed trap replaced, whole-food swap, synergy/safety, and citation
+            for req_field in ("trapReplaced", "wholeFoodSwap", "synergySafety", "whyCliniciansApprove", "researchAnchor", "link"):
+                self.assertTrue(
+                    isinstance(item.get(req_field), str) and len(item[req_field].strip()) >= 10,
+                    f"Food '{name}' missing or short required field '{req_field}'",
+                )
+            self.assertTrue(
+                isinstance(item.get("keyNutrients"), list) and len(item["keyNutrients"]) >= 2,
+                f"Food '{name}' must list at least 2 keyNutrients",
+            )
+
+    def test_r7_food_calculator_buttons_persistence_and_csv_export(self) -> None:
+        """Clicking .food-opt-btn inside .food-dim-box updates live NFI-10 score, resets on reload, and persists filters."""
+        res_high = run_node_harness(
+            {
+                "clickFoodCalc": {
+                    "matrix": 2,
+                    "glycemic": 2,
+                    "nutrients": 2,
+                    "additives": 2,
+                    "texture": 1,
+                }
+            }
+        )
+        # Base 1 + 2+2+2+2+1 = 10/10 Ultra-Processed Hazard
+        self.assertIn("10/10", res_high["foodCalcScoreBadge"])
+        self.assertIn("stimulus-high", res_high["foodCalcScoreClass"])
+        self.assertIn(
+            "Base 1 + Matrix: 2/2 \u2022 Glycemic: 2/2 \u2022 Nutrients: 2/2 \u2022 Additives: 2/2 \u2022 Texture: 1/2 (Total: 10/10)",
+            res_high["foodCalcBreakdownText"],
+        )
+
+        # Single 1-pt click (e.g. Matrix: 1/2 NOVA-3 sourdough/cheese) MUST be 2/10, not 1/10!
+        res_two = run_node_harness({"clickFoodCalc": {"matrix": 1}})
+        self.assertIn("2/10", res_two["foodCalcScoreBadge"])
+        self.assertIn("Total: 2/10", res_two["foodCalcBreakdownText"])
+
+        # Clicking Reset Food Auditor must return to 1/10 Whole-Food Staple baseline
+        res_reset = run_node_harness(
+            {"clickFoodCalc": {"matrix": 2, "glycemic": 2, "additives": 2}, "clickFoodResetAfter": True}
+        )
+        self.assertIn("1/10", res_reset["foodCalcScoreBadge"])
+        self.assertIn("stimulus-low", res_reset["foodCalcScoreClass"])
+        self.assertIn("Total: 1/10", res_reset["foodCalcBreakdownText"])
+
+        # Verify food filter persistence + allow-list validation + export buttons
+        res_persist = run_node_harness(
+            {
+                "clickFoodAgeFilter": "toddler",
+                "clickFoodDomainFilter": "lunchbox-swaps",
+                "clickFoodCalc": {"matrix": 2, "additives": 2},
+            }
+        )
+        self.assertTrue(res_persist["hasFoodExportButtons"], "Wholesome Food section must have 1-click export buttons")
+        storage = res_persist["storageAfter"]
+        self.assertEqual(storage.get("safekids_food_age_filter"), "toddler")
+        self.assertEqual(storage.get("safekids_food_domain_filter"), "lunchbox-swaps")
+        for k in storage:
+            self.assertNotIn("nfi", k.lower())
+
+        # Corrupted food filter storage must fall back safely to 'all' (32 items)
+        res_corrupt = run_node_harness(
+            {
+                "initialStorage": {
+                    "safekids_food_age_filter": "<img src=x onerror=alert(1)>",
+                    "safekids_food_domain_filter": "evil-domain",
+                }
+            }
+        )
+        self.assertEqual(res_corrupt["renderedFoodCount"], 32)
 
 
 if __name__ == "__main__":

@@ -21,18 +21,21 @@ Before writing or refactoring code, the repository was subjected to a 5-lens Vet
 5. **Cloud Release & Account Hygiene Engineer Lens**:
    - *Finding*: An untracked 902 KB `projects.txt` file containing GCP project listings sat in the repo root.
    - *Resolution*: Deleted `projects.txt`, hardened [`firebase.json`](../firebase.json) `hosting.ignore`, and added [`tests/test_no_real_names.py`](../tests/test_no_real_names.py) and [`tools/ci/forbid_fabrication.py`](../tools/ci/forbid_fabrication.py).
+6. **Pediatric Clinical Nutrition & Feeding Safety SME Lens (`R-7`)**:
+   - *Finding*: Parents managing screen overstimulation simultaneously battle NOVA-4 ultra-processed supermarket snacks (pouches, extruded puffs, synthetic dyes, liquid sugars) that trigger glycemic crashes and undermine classroom executive function, while needing explicit CDC/AAP choking-modification and early-allergen guidance.
+   - *Resolution*: Added the 10-Point Nutritional & Food-Matrix Integrity Rubric (**NFI-10**, `SafeKidsCore.computeNfi10Score()`), the interactive Food Label Auditor (`#food-calculator`), 32 curated whole-food swaps across 6 developmental domains (`#nutrition-directory`), and 12 peer-reviewed clinical nutrition citations (`#19`–`#30`, bringing total Bibliography to 30).
 
 ---
 
 ## 2. Why These Pieces & Alternative When Scale Changes
 
-| Architectural Piece | Why Chosen for Current Scale (28 Channels, 33 Games, 18 Citations) | Alternative When Scale Changes (> 1,000 Curated Items or Multi-Editor Workflow) |
+| Architectural Piece | Why Chosen for Current Scale (28 Channels, 33 Games, 32 Whole-Food Swaps, 30 Citations) | Alternative When Scale Changes (> 1,000 Curated Items or Multi-Editor Workflow) |
 | :--- | :--- | :--- |
 | **Static Zero-Dependency Vanilla JS (`public/app.js`)** | Zero build-step fragility, instant `< 50ms` client-side filtering, 100% inspectable DOM construction (`createElement` + `textContent`), and zero third-party npm supply-chain risk. | Pre-compiled static site generator (Eleventy/Astro) with build-time JSON schema validation and paginated static index shards. |
-| **Universal UMD/Browser `SafeKidsCore` Module** | Allows the exact same `public/app.js` file to execute in the browser and be imported directly by Node.js in [`tests/test_parity.py`](../tests/test_parity.py) without transpilation. | Dedicated shared ES module package (`packages/sem10-core`) published with TypeScript declaration files. |
-| **Client-Side Blob JSON/CSV Export (`sanitizeCsvCell`)** | Zero server round-trips, works offline after page load, and enforces OWASP formula neutralization deterministically in the browser. | Signed server-side export endpoint with streaming RFC 4180 generation when datasets exceed browser memory (`> 50 MB`). |
-| **Allow-List Validated `localStorage` Filter State** | Preserves parent age/domain filter choices across reloads with zero cookies, zero accounts, and zero server-side tracking. | URL query-parameter state synced with `History.replaceState` for shareable filtered deep links across family devices. |
-| **Python + Node Subprocess Cross-Runtime Parity Harness** | Verifies all $3^5 = 243$ SEM-10 states, 400 fuzz inputs, and real `public/index.html` DOM interactions in `< 1s` with zero external dependencies. | Headless Playwright browser matrix in CI when multi-page routing or WebGL canvas components are introduced. |
+| **Universal UMD/Browser `SafeKidsCore` Module** | Allows the exact same `public/app.js` file to execute in the browser and be imported directly by Node.js in [`tests/test_parity.py`](../tests/test_parity.py) without transpilation. | Dedicated shared ES module package (`packages/safekids-core`) published with TypeScript declaration files. |
+| **Client-Side Blob JSON/CSV Export (`sanitizeCsvCell`)** | Zero server round-trips, works offline after page load, and enforces OWASP formula neutralization deterministically across Channels, Games, and Whole-Food Swaps. | Signed server-side export endpoint with streaming RFC 4180 generation when datasets exceed browser memory (`> 50 MB`). |
+| **Allow-List Validated `localStorage` Filter State** | Preserves parent age/domain filter choices across reloads (`safekids_channel_age_filter`, `safekids_game_age_filter`, `safekids_game_domain_filter`, `safekids_food_age_filter`, `safekids_food_domain_filter`) with zero cookies or tracking. | URL query-parameter state synced with `History.replaceState` for shareable filtered deep links across family devices. |
+| **Python + Node Subprocess Cross-Runtime Parity Harness** | Verifies all $3^5 = 243$ SEM-10 and NFI-10 states, 800 total fuzz inputs, and real `public/index.html` DOM interactions in `< 1.5s` with zero external dependencies. | Headless Playwright browser matrix in CI when multi-page routing or WebGL canvas components are introduced. |
 
 ---
 
@@ -43,4 +46,5 @@ Before writing or refactoring code, the repository was subjected to a 5-lens Vet
 | [`public/index.html`](../public/index.html), [`public/styles.css`](../public/styles.css), [`public/app.js`](../public/app.js) | **MOVES (Deployed)** | Tested in CI | Production static web application served via Firebase global CDN (`https://safe-kids.web.app`). |
 | [`firebase.json`](../firebase.json), [`.firebaserc`](../.firebaserc) | Deployment config | **STAYS BEHIND** | Configures cache headers, clean URLs, and `hosting.ignore` rules so internal files never ship to CDN. |
 | [`STATE.md`](../STATE.md), [`assumptions.json`](../assumptions.json), [`Makefile`](../Makefile), [`docs/`](../docs/) | Excluded via `hosting.ignore` | **STAYS BEHIND** | Engineering governance, ADRs, regression ledger, and smoking-gun demo script. |
-| [`tests/`](../tests/), [`tools/`](../tools/) | Excluded via `hosting.ignore` | **STAYS BEHIND** | Offline hermetic test suite, network socket blocker, AST fabrication scanner, and 5-mutant fault-injection harness. |
+| [`tests/`](../tests/), [`tools/`](../tools/) | Excluded via `hosting.ignore` | **STAYS BEHIND** | Offline hermetic test suite, network socket blocker, AST fabrication scanner, and 7-mutant fault-injection harness. |
+

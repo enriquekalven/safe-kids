@@ -33,7 +33,16 @@
       "verified": false,
       "statement": "YouTube channel handles and curated game store availability remain stable across regional storefronts between quarterly repository audits.",
       "owner_role": "Curated Directory Maintainer",
-      "verification_plan": "Run an out-of-band quarterly link-health and monetization re-verification audit against all 28 channel URLs and 33 game entries."
+      "verification_plan": "Run an out-of-band quarterly link-health and monetization re-verification audit against all 28 channel URLs, 33 game entries, and 32 whole-food clinical references."
+    },
+    {
+      "id": "ASM-005",
+      "status": "ASSUMPTION",
+      "verified": false,
+      "statement": "A Base-1 nutritional load floor plus 5 additive dimensions (processing/NOVA tier, added sugar/glycemic load, fiber/matrix integrity, synthetic dyes/additives, and brain-nutrient bioavailability, 0-2 pts each, capped at 10) provides an actionable parent screening proxy for pediatric snacks and staples.",
+      "owner_role": "Pediatric Clinical Nutrition & Feeding Safety SME",
+      "verification_plan": "Cross-validate NFI-10 tier classifications (1-3 Whole-Food Staple, 4-6 Transitional Swap, 7-10 Ultra-Processed Trap) against registered dietitian (RDN) audits of n >= 100 supermarket kids' snacks."
     }
   ]
 }
+

@@ -191,11 +191,11 @@ class DocsMatchCodeIntegrityTests(unittest.TestCase):
         checklist = (REPO_ROOT / "docs" / "REVIEW_CHECKLIST.md").read_text(encoding="utf-8")
         for axis_num in range(1, 9):
             self.assertIn(f"### Axis {axis_num}:", checklist)
-        for r_num in range(1, 7):
+        for r_num in range(1, 8):
             self.assertRegex(checklist, rf"\*\*R-{r_num}\*\*")
 
         test_refs = re.findall(r"`(tests/test_[a-z0-9_]+\.py::[A-Za-z0-9_.]+)`", checklist)
-        self.assertGreaterEqual(len(test_refs), 6, "Every R-1..R-6 entry must cite a locking test")
+        self.assertGreaterEqual(len(test_refs), 7, "Every R-1..R-7 entry must cite a locking test")
         for ref in test_refs:
             ok, reason = verify_test_reference_exists(REPO_ROOT, ref)
             self.assertTrue(ok, f"Broken locking test reference in REVIEW_CHECKLIST.md: {ref} ({reason})")
@@ -216,15 +216,18 @@ class DocsMatchCodeIntegrityTests(unittest.TestCase):
         html = (REPO_ROOT / "public" / "index.html").read_text(encoding="utf-8")
         js = (REPO_ROOT / "public" / "app.js").read_text(encoding="utf-8")
 
-        # 28 channels, 33 games, 18 citations must match across README, index.html, and app.js
+        # 28 channels, 33 games, 32 whole foods, 30 citations must match across README, index.html, and app.js
         self.assertIn("28 Unique Channels", readme)
         self.assertIn("33 Curated Games", readme)
-        self.assertIn("18 Studies & Statutes", readme)
+        self.assertIn("32 Whole-Food Swaps & Staples", readme)
+        self.assertIn("30 Studies & Statutes", readme)
         self.assertIn(">28<", html)
         self.assertIn(">33<", html)
-        self.assertIn(">18<", html)
+        self.assertIn(">32<", html)
+        self.assertIn(">30<", html)
         self.assertIn("28 Unique Curated Low-Stimulus Channels", js)
         self.assertIn("33 Educator-Approved, Low-Stimulus Cognitive Games", js)
+        self.assertIn("32 Pediatrician- & Dietitian-Vetted Whole Foods & Lunchbox Swaps", js)
 
         # Verify files referenced in README directory structure block exist
         for expected_path in (
