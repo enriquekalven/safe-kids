@@ -228,8 +228,9 @@ safe-kids-portal/
 ├── assumptions.json    # Explicitly labeled unverified domain assumptions (verified: false)
 ├── public/
 │   ├── index.html      # Responsive Single Page Application (Rubrics, Calculators, Channels, Games, Foods)
-│   ├── styles.css      # WCAG AA compliant CSS design system with tabular-nums & calculator styles
-│   └── app.js          # Canonical SEM-10 & NFI-10 oracles, XSS-safe DOM, & OWASP-safe exporter
+│   ├── styles.css      # WCAG AA compliant CSS design system with tabular-nums & editorial visual styles
+│   ├── app.js          # Canonical SEM-10 & NFI-10 oracles, XSS-safe DOM, & OWASP-safe exporter
+│   └── images/         # 10 Web-optimized editorial illustrations (9 Recommendations + UPF Swap Guide)
 ├── docs/
 │   ├── PLAN.md         # Veteran SME grill, Why These Pieces, and What Moves vs. Stays Behind
 │   ├── REVIEW_CHECKLIST.md # 8 Fixed Review Axes & Regression Ledger (R-1..R-7)

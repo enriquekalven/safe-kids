@@ -93,9 +93,24 @@ class AccountHygieneAndPiiGuardTests(unittest.TestCase):
         for required_ignore in ("firebase.json", "**/.*", "**/node_modules/**", "projects.txt"):
             self.assertIn(required_ignore, ignore_list)
 
-        # Public directory must contain ONLY index.html, styles.css, and app.js
-        public_files = {p.name for p in (REPO_ROOT / "public").rglob("*") if p.is_file()}
-        self.assertEqual(public_files, {"index.html", "styles.css", "app.js"})
+        # Public root must contain ONLY index.html, styles.css, and app.js; public/images/ must contain ONLY approved .jpg assets
+        public_root_files = {p.name for p in (REPO_ROOT / "public").iterdir() if p.is_file()}
+        self.assertEqual(public_root_files, {"index.html", "styles.css", "app.js"})
+
+        approved_images = {
+            "rec-1-zero-screen.jpg",
+            "rec-2-curated-tv.jpg",
+            "rec-3-approval-bot.jpg",
+            "rec-4-offline-travel.jpg",
+            "rec-5-pin-kidtube.jpg",
+            "rec-6-os-lockdown.jpg",
+            "rec-7-calm-gaming.jpg",
+            "rec-8-dns-shield.jpg",
+            "rec-9-wholesome-food.jpg",
+            "nutrition-swap-guide.jpg",
+        }
+        image_files = {p.name for p in (REPO_ROOT / "public" / "images").iterdir() if p.is_file()}
+        self.assertEqual(image_files, approved_images)
 
     def test_forbid_fabrication_passes_across_repo(self) -> None:
         hits = scan_repository(REPO_ROOT)

@@ -971,6 +971,27 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         )
         self.assertEqual(res_corrupt["renderedFoodCount"], 32)
 
+    def test_visual_illustrations_and_card_banners_present(self) -> None:
+        """Every image referenced in index.html and app.js must exist in public/images/ and have descriptive alt text."""
+        html_text = INDEX_HTML.read_text(encoding="utf-8")
+        js_text = APP_JS.read_text(encoding="utf-8")
+
+        html_imgs = re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>', html_text)
+        self.assertGreaterEqual(len(html_imgs), 23, "Expected hero strip, 9 rec banners, 6 showcase banners, and 5 step thumbs")
+
+        for img_tag in re.findall(r'<img\s+[^>]+>', html_text):
+            alt_match = re.search(r'alt="([^"]+)"', img_tag)
+            self.assertIsNotNone(alt_match, f"Missing non-empty alt attribute on {img_tag}")
+            self.assertGreaterEqual(len(alt_match.group(1).strip()), 10)
+
+        js_imgs = re.findall(r"src:\s*'([^']+)'", js_text)
+        self.assertGreaterEqual(len(js_imgs), 7, "Expected channel, game, and food visual strip image mappings in app.js")
+
+        for rel_src in set(html_imgs + js_imgs):
+            img_path = REPO_ROOT / "public" / rel_src
+            self.assertTrue(img_path.is_file(), f"Referenced image does not exist on disk: {rel_src}")
+            self.assertGreater(img_path.stat().st_size, 10_000, f"Image file unexpectedly tiny: {rel_src}")
+
 
 if __name__ == "__main__":
     unittest.main()

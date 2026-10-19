@@ -2442,6 +2442,96 @@ function createEmptyState(primaryMsg, secondaryMsg) {
   return wrapper;
 }
 
+function createCardVisualStrip(imgSrc, altText, kickerText, subText) {
+  const strip = document.createElement('div');
+  strip.className = 'card-visual-strip';
+
+  const img = document.createElement('img');
+  img.className = 'card-visual-thumb';
+  img.src = imgSrc;
+  img.alt = altText;
+  img.loading = 'lazy';
+  img.width = 52;
+  img.height = 38;
+
+  const meta = document.createElement('div');
+  meta.className = 'card-visual-meta';
+
+  const kicker = document.createElement('span');
+  kicker.className = 'card-visual-kicker';
+  kicker.textContent = kickerText;
+
+  const sub = document.createElement('span');
+  sub.className = 'card-visual-sub';
+  sub.textContent = subText;
+
+  meta.appendChild(kicker);
+  meta.appendChild(sub);
+  strip.appendChild(img);
+  strip.appendChild(meta);
+  return strip;
+}
+
+function getChannelVisualMeta(ch) {
+  const ages = Array.isArray(ch.age) ? ch.age : [ch.age || ''];
+  if (ages.includes('toddler') || ages.includes('preschool')) {
+    return {
+      src: 'images/rec-2-curated-tv.jpg',
+      alt: 'Calm living-room co-viewing illustration',
+      kicker: 'Pillar 1 • Calm Living-Room Media',
+      sub: 'Slow Scene Pacing • Acoustic Storytelling'
+    };
+  }
+  if (ch.stimulusClass === 'stimulus-low') {
+    return {
+      src: 'images/rec-4-offline-travel.jpg',
+      alt: 'Offline and low-stimulus viewing illustration',
+      kicker: 'Pillar 1 • Low-Stimulus Documentary & Craft',
+      sub: 'Zero Algorithm Feeds • Offline yt-dlp Ready'
+    };
+  }
+  return {
+    src: 'images/rec-5-pin-kidtube.jpg',
+    alt: 'PIN-locked whitelisted STEM channel illustration',
+    kicker: 'Pillar 1 • Whitelisted STEM & Inquiry',
+    sub: 'Parent-Curated Channel • Daytime Co-Viewing'
+  };
+}
+
+function getGameVisualMeta(g) {
+  if (g.category === 'sandbox' || g.category === 'sel') {
+    return {
+      src: 'images/rec-1-zero-screen.jpg',
+      alt: 'Open-ended constructivist sandbox play illustration',
+      kicker: `Pillar 2 • ${g.categoryLabel || 'Constructivist Play'}`,
+      sub: 'Self-Paced Microworld • Zero Timers or Loot Boxes'
+    };
+  }
+  return {
+    src: 'images/rec-7-calm-gaming.jpg',
+    alt: 'Calm cognitive puzzle and spatial reasoning illustration',
+    kicker: `Pillar 2 • ${g.categoryLabel || 'Cognitive Skill Game'}`,
+    sub: 'Executive Function • Ad-Free & Dark-Pattern Free'
+  };
+}
+
+function getFoodVisualMeta(f) {
+  if (f.category === 'lunchbox-swaps') {
+    return {
+      src: 'images/nutrition-swap-guide.jpg',
+      alt: 'Side-by-side ultra-processed snack trap vs whole-food upgrade illustration',
+      kicker: 'Pillar 3 • Supermarket UPF Trap Swap',
+      sub: 'Zero Synthetic Dyes • Intact Cellular Fiber Matrix'
+    };
+  }
+  return {
+    src: 'images/rec-9-wholesome-food.jpg',
+    alt: 'Wholesome pediatric whole-food bento illustration',
+    kicker: `Pillar 3 • ${f.categoryLabel || 'Pediatric Neuro-Nutrition'}`,
+    sub: 'NOVA-1 Intact Whole Food • Clinician-Vetted Synergy'
+  };
+}
+
 // ==================== CHANNEL, GAME & FOOD STATE INITIALIZATION ====================
 let currentChannelFilter = 'all';
 let currentChannelSearch = '';
@@ -2499,6 +2589,9 @@ function buildChannelCard(ch) {
   card.className = 'card channel-card';
 
   const body = document.createElement('div');
+
+  const vMeta = getChannelVisualMeta(ch);
+  body.appendChild(createCardVisualStrip(vMeta.src, vMeta.alt, vMeta.kicker, vMeta.sub));
 
   // Header
   const header = document.createElement('div');
@@ -2932,6 +3025,9 @@ function buildGameCard(g) {
   card.className = 'card game-card';
 
   const body = document.createElement('div');
+
+  const gMeta = getGameVisualMeta(g);
+  body.appendChild(createCardVisualStrip(gMeta.src, gMeta.alt, gMeta.kicker, gMeta.sub));
 
   // Header
   const header = document.createElement('div');
@@ -3424,6 +3520,9 @@ function buildFoodCard(f) {
   card.className = 'card food-card';
 
   const body = document.createElement('div');
+
+  const fMeta = getFoodVisualMeta(f);
+  body.appendChild(createCardVisualStrip(fMeta.src, fMeta.alt, fMeta.kicker, fMeta.sub));
 
   // Header
   const header = document.createElement('div');
