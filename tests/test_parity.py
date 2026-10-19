@@ -253,7 +253,7 @@ class MockElement {
     const matchSel = (el, sel) => {
       if (sel.startsWith('.')) {
         const baseCls = sel.slice(1).split('[')[0];
-        return el.classList.contains(baseCls);
+        return Boolean(el && el.classList && el.classList.contains(baseCls));
       }
       return false;
     };
@@ -378,12 +378,37 @@ const gameAgeFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'm
 const gameDomainFilterBtns = ['all', 'logic', 'spatial', 'coding', 'sandbox', 'stem', 'sel'].map(
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
+const gameStoppingFilterBtns = ['all', 'discrete-levels', 'calm-toybox', 'deep-sandbox', 'co-play'].map(
+  (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
+);
 const foodAgeFilterBtns = ['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen'].map(
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
 const foodDomainFilterBtns = ['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps'].map(
   (f, idx) => new MockElement('button', '', idx === 0 ? 'filter-btn active' : 'filter-btn', { 'data-filter': f })
 );
+
+// Daily Blueprint Builder mock elements
+const blueprintContainer = registerEl(new MockElement('div', 'daily-blueprint-builder', 'blueprint-card'));
+const blueprintAgeBtns = ['under-2', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen'].map(
+  (a, idx) => {
+    const btn = new MockElement('button', '', idx === 1 ? 'blueprint-age-btn active' : 'blueprint-age-btn', { 'data-bp-age': a });
+    blueprintContainer.appendChild(btn);
+    return btn;
+  }
+);
+registerEl(new MockElement('div', 'bp-stage-headline', ''));
+registerEl(new MockElement('p', 'bp-stage-summary', ''));
+registerEl(new MockElement('div', 'bp-sync-status', ''));
+registerEl(new MockElement('div', 'bp-screen-budget', ''));
+registerEl(new MockElement('div', 'bp-sleep-cutoff', ''));
+registerEl(new MockElement('div', 'bp-meal-rule', ''));
+registerEl(new MockElement('ul', 'bp-channels-list', 'fridge-col-list'));
+registerEl(new MockElement('ul', 'bp-games-list', 'fridge-col-list'));
+registerEl(new MockElement('ul', 'bp-foods-list', 'fridge-col-list'));
+registerEl(new MockElement('button', 'btn-sync-age-directories', 'btn btn-primary btn-sm'));
+registerEl(new MockElement('button', 'btn-copy-blueprint', 'btn btn-outline btn-sm'));
+registerEl(new MockElement('button', 'btn-print-fridge-sheet', 'btn btn-outline btn-sm'));
 
 // Parse real [data-tab-panel] sections and [data-tab] buttons from index.html
 const tabPanels = [];
@@ -426,6 +451,7 @@ const localStorageMock = {
 };
 
 let lastClipboardText = null;
+let printCalledCount = 0;
 let downloads = [];
 const domReadyCallbacks = [];
 
@@ -436,6 +462,7 @@ const documentMock = {
     if (sel === '#channel-filters .filter-btn') return channelFilterBtns;
     if (sel === '#game-age-filters .filter-btn') return gameAgeFilterBtns;
     if (sel === '#game-domain-filters .filter-btn') return gameDomainFilterBtns;
+    if (sel === '#game-stopping-filters .filter-btn') return gameStoppingFilterBtns;
     if (sel === '#food-age-filters .filter-btn') return foodAgeFilterBtns;
     if (sel === '#food-domain-filters .filter-btn') return foodDomainFilterBtns;
     if (sel === '[data-tab-panel]') return tabPanels;
@@ -454,7 +481,12 @@ const documentMock = {
 
 const sandbox = {
   document: documentMock,
-  window: { localStorage: localStorageMock, scrollTo: () => {}, location: { hash: payload.initialHash || '' } },
+  window: {
+    localStorage: localStorageMock,
+    scrollTo: () => {},
+    print: () => { printCalledCount += 1; },
+    location: { hash: payload.initialHash || '' }
+  },
   localStorage: localStorageMock,
   navigator: {
     clipboard: {
@@ -483,6 +515,8 @@ globalThis.__exports = {
   computeSem10Score: typeof computeSem10Score === 'function' ? computeSem10Score : null,
   computeNfi10Score: typeof computeNfi10Score === 'function' ? computeNfi10Score : null,
   sanitizeCsvCell: typeof sanitizeCsvCell === 'function' ? sanitizeCsvCell : null,
+  computeDailyBlueprint: typeof computeDailyBlueprint === 'function' ? computeDailyBlueprint : null,
+  getGameStoppingProfile: typeof getGameStoppingProfile === 'function' ? getGameStoppingProfile : null,
 };`, sandbox);
 
 domReadyCallbacks.forEach(fn => fn());
@@ -535,6 +569,11 @@ if (payload.clickGameDomainFilter) {
   if (btn) btn.click();
 }
 
+if (payload.clickGameStoppingFilter) {
+  const btn = gameStoppingFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickGameStoppingFilter);
+  if (btn) btn.click();
+}
+
 if (payload.clickFoodAgeFilter) {
   const btn = foodAgeFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickFoodAgeFilter);
   if (btn) btn.click();
@@ -543,6 +582,23 @@ if (payload.clickFoodAgeFilter) {
 if (payload.clickFoodDomainFilter) {
   const btn = foodDomainFilterBtns.find(b => b.getAttribute('data-filter') === payload.clickFoodDomainFilter);
   if (btn) btn.click();
+}
+
+if (payload.clickBlueprintAge) {
+  const btn = blueprintAgeBtns.find(b => b.getAttribute('data-bp-age') === payload.clickBlueprintAge);
+  if (btn) btn.click();
+}
+
+if (payload.clickSyncBlueprintDirectories) {
+  if (elementsById['btn-sync-age-directories']) elementsById['btn-sync-age-directories'].click();
+}
+
+if (payload.clickCopyBlueprint) {
+  if (elementsById['btn-copy-blueprint']) elementsById['btn-copy-blueprint'].click();
+}
+
+if (payload.clickPrintBlueprint) {
+  if (elementsById['btn-print-fridge-sheet']) elementsById['btn-print-fridge-sheet'].click();
 }
 
 if (payload.clickWorkspaceTab) {
@@ -595,6 +651,11 @@ if (payload.csvInputs && sandbox.__exports.sanitizeCsvCell) {
   }
 }
 
+const channelPhdBoxes = elementsById['channel-grid'].querySelectorAll('.expert-bridge-phd').length;
+const gamePhdBoxes = elementsById['game-grid'].querySelectorAll('.expert-bridge-phd').length;
+const gameStoppingPills = elementsById['game-grid'].querySelectorAll('.stopping-cue-pill').length;
+const foodMdBoxes = elementsById['food-grid'].querySelectorAll('.expert-bridge-md').length;
+
 const out = {
   channelsCount: sandbox.__exports.channelsData.length,
   gamesCount: sandbox.__exports.gamesData.length,
@@ -605,6 +666,7 @@ const out = {
   hasComputeSem10Score: Boolean(sandbox.__exports.computeSem10Score),
   hasComputeNfi10Score: Boolean(sandbox.__exports.computeNfi10Score),
   hasSanitizeCsvCell: Boolean(sandbox.__exports.sanitizeCsvCell),
+  hasComputeDailyBlueprint: Boolean(sandbox.__exports.computeDailyBlueprint),
   calcScoreBadge: elementsById['calc-score-badge'].textContent,
   calcScoreClass: elementsById['calc-score-badge'].className,
   calcBreakdownText: elementsById['calc-breakdown-text'].textContent,
@@ -616,6 +678,19 @@ const out = {
   renderedChannelCount: elementsById['channel-grid'].children.length,
   renderedGameCount: elementsById['game-grid'].children.length,
   renderedFoodCount: elementsById['food-grid'].children.length,
+  channelPhdBoxes,
+  gamePhdBoxes,
+  gameStoppingPills,
+  foodMdBoxes,
+  bpStageHeadline: elementsById['bp-stage-headline'].textContent,
+  bpScreenBudget: elementsById['bp-screen-budget'].textContent,
+  bpSleepCutoff: elementsById['bp-sleep-cutoff'].textContent,
+  bpMealRule: elementsById['bp-meal-rule'].textContent,
+  bpSyncStatus: elementsById['bp-sync-status'].textContent,
+  bpChannelsCount: elementsById['bp-channels-list'].children.length,
+  bpGamesCount: elementsById['bp-games-list'].children.length,
+  bpFoodsCount: elementsById['bp-foods-list'].children.length,
+  printCalledCount,
   channelBadgeText: elementsById['channel-count-badge'].textContent,
   gameBadgeText: elementsById['game-count-badge'].textContent,
   foodBadgeText: elementsById['food-count-badge'].textContent,
@@ -1084,6 +1159,63 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         )
         self.assertEqual(res_corrupt_tab["visibleTabPanels"], ["overview", "overview"])
 
+    def test_r8_expert_lenses_blueprint_bridges_stopping_cues_and_fridge_sheet(self) -> None:
+        """Multi-expert upgrades: Daily Blueprint Builder, PhD/MD card bridges, Game Stopping-Cue filter, and Fridge Sheet."""
+        res_default = run_node_harness()
+        self.assertTrue(res_default["hasComputeDailyBlueprint"])
+        # All 28 channels + 33 games render Educational PhD Off-Screen Transfer boxes
+        self.assertEqual(res_default["channelPhdBoxes"], 28)
+        self.assertEqual(res_default["gamePhdBoxes"], 33)
+        # All 33 games render Stopping-Cue / Session-Exit Friction pills
+        self.assertEqual(res_default["gameStoppingPills"], 33)
+        # All 32 whole-food swaps render Pediatric Feeding MD 3-Step Picky-Eater Sensory Bridge boxes
+        self.assertEqual(res_default["foodMdBoxes"], 32)
+        # Default blueprint is 'toddler' with 4 channels, 4 games, and 4 foods
+        self.assertIn("Toddlers (Ages 2–3)", res_default["bpStageHeadline"])
+        self.assertEqual(res_default["bpChannelsCount"], 4)
+        self.assertEqual(res_default["bpGamesCount"], 4)
+        self.assertEqual(res_default["bpFoodsCount"], 4)
+
+        # Selecting 'under-2' shows 0 mins/day passive video rule per AAP
+        res_under2 = run_node_harness({"clickBlueprintAge": "under-2"})
+        self.assertIn("Under 2 Years", res_under2["bpStageHeadline"])
+        self.assertIn("0 mins/day", res_under2["bpScreenBudget"])
+        self.assertEqual(res_under2["storageAfter"].get("safekids_blueprint_age"), "under-2")
+
+        # Selecting 'early-elementary' + clicking Sync All 3 Directories filters Watch, Play, and Nourish simultaneously
+        res_sync = run_node_harness(
+            {
+                "clickBlueprintAge": "early-elementary",
+                "clickSyncBlueprintDirectories": True,
+                "clickCopyBlueprint": True,
+                "clickPrintBlueprint": True,
+            }
+        )
+        self.assertEqual(res_sync["storageAfter"].get("safekids_channel_age_filter"), "early-elementary")
+        self.assertEqual(res_sync["storageAfter"].get("safekids_game_age_filter"), "early-elementary")
+        self.assertEqual(res_sync["storageAfter"].get("safekids_food_age_filter"), "early-elementary")
+        self.assertIn("Synced Watch", res_sync["bpSyncStatus"])
+        self.assertIn("SAFEKIDS CAREGIVER & BABYSITTER DAILY PLAN", res_sync["lastClipboardText"])
+        self.assertEqual(res_sync["printCalledCount"], 1)
+
+        # Game Stopping-Cue filters partition the 33 games into discrete-levels, calm-toybox, and deep-sandbox
+        res_discrete = run_node_harness({"clickGameStoppingFilter": "discrete-levels"})
+        res_toybox = run_node_harness({"clickGameStoppingFilter": "calm-toybox"})
+        res_sandbox = run_node_harness({"clickGameStoppingFilter": "deep-sandbox"})
+        res_coplay = run_node_harness({"clickGameStoppingFilter": "co-play"})
+
+        self.assertGreater(res_discrete["renderedGameCount"], 0)
+        self.assertGreater(res_toybox["renderedGameCount"], 0)
+        self.assertGreater(res_sandbox["renderedGameCount"], 0)
+        self.assertGreater(res_coplay["renderedGameCount"], 0)
+        self.assertEqual(
+            res_discrete["renderedGameCount"] + res_toybox["renderedGameCount"] + res_sandbox["renderedGameCount"],
+            33,
+            "All 33 games must partition cleanly across discrete-levels, calm-toybox, and deep-sandbox",
+        )
+        self.assertEqual(res_sandbox["storageAfter"].get("safekids_game_stopping_filter"), "deep-sandbox")
+
 
 if __name__ == "__main__":
     unittest.main()
+

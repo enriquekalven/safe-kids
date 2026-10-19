@@ -162,7 +162,11 @@
       </div>
 
       <div class="sidebar-quick-auditors">
-        <div class="sidebar-group-label" style="padding-left:0.2rem;">60-Second Self-Auditors</div>
+        <div class="sidebar-group-label" style="padding-left:0.2rem;">60-Second Self-Auditors &amp; Planner</div>
+        <a href="#daily-blueprint-builder" class="sidebar-quick-link">
+          <span>🗓️ Daily Age Blueprint &amp; Fridge Sheet</span>
+          <span>&rarr;</span>
+        </a>
         <a href="#sem-calculator" class="sidebar-quick-link">
           <span>🧮 SEM-10 Screen Media Auditor</span>
           <span>&rarr;</span>
@@ -402,6 +406,85 @@
           </div>
           <p class="channel-desc"><strong>Best for:</strong> Ages 1–12 (Neuro-Nutrition)</p>
           <p class="channel-desc">Replace NOVA-4 ultra-processed snacks, squeeze pouches, and synthetic-dyed treats with <strong>intact whole foods</strong> rich in Choline, DHA, Heme Iron, Zinc, and Prebiotic Fiber.</p>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE AGE-STAGE DAILY RHYTHM, BUNDLE BUILDER & PRINTABLE FRIDGE QUICK-SHEET -->
+      <div id="daily-blueprint-builder" class="blueprint-card" style="margin-top: 2rem;">
+        <div class="blueprint-header">
+          <div>
+            <span class="tag-badge" style="background:#e0e7ff; color:#1e40af; font-weight:700; margin-bottom:0.35rem; display:inline-block;">
+              🎓 PhD + 🥦 MD + 🎮 Gaming Expert Synthesis
+            </span>
+            <h4 style="font-size:1.2rem; color:var(--text-main); margin-bottom:0.25rem;">
+              Interactive Child Age-Stage Daily Rhythm &amp; Printable Fridge Quick-Sheet
+            </h4>
+            <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">
+              Select your child's developmental stage below to generate an evidence-backed 24-hour rhythm (screen cap, melatonin cutoff, matched low-stimulus channels, tantrum-free games, and whole-food swaps) ready to sync across all directories or print for your refrigerator, nanny, or grandparents.
+            </p>
+          </div>
+          <div class="blueprint-actions">
+            <button type="button" id="btn-sync-age-directories" class="btn btn-primary btn-sm">
+              🔗 Sync All 3 Directories to This Age
+            </button>
+            <button type="button" id="btn-copy-blueprint" class="btn btn-outline btn-sm">
+              📋 Copy Caregiver Plan
+            </button>
+            <button type="button" id="btn-print-fridge-sheet" class="btn btn-outline btn-sm">
+              🖨️ Print Fridge Quick-Sheet
+            </button>
+          </div>
+        </div>
+
+        <div id="blueprint-age-selector" class="blueprint-age-bar" role="tablist" aria-label="Select Child Age Band">
+          <button type="button" class="blueprint-age-btn" data-blueprint-age="under-2">👶 Under 2 (0–24m)</button>
+          <button type="button" class="blueprint-age-btn" data-blueprint-age="toddler">🧸 Toddler (Ages 2–3)</button>
+          <button type="button" class="blueprint-age-btn active" data-blueprint-age="preschool">🎨 Preschool (Ages 4–5)</button>
+          <button type="button" class="blueprint-age-btn" data-blueprint-age="early-elementary">📚 Early Elem (Ages 6–7)</button>
+          <button type="button" class="blueprint-age-btn" data-blueprint-age="middle-elementary">🔬 Middle Elem (Ages 8–9)</button>
+          <button type="button" class="blueprint-age-btn" data-blueprint-age="preteen">🚀 Pre-Teen (Ages 10–12)</button>
+        </div>
+
+        <div id="fridge-quick-sheet" class="fridge-sheet-container">
+          <div class="fridge-sheet-banner">
+            <div>
+              <strong id="bp-stage-headline" style="font-size:1.02rem; color:var(--text-main);">Preschool Blueprint (Ages 4–5) • Prefrontal &amp; Symbolic Play Window</strong>
+              <p id="bp-stage-summary" style="font-size:0.84rem; color:var(--text-muted); margin:0.15rem 0 0 0;">
+                Co-viewed slow narrative media (&le;45 mins/day), discrete puzzle games with natural stopping cues, and intact NOVA-1 whole foods.
+              </p>
+            </div>
+            <span id="bp-sync-status" class="tag-badge" style="background:#dcfce7; color:#166534; font-weight:700;">Refrigerator &amp; Caregiver Ready</span>
+          </div>
+
+          <div class="fridge-metrics-row">
+            <div class="fridge-metric-box">
+              <span class="fridge-metric-label">⏱️ Daily Screen Cap (AAP)</span>
+              <strong id="bp-screen-budget" class="fridge-metric-val">&le; 45–60 mins/day (Shared TV)</strong>
+            </div>
+            <div class="fridge-metric-box">
+              <span class="fridge-metric-label">🌙 Melatonin &amp; Sleep Cutoff</span>
+              <strong id="bp-sleep-cutoff" class="fridge-metric-val">Screens Off 60–90m Before Bed (10–13h Sleep)</strong>
+            </div>
+            <div class="fridge-metric-box">
+              <span class="fridge-metric-label">🍽️ Pediatric MD Meal Rule</span>
+              <strong id="bp-meal-rule" class="fridge-metric-val">100% Screen-Free Meals (Protects Vagal Satiety)</strong>
+            </div>
+          </div>
+
+          <div class="fridge-sheet-grid">
+            <div class="fridge-col">
+              <div class="fridge-col-title">📺 Watch: Matched Calm Channels + Offline Transfer</div>
+              <ul id="bp-channels-list" class="fridge-list"></ul>
+            </div>
+            <div class="fridge-col">
+              <div class="fridge-col-title">🎮 Play: Matched Cognitive Games + Stopping Rule</div>
+              <ul id="bp-games-list" class="fridge-list"></ul>
+            </div>
+            <div class="fridge-col">
+              <div class="fridge-col-title">🥦 Nourish: Matched Whole-Food Swaps + Safety Gate</div>
+              <ul id="bp-foods-list" class="fridge-list"></ul>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1279,6 +1362,17 @@
             <button class="filter-btn" data-filter="sandbox">Creative, Montessori &amp; Sandbox</button>
             <button class="filter-btn" data-filter="stem">Science, Phonics &amp; Math</button>
             <button class="filter-btn" data-filter="sel">Emotional Regulation (SEL)</button>
+          </div>
+        </div>
+
+        <div class="filter-group" style="margin-top:0.6rem;">
+          <div class="filter-label">🎮 Gaming Expert Filter — Session Exit Friction (Stopping Cue) &amp; Co-Play Mode:</div>
+          <div id="game-stopping-filters" class="filter-pills">
+            <button class="filter-btn active" data-filter="all">All Session Types (33)</button>
+            <button class="filter-btn" data-filter="discrete-levels">🟢 Discrete 3–5m Levels (Tantrum-Free Exit)</button>
+            <button class="filter-btn" data-filter="calm-toybox">🟢 Calm Open Toybox (Stop Anytime)</button>
+            <button class="filter-btn" data-filter="deep-sandbox">🟡 Deep Flow Sandbox (Set 5m Timer)</button>
+            <button class="filter-btn" data-filter="co-play">👨‍👩‍👧 Parent + Child Co-Play</button>
           </div>
         </div>
 

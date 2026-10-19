@@ -3,6 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   restorePersistedDirectoryFilters();
   setupWorkspaceTabs();
+  setupDailyBlueprintBuilder();
   renderChannels();
   setupChannelFilterListeners();
   setupChannelSearch();
@@ -2260,17 +2261,21 @@ const foodsData = [
 // ==================== DETERMINISTIC SEM-10 & NFI-10 ORACLES & SECURITY HELPERS ====================
 const ALLOWED_AGE_FILTERS = new Set(['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
 const ALLOWED_GAME_DOMAINS = new Set(['all', 'logic', 'spatial', 'coding', 'sandbox', 'stem', 'sel']);
+const ALLOWED_GAME_STOPPING_FILTERS = new Set(['all', 'discrete-levels', 'calm-toybox', 'deep-sandbox', 'co-play']);
 const ALLOWED_FOOD_DOMAINS = new Set(['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps']);
 const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'lockdown', 'all']);
+const ALLOWED_BLUEPRINT_AGES = new Set(['under-2', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
 const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'lockdown'];
 
 const STORAGE_KEYS = {
   CHANNEL_AGE: 'safekids_channel_age_filter',
   GAME_AGE: 'safekids_game_age_filter',
   GAME_DOMAIN: 'safekids_game_domain_filter',
+  GAME_STOPPING: 'safekids_game_stopping_filter',
   FOOD_AGE: 'safekids_food_age_filter',
   FOOD_DOMAIN: 'safekids_food_domain_filter',
-  ACTIVE_TAB: 'safekids_active_tab'
+  ACTIVE_TAB: 'safekids_active_tab',
+  BLUEPRINT_AGE: 'safekids_blueprint_age'
 };
 
 function clampSemDimension(val) {
@@ -2536,15 +2541,170 @@ function getFoodVisualMeta(f) {
   };
 }
 
+// ==================== MULTI-DISCIPLINARY EXPERT LENS HELPERS (PhD / MD / GAME SYSTEMS) ====================
+function createExpertBridgeBox(variantClass, titleText, bodyText) {
+  const box = document.createElement('div');
+  box.className = `expert-bridge-box ${variantClass}`;
+
+  const title = document.createElement('div');
+  title.className = 'expert-bridge-title';
+  title.textContent = titleText;
+
+  const content = document.createElement('div');
+  content.textContent = bodyText;
+
+  box.appendChild(title);
+  box.appendChild(content);
+  return box;
+}
+
+function getChannelOffScreenTransfer(ch) {
+  const name = (ch && ch.name) ? ch.name : '';
+  const lower = name.toLowerCase();
+  if (lower.includes('art for kids') || lower.includes('mister maker')) {
+    return 'Place folding sketchbooks, beeswax crayons, and origami paper on the coffee table before pressing play so 80% of visual attention stays on physical hand-eye drawing.';
+  }
+  if (lower.includes('cosmic kids')) {
+    return 'Roll out a physical yoga mat and practice the "Peace Out" belly-breathing sequence offline before naptime or bedtime without turning on the TV.';
+  }
+  if (lower.includes('numberblocks') || lower.includes('math') || lower.includes('3blue1brown')) {
+    return 'Pair one episode with physical snap-cubes, wooden Cuisenaire rods, or graph paper so your child physically builds the exact number bonds or geometric patterns shown.';
+  }
+  if (lower.includes('alphablocks') || lower.includes('ms. rachel') || lower.includes('super simple') || lower.includes('reading')) {
+    return 'Echo the target phonemes using physical magnetic fridge letters or sing the gesture song face-to-face during diaper changes and car rides with zero screen.';
+  }
+  if (lower.includes('daniel tiger') || lower.includes('stillwater') || lower.includes('bluey')) {
+    return 'Re-enact the episode\'s game or emotional coping song ("Take a deep breath and count to four") using physical stuffed animals or backyard roleplay immediately after viewing.';
+  }
+  const ages = Array.isArray(ch && ch.age) ? ch.age : [];
+  if (ages.includes('toddler') || ages.includes('preschool')) {
+    return 'Co-view and ask 1 open-ended "serve-and-return" question afterward ("What did they discover outside?"), then step into the yard or playroom to find a real object that matches.';
+  }
+  return 'After watching 1 episode, invite your child to sketch a 3-step diagram or run a hands-on kitchen-table experiment testing the phenomenon they just observed.';
+}
+
+function getGameStoppingProfile(g) {
+  const name = (g && g.name) ? g.name : '';
+  const cat = (g && g.category) ? g.category : '';
+  const deepSandboxNames = [
+    'Minecraft',
+    'Kerbal Space Program',
+    'Civilization VI',
+    'Scratch 3.0',
+    'Turing Complete',
+    'SimCity',
+    ' Stardew'
+  ];
+  const isDeepSandbox = deepSandboxNames.some(token => name.includes(token));
+  if (isDeepSandbox) {
+    return {
+      stoppingType: 'deep-sandbox',
+      stoppingLabel: '🟡 Deep Flow Sandbox (Set 5m Visual Timer)',
+      stoppingClass: 'stopping-timer',
+      coPlay: true,
+      coPlayLabel: '👨‍👩‍👧 Parent + Child Co-Play'
+    };
+  }
+
+  const calmToyboxNames = [
+    'Pok Pok',
+    'Toca Life',
+    'Sago Mini',
+    'Breathe, Think, Do',
+    'Daniel Tiger',
+    'Endless Alphabet',
+    'Crayola',
+    'PBS KIDS',
+    'Khan Academy Kids',
+    'A Short Hike',
+    'Alba:',
+    'Dorfromantik',
+    'Townscaper',
+    'ScratchJr'
+  ];
+  const isCalmToybox = cat === 'sandbox' || cat === 'sel' || calmToyboxNames.some(token => name.includes(token));
+  if (isCalmToybox) {
+    const coPlayToybox = !name.includes('Dorfromantik');
+    return {
+      stoppingType: 'calm-toybox',
+      stoppingLabel: '🟢 Calm Open Toybox (Zero-Penalty Stop)',
+      stoppingClass: 'stopping-low',
+      coPlay: coPlayToybox,
+      coPlayLabel: coPlayToybox ? '👨‍👩‍👧 Parent + Child Co-Play' : '🧘 Solo Quiet Focus'
+    };
+  }
+
+  const coPlayLogicNames = [
+    'ChessKid',
+    'Zoombinis',
+    'Monument Valley',
+    'Thinkrolls',
+    'Lightbot',
+    'Slice Fractions',
+    'DragonBox',
+    'Baba Is You',
+    'World of Goo',
+    'The Witness',
+    'Good Pizza'
+  ];
+  const isCoPlay = coPlayLogicNames.some(token => name.includes(token));
+  return {
+    stoppingType: 'discrete-levels',
+    stoppingLabel: '🟢 Discrete 3–5m Levels (Natural Stopping Cue)',
+    stoppingClass: 'stopping-low',
+    coPlay: isCoPlay,
+    coPlayLabel: isCoPlay ? '👨‍👩‍👧 Parent + Child Co-Play' : '🧘 Solo Quiet Focus'
+  };
+}
+
+function getGameOffScreenTransfer(g) {
+  const cat = (g && g.category) ? g.category : '';
+  if (cat === 'spatial') {
+    return 'Bridge to physical spatial geometry: pair 15 minutes of digital play with wooden tangram blocks, Magna-Tiles, origami folding, or LEGO architectural builds.';
+  }
+  if (cat === 'coding') {
+    return 'Bridge to physical "Robot Turtle" unplugged coding: have your child write arrow-card algorithms on index cards to guide a parent across the living room floor.';
+  }
+  if (cat === 'logic') {
+    return 'Bridge to tabletop deduction: play a physical round of Mastermind, Rush Hour, Set, or over-the-board wooden chess to reinforce look-ahead inhibitory control.';
+  }
+  if (cat === 'sandbox' || cat === 'sel') {
+    return 'Bridge to real-world autonomy: translate today\'s in-game nature/town discovery into a backyard bug-identification journal, cardboard diorama, or calm breathing ritual.';
+  }
+  return 'Bridge to concrete manipulatives: use kitchen measuring cups, fraction pizza slices, or magnetic phonics tiles on the table to cement the concept in 3D space.';
+}
+
+function getFoodSensoryBridge(f) {
+  const cat = (f && f.category) ? f.category : '';
+  if (cat === 'brain-dha') {
+    return 'Step 1 (Familiar Anchor): Serve alongside warm toast strips or mild crackers → Step 2 (50/50 Sensory Bridge): Blend flaky fish/egg yolk into creamy avocado or ricotta dip → Step 3 (Target Whole Matrix): Intact omega-3 & choline whole-food portion.';
+  }
+  if (cat === 'iron-focus') {
+    return 'Step 1 (Familiar Anchor): Keep texture ultra-smooth or finely minced in favorite pasta/dip → Step 2 (50/50 Sensory Bridge): Pair with sweet bell pepper or orange slices (Vitamin C 3x iron uptake) → Step 3 (Target Whole Matrix): Intact lentil/beef/seed iron staple.';
+  }
+  if (cat === 'steady-glucose') {
+    return 'Step 1 (Familiar Anchor): Offer familiar crunchy shape (apple wedges or warm oats) → Step 2 (50/50 Sensory Bridge): Add a "dip moat" of 100% nut/seed butter + cinnamon → Step 3 (Target Whole Matrix): Zero-spike intact cellular fiber + lipid snack.';
+  }
+  if (cat === 'bone-growth') {
+    return 'Step 1 (Familiar Anchor): Serve cold in a small open cup or fun silicone mold → Step 2 (50/50 Sensory Bridge): Swirl mashed real berries + chia into plain full-fat dairy/kefir → Step 3 (Target Whole Matrix): Unsweetened D3 + K2 + calcium matrix.';
+  }
+  if (cat === 'gut-immune') {
+    return 'Step 1 (Familiar Anchor): Start with 1 teaspoon of mild probiotic dip or fruit puree → Step 2 (50/50 Sensory Bridge): Let child sprinkle "crunchy toppings" (hemp/flax/pomegranate) themselves → Step 3 (Target Whole Matrix): Live-culture + prebiotic fiber bowl.';
+  }
+  return 'Step 1 (Familiar Anchor): Keep the visual bento compartment shape kids expect → Step 2 (50/50 Sensory Bridge): Plate a zero-pressure "exploler bite" next to a safe favorite (Satter Division of Responsibility) → Step 3 (Target Whole Matrix): 100% NOVA-1 lunchbox swap.';
+}
+
 // ==================== CHANNEL, GAME & FOOD STATE INITIALIZATION ====================
 let currentChannelFilter = 'all';
 let currentChannelSearch = '';
 let currentGameAgeFilter = 'all';
 let currentGameDomainFilter = 'all';
+let currentGameStoppingFilter = 'all';
 let currentGameSearch = '';
 let currentFoodAgeFilter = 'all';
 let currentFoodDomainFilter = 'all';
 let currentFoodSearch = '';
+let currentBlueprintAge = 'toddler';
 
 function syncFilterButtons(selector, activeValue) {
   const buttons = document.querySelectorAll(selector);
@@ -2561,12 +2721,15 @@ function restorePersistedDirectoryFilters() {
   currentChannelFilter = readPersistedFilter(STORAGE_KEYS.CHANNEL_AGE, ALLOWED_AGE_FILTERS, 'all');
   currentGameAgeFilter = readPersistedFilter(STORAGE_KEYS.GAME_AGE, ALLOWED_AGE_FILTERS, 'all');
   currentGameDomainFilter = readPersistedFilter(STORAGE_KEYS.GAME_DOMAIN, ALLOWED_GAME_DOMAINS, 'all');
+  currentGameStoppingFilter = readPersistedFilter(STORAGE_KEYS.GAME_STOPPING, ALLOWED_GAME_STOPPING_FILTERS, 'all');
   currentFoodAgeFilter = readPersistedFilter(STORAGE_KEYS.FOOD_AGE, ALLOWED_AGE_FILTERS, 'all');
   currentFoodDomainFilter = readPersistedFilter(STORAGE_KEYS.FOOD_DOMAIN, ALLOWED_FOOD_DOMAINS, 'all');
+  currentBlueprintAge = readPersistedFilter(STORAGE_KEYS.BLUEPRINT_AGE, ALLOWED_BLUEPRINT_AGES, 'toddler');
 
   syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
   syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
   syncFilterButtons('#game-domain-filters .filter-btn', currentGameDomainFilter);
+  syncFilterButtons('#game-stopping-filters .filter-btn', currentGameStoppingFilter);
   syncFilterButtons('#food-age-filters .filter-btn', currentFoodAgeFilter);
   syncFilterButtons('#food-domain-filters .filter-btn', currentFoodDomainFilter);
 }
@@ -2719,6 +2882,15 @@ function buildChannelCard(ch) {
     swBox.appendChild(swList);
     body.appendChild(swBox);
   }
+
+  // Educational PhD Lens: Off-Screen Transfer Activity
+  body.appendChild(
+    createExpertBridgeBox(
+      'expert-bridge-phd',
+      '🎓 Educational PhD • Off-Screen Transfer Activity (Hirsh-Pasek et al., 2015):',
+      getChannelOffScreenTransfer(ch)
+    )
+  );
 
   card.appendChild(body);
 
@@ -2915,6 +3087,11 @@ function getFilteredGames() {
     const ageVal = Array.isArray(g.age) ? g.age : [g.age || ''];
     const matchesAge = currentGameAgeFilter === 'all' || ageVal.includes(currentGameAgeFilter);
     const matchesDomain = currentGameDomainFilter === 'all' || g.category === currentGameDomainFilter;
+    const stopProfile = getGameStoppingProfile(g);
+    const matchesStopping =
+      currentGameStoppingFilter === 'all' ||
+      (currentGameStoppingFilter === 'co-play' && stopProfile.coPlay) ||
+      stopProfile.stoppingType === currentGameStoppingFilter;
 
     const matchesSearch = !currentGameSearch ||
       (g.name && g.name.toLowerCase().includes(currentGameSearch)) ||
@@ -2928,7 +3105,7 @@ function getFilteredGames() {
       (g.endorsements && g.endorsements.some(ed => ed.toLowerCase().includes(currentGameSearch))) ||
       (g.platforms && g.platforms.some(pl => pl.toLowerCase().includes(currentGameSearch)));
 
-    return matchesAge && matchesDomain && matchesSearch;
+    return matchesAge && matchesDomain && matchesStopping && matchesSearch;
   });
 }
 
@@ -3081,6 +3258,23 @@ function buildGameCard(g) {
   metaRow.appendChild(monBadge);
   body.appendChild(metaRow);
 
+  // Game Systems Expert Lens: Stopping-Cue / Session-Exit Friction + Co-Play Mode Row
+  const stopProfile = getGameStoppingProfile(g);
+  const stopRow = document.createElement('div');
+  stopRow.className = 'stopping-cue-row';
+
+  const stopPill = document.createElement('span');
+  stopPill.className = `stopping-cue-pill ${stopProfile.stoppingClass}`;
+  stopPill.textContent = stopProfile.stoppingLabel;
+
+  const coPlayPill = document.createElement('span');
+  coPlayPill.className = 'coplay-pill';
+  coPlayPill.textContent = stopProfile.coPlayLabel;
+
+  stopRow.appendChild(stopPill);
+  stopRow.appendChild(coPlayPill);
+  body.appendChild(stopRow);
+
   // Cognitive Focus
   if (g.cognitiveSkills && g.cognitiveSkills.length > 0) {
     const cogSection = document.createElement('div');
@@ -3217,6 +3411,15 @@ function buildGameCard(g) {
     body.appendChild(calmBox);
   }
 
+  // Educational PhD Lens: Screen-to-Tabletop Transfer
+  body.appendChild(
+    createExpertBridgeBox(
+      'expert-bridge-phd',
+      '🎓 Educational PhD • Screen-to-Tabletop Transfer (Papert / Vygotsky):',
+      getGameOffScreenTransfer(g)
+    )
+  );
+
   // Platforms
   const platDiv = document.createElement('div');
   platDiv.style.fontSize = '0.78rem';
@@ -3267,7 +3470,7 @@ function renderGames() {
     container.replaceChildren(
       createEmptyState(
         'No educational games match your search criteria.',
-        "Try selecting 'All Games' or clearing the domain and search filters."
+        "Try selecting 'All Games' or clearing the domain, stopping-cue, and search filters."
       )
     );
     return;
@@ -3309,6 +3512,22 @@ function setupGameFilterListeners() {
       renderGames();
       if (window.trackSafeKidsEvent) {
         window.trackSafeKidsEvent('filter_games_domain', { domain: currentGameDomainFilter });
+      }
+    });
+  });
+
+  const stoppingButtons = document.querySelectorAll('#game-stopping-filters .filter-btn');
+  stoppingButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const activeBtn = e.currentTarget || e.target;
+      stoppingButtons.forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+      const rawStopping = activeBtn.getAttribute('data-filter') || 'all';
+      currentGameStoppingFilter = ALLOWED_GAME_STOPPING_FILTERS.has(rawStopping) ? rawStopping : 'all';
+      writePersistedFilter(STORAGE_KEYS.GAME_STOPPING, currentGameStoppingFilter, ALLOWED_GAME_STOPPING_FILTERS);
+      renderGames();
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_games_stopping', { stopping: currentGameStoppingFilter });
       }
     });
   });
@@ -3684,6 +3903,15 @@ function buildFoodCard(f) {
   citBox.appendChild(nfiDiv);
   body.appendChild(citBox);
 
+  // Pediatric Feeding MD Lens: 3-Step Picky-Eater Sensory Bridge
+  body.appendChild(
+    createExpertBridgeBox(
+      'expert-bridge-md',
+      '🩺 Pediatric Feeding MD • 3-Step Picky-Eater Sensory Bridge (SOS / Birch, 1999):',
+      getFoodSensoryBridge(f)
+    )
+  );
+
   card.appendChild(body);
 
   // Action Link
@@ -3910,6 +4138,7 @@ const WORKSPACE_TAB_METADATA = {
 const HASH_TO_TAB_MAP = {
   '#overview': 'overview',
   '#recommendations': 'overview',
+  '#daily-blueprint-builder': 'overview',
   '#science': 'science',
   '#research': 'science',
   '#methodology': 'science',
@@ -4090,6 +4319,281 @@ function setupWorkspaceTabs() {
       }
     });
   });
+}
+
+// ==================== DAILY AGE RHYTHM & FRIDGE QUICK-SHEET BUILDER ====================
+const BLUEPRINT_STAGE_RULES = {
+  'under-2': {
+    ageLabelShort: 'Under 2 (0–24m)',
+    directoryFilterAge: 'toddler',
+    stageHeadline: '👶 Under 2 Years (0–24 Months) — 100% Zero-Screen Sensorimotor & Iron/DHA Foundation',
+    stageSummary: 'AAP (2016) & Kuhl (2003) Social Gating: Infants and toddlers under 24 months experience a video-deficit effect and require live 3D parent-child serve-and-return vocal interaction, floor exploration, and iron/DHA-rich complementary foods.',
+    screenBudget: '0 mins/day passive video (Live family video-chat only per AAP)',
+    sleepCutoff: '100% dark, screen-free nursery; 12–16 hrs total sleep/naps',
+    mealRule: 'Zero added sugar & zero honey (<12m); soft iron + DHA whole foods'
+  },
+  'toddler': {
+    ageLabelShort: 'Toddlers (Ages 2–3)',
+    directoryFilterAge: 'toddler',
+    stageHeadline: '🧸 Toddlers (Ages 2–3) — Co-Viewed Slow Pacing (SEM-10 ≤ 2/10) & Choking-Safe Whole Foods',
+    stageSummary: 'WHO (2019) & Lillard (2011): Keep total screen media under 30–45 mins/day, always co-viewed on a shared living-room TV. Prioritize open-ended digital toyboxes with zero failure states and quartered/mashed NOVA-1 whole foods.',
+    screenBudget: '≤ 30–45 mins/day (100% Parent Co-Viewed on Shared TV)',
+    sleepCutoff: 'Screens OFF 60+ mins before nap & bedtime (Melatonin Protection)',
+    mealRule: '100% Screen-Free Table; quarter grapes/tomatoes lengthwise; thin nut butters'
+  },
+  'preschool': {
+    ageLabelShort: 'Preschool (Ages 4–5)',
+    directoryFilterAge: 'preschool',
+    stageHeadline: '🎨 Preschool (Ages 4–5) — Prefrontal Executive Function, Phonics & Sensory Food Bridges',
+    stageSummary: 'Diamond (2013) & Hirsh-Pasek (2015): Build inhibitory control, synthetic phonics, and spatial number sense through low-arousal stories and tactile apps, paired with division-of-responsibility family meals.',
+    screenBudget: '≤ 45–60 mins/day Curated Low-Stimulus TV or Guided App',
+    sleepCutoff: 'All screens OFF 60+ mins before bedtime (Read-aloud wind-down)',
+    mealRule: '100% Screen-Free Meals; zero synthetic dyes (Red 40 / Yellow 5); intact fruit over pouches'
+  },
+  'early-elementary': {
+    ageLabelShort: 'Early Elementary (Ages 6–7)',
+    directoryFilterAge: 'early-elementary',
+    stageHeadline: '🚀 Early Elementary (Ages 6–7) — Hands-On STEM Inquiry, Spatial Logic & Steady School Glucose',
+    stageSummary: 'Papert (1980) & Benton (2007): Transition from passive watching to hands-on drawing, nature inquiry, and discrete-level spatial logic puzzles. Pack low-glycemic-load school lunches to prevent the 10:30 AM classroom attention crash.',
+    screenBudget: '≤ 60 mins/day School-Day Recreational Cap (Shared Room Only)',
+    sleepCutoff: 'Hardware shutoff 60+ mins before sleep; zero screens in bedrooms',
+    mealRule: 'Low-GL Breakfast + Bento (Oats/Eggs/Seeds) for 4-hr morning classroom focus'
+  },
+  'middle-elementary': {
+    ageLabelShort: 'Middle Elementary (Ages 8–9)',
+    directoryFilterAge: 'middle-elementary',
+    stageHeadline: '🧩 Middle Elementary (Ages 8–9) — Constructivist Coding, Deductive Math & Neuro-Cofactor Nutrition',
+    stageSummary: 'Resnick (2017) & Asbell-Clarke (2012): Channel growing autonomy into Scratch block programming, Zoombinis Boolean logic, and engineering sandboxes (with a 5-min visual stopping timer) alongside iron/zinc/DHA brain staples.',
+    screenBudget: '≤ 60–75 mins/day (Prioritize Creative Coding & Co-Op Puzzles)',
+    sleepCutoff: 'Devices docked in kitchen 60+ mins before lights-out (Chang et al., 2015)',
+    mealRule: 'Screen-Free Family Dinner; Heme/Lentil Iron + Vitamin C & Marine DHA 2–3x/wk'
+  },
+  'preteen': {
+    ageLabelShort: 'Pre-Teens (Ages 10–12)',
+    directoryFilterAge: 'preteen',
+    stageHeadline: '🔭 Pre-Teens (Ages 10–12) — Deep Systems Thinking, Peak Bone Mineralization & Zero Social Feeds',
+    stageSummary: 'Nisan & Schocken (2005) & Weaver (2016): Replace algorithmic short-form feeds (Shorts/TikTok) and loot-box shooters with orbital physics, CPU architecture, and deep strategy, fueled by peak-velocity calcium/D3/K2 and high-polyphenol brain foods.',
+    screenBudget: '≤ 60–90 mins/day Recreational (Zero Infinite-Scroll Feeds or Chat)',
+    sleepCutoff: 'Strict 60-min pre-bedtime curfew; chargers stay outside bedrooms overnight',
+    mealRule: 'Peak Bone-Mass D3 + K2 + Calcium + Prebiotic Fiber; zero caffeine/energy drinks'
+  }
+};
+
+function computeDailyBlueprint(rawAgeKey) {
+  const ageKey = ALLOWED_BLUEPRINT_AGES.has(rawAgeKey) ? rawAgeKey : 'toddler';
+  const stageMeta = BLUEPRINT_STAGE_RULES[ageKey] || BLUEPRINT_STAGE_RULES.toddler;
+
+  if (ageKey === 'under-2') {
+    return {
+      ageKey,
+      ageLabelShort: stageMeta.ageLabelShort,
+      directoryFilterAge: stageMeta.directoryFilterAge,
+      stageHeadline: stageMeta.stageHeadline,
+      stageSummary: stageMeta.stageSummary,
+      screenBudget: stageMeta.screenBudget,
+      sleepCutoff: stageMeta.sleepCutoff,
+      mealRule: stageMeta.mealRule,
+      channels: [
+        'Live Parent-Sung Gestures (Zero Screen) — Use Super Simple Songs melodies face-to-face',
+        'Live Parentese & ASL Sign Modeling — Practice Ms. Rachel speech pauses in 3D space',
+        'Acoustic Chamber Music (Speaker Only) — Schubert/Bach woodwinds from Little Bear',
+        'Board-Book Shared Reading — Point-and-name picture books (Puffin Rock / Frog & Toad)'
+      ],
+      games: [
+        'Physical Object Permanence Box & Wooden Coin Drop (Zero Screen Sensorimotor)',
+        'Montessori Treasure Basket (Safe Wood, Brushed Steel, Silicone & Natural Fabrics)',
+        'Tactile Water Pouring, Stacking Cups & Nesting Rings (Cause-and-Effect Mastery)',
+        'Serve-and-Return Floor Roll-the-Ball & Peek-a-Boo (Joint Attention Circuitry)'
+      ],
+      foods: [
+        'Slow-Simmered Grass-Fed Beef & Red Lentil Mash (NFI 1/10 • Heme Iron for Myelination)',
+        'Wild Alaskan Salmon Flakes & Avocado Mash (NFI 1/10 • Pin-Bone Checked Marine DHA)',
+        'Pasture-Raised Soft-Scrambled Whole Egg Yolk (NFI 1/10 • 147mg Choline for Memory)',
+        'Plain Whole-Milk Kefir & Mashed Berries (NFI 1/10 • Zero Added Sugar; No Honey <12m)'
+      ]
+    };
+  }
+
+  const matchedChannels = channelsData
+    .filter(ch => (Array.isArray(ch.age) ? ch.age : [ch.age]).includes(ageKey))
+    .slice(0, 4)
+    .map(ch => `${ch.name} (SEM-10: ${ch.stimulusScore}) — Start: ${(ch.startWith && ch.startWith[0]) || 'Calm Episode'}`);
+
+  const matchedGames = gamesData
+    .filter(g => (Array.isArray(g.age) ? g.age : [g.age]).includes(ageKey))
+    .slice(0, 4)
+    .map(g => {
+      const stopProf = getGameStoppingProfile(g);
+      return `${g.name} (SEM-10: ${g.stimulusScore} • ${stopProf.stoppingLabel})`;
+    });
+
+  const matchedFoods = foodsData
+    .filter(f => (Array.isArray(f.age) ? f.age : [f.age]).includes(ageKey))
+    .slice(0, 4)
+    .map(f => `${f.name} (NFI-10: ${f.nfiScore} • Replaces: ${f.trapReplaced.split('(')[0].trim()})`);
+
+  return {
+    ageKey,
+    ageLabelShort: stageMeta.ageLabelShort,
+    directoryFilterAge: stageMeta.directoryFilterAge,
+    stageHeadline: stageMeta.stageHeadline,
+    stageSummary: stageMeta.stageSummary,
+    screenBudget: stageMeta.screenBudget,
+    sleepCutoff: stageMeta.sleepCutoff,
+    mealRule: stageMeta.mealRule,
+    channels: matchedChannels,
+    games: matchedGames,
+    foods: matchedFoods
+  };
+}
+
+function renderBlueprintList(ulEl, items) {
+  if (!ulEl) return;
+  const frag = document.createDocumentFragment();
+  (items || []).forEach(txt => {
+    const li = document.createElement('li');
+    li.textContent = txt;
+    frag.appendChild(li);
+  });
+  ulEl.replaceChildren(frag);
+}
+
+function setupDailyBlueprintBuilder() {
+  const container = document.getElementById('daily-blueprint-builder');
+  if (!container) return;
+
+  const ageBtns = container.querySelectorAll('.blueprint-age-btn');
+  const headlineEl = document.getElementById('bp-stage-headline');
+  const summaryEl = document.getElementById('bp-stage-summary');
+  const syncStatusEl = document.getElementById('bp-sync-status');
+  const screenBudgetEl = document.getElementById('bp-screen-budget');
+  const sleepCutoffEl = document.getElementById('bp-sleep-cutoff');
+  const mealRuleEl = document.getElementById('bp-meal-rule');
+  const channelsListEl = document.getElementById('bp-channels-list');
+  const gamesListEl = document.getElementById('bp-games-list');
+  const foodsListEl = document.getElementById('bp-foods-list');
+
+  const btnSync = document.getElementById('btn-sync-age-directories');
+  const btnCopy = document.getElementById('btn-copy-blueprint');
+  const btnPrint = document.getElementById('btn-print-fridge-sheet');
+
+  function updateBlueprintView(ageKey, clearSyncBanner) {
+    const bp = computeDailyBlueprint(ageKey);
+    currentBlueprintAge = bp.ageKey;
+
+    ageBtns.forEach(btn => {
+      if (btn.getAttribute('data-bp-age') === bp.ageKey) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    if (headlineEl) headlineEl.textContent = bp.stageHeadline;
+    if (summaryEl) summaryEl.textContent = bp.stageSummary;
+    if (screenBudgetEl) screenBudgetEl.textContent = bp.screenBudget;
+    if (sleepCutoffEl) sleepCutoffEl.textContent = bp.sleepCutoff;
+    if (mealRuleEl) mealRuleEl.textContent = bp.mealRule;
+
+    renderBlueprintList(channelsListEl, bp.channels);
+    renderBlueprintList(gamesListEl, bp.games);
+    renderBlueprintList(foodsListEl, bp.foods);
+
+    if (clearSyncBanner && syncStatusEl) {
+      syncStatusEl.textContent = '';
+    }
+  }
+
+  ageBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget || e.target;
+      const requestedAge = targetBtn.getAttribute('data-bp-age') || 'toddler';
+      const validAge = ALLOWED_BLUEPRINT_AGES.has(requestedAge) ? requestedAge : 'toddler';
+      writePersistedFilter(STORAGE_KEYS.BLUEPRINT_AGE, validAge, ALLOWED_BLUEPRINT_AGES);
+      updateBlueprintView(validAge, true);
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('select_blueprint_age', { age: validAge });
+      }
+    });
+  });
+
+  if (btnSync) {
+    btnSync.addEventListener('click', () => {
+      const bp = computeDailyBlueprint(currentBlueprintAge);
+      const targetDirAge = ALLOWED_AGE_FILTERS.has(bp.directoryFilterAge) ? bp.directoryFilterAge : 'toddler';
+
+      currentChannelFilter = targetDirAge;
+      currentGameAgeFilter = targetDirAge;
+      currentFoodAgeFilter = targetDirAge;
+
+      writePersistedFilter(STORAGE_KEYS.CHANNEL_AGE, currentChannelFilter, ALLOWED_AGE_FILTERS);
+      writePersistedFilter(STORAGE_KEYS.GAME_AGE, currentGameAgeFilter, ALLOWED_AGE_FILTERS);
+      writePersistedFilter(STORAGE_KEYS.FOOD_AGE, currentFoodAgeFilter, ALLOWED_AGE_FILTERS);
+
+      syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
+      syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
+      syncFilterButtons('#food-age-filters .filter-btn', currentFoodAgeFilter);
+
+      renderChannels();
+      renderGames();
+      renderFoods();
+
+      const chCount = getFilteredChannels().length;
+      const gmCount = getFilteredGames().length;
+      const fdCount = getFilteredFoods().length;
+
+      if (syncStatusEl) {
+        syncStatusEl.textContent = bp.ageKey === 'under-2'
+          ? `✓ Synced Watch (${chCount}), Play (${gmCount}) & Nourish (${fdCount}) directories to Early-Years / Toddler prep mode (Note: 0 passive screen mins under 24m per AAP)!`
+          : `✓ Synced Watch (${chCount} channels), Play (${gmCount} games) & Nourish (${fdCount} swaps) directories to ${bp.ageLabelShort}!`;
+      }
+      flashButtonSuccess(btnSync, `✓ Synced All 3 Directories (${bp.ageLabelShort})!`);
+    });
+  }
+
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      const bp = computeDailyBlueprint(currentBlueprintAge);
+      const lines = [
+        `SAFEKIDS CAREGIVER & BABYSITTER DAILY PLAN — ${bp.stageHeadline}`,
+        `====================================================================`,
+        `• Daily Screen Budget: ${bp.screenBudget}`,
+        `• Sleep & Melatonin Rule: ${bp.sleepCutoff}`,
+        `• Mealtime & Safety Rule: ${bp.mealRule}`,
+        ``,
+        `📺 PILLAR 1: APPROVED CALM CHANNELS (WATCH)`,
+        ...bp.channels.map(c => `  - ${c}`),
+        ``,
+        `🎮 PILLAR 2: APPROVED COGNITIVE GAMES & STOPPING CUES (PLAY)`,
+        ...bp.games.map(g => `  - ${g}`),
+        ``,
+        `🥗 PILLAR 3: WHOLE-FOOD SWAPS & PREP SAFETY (NOURISH)`,
+        ...bp.foods.map(f => `  - ${f}`),
+        ``,
+        `Source: SafeKids Parent Portal (https://safe-kids.web.app)`
+      ];
+      safeCopyText(
+        lines.join('\n'),
+        () => {
+          flashButtonSuccess(btnCopy, '✓ Copied Caregiver Plan!');
+        },
+        () => {
+          flashButtonSuccess(btnCopy, '✓ Prepared Caregiver Plan');
+        }
+      );
+    });
+  }
+
+  if (btnPrint) {
+    btnPrint.addEventListener('click', () => {
+      if (typeof window !== 'undefined' && typeof window.print === 'function') {
+        window.print();
+      }
+      flashButtonSuccess(btnPrint, '✓ Print Dialog Opened');
+    });
+  }
+
+  updateBlueprintView(currentBlueprintAge, false);
 }
 
 // ==================== COPY CODE BUTTONS ====================
