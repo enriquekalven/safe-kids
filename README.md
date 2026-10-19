@@ -192,36 +192,56 @@ Setup walk-throughs covering:
 
 ## 📁 Repository Directory Structure
 
-```
+```text
 safe-kids-portal/
-├── firebase.json       # Configured with site: "safe-kids" + strict HTTP security headers
+├── firebase.json       # Configured with site: "safe-kids", CSP headers, and hosting.ignore rules
 ├── .firebaserc         # Configured with project: "project-maui"
+├── Makefile            # Verification & localhost-bound preview targets (make verify, make preview)
 ├── README.md           # Master project documentation, SEM-10 rubric, & 18-study bibliography
-└── public/
-    ├── index.html      # Responsive Single Page Application (Rubric, Calculator, Channels, Games)
-    ├── styles.css      # WCAG AA compliant CSS design system with responsive nav & calculator styles
-    └── app.js          # XSS-safe DOM rendering, interactive SEM-10 calculator, & whitelist exporter
+├── STATE.md            # Truthful delivery status, Correction log, and open risks by role
+├── assumptions.json    # Explicitly labeled unverified domain assumptions (verified: false)
+├── public/
+│   ├── index.html      # Responsive Single Page Application (Rubric, Calculator, Channels, Games)
+│   ├── styles.css      # WCAG AA compliant CSS design system with tabular-nums & calculator styles
+│   └── app.js          # Canonical SafeKidsCore SEM-10 oracle, XSS-safe DOM, & OWASP-safe exporter
+├── docs/
+│   ├── PLAN.md         # Veteran SME grill, Why These Pieces, and What Moves vs. Stays Behind
+│   ├── REVIEW_CHECKLIST.md # 8 Fixed Review Axes & Regression Ledger (R-1..R-6)
+│   ├── TESTING.md      # Offline test inventory, parity matrix, and 5-mutant harness documentation
+│   ├── DEMO_SCRIPT.md  # 3-minute smoking-gun walkthrough script
+│   └── adr/
+│       └── 0001-sem10-deterministic-rubric-and-no-fakes.md
+├── tests/
+│   ├── network_guard.py      # Socket-level outbound network blocker (Law 6)
+│   ├── test_parity.py        # 243-grid + 400-fuzz Python/JS parity, DOM calculator, CSV & persistence tests
+│   ├── test_no_real_names.py # SHA-256 customer/PII digest gate + negative verifiers (Law 5, Law 10)
+│   └── test_docs_integrity.py# Markdown link/fence/heading & AST test-reference verifier (Law 4, Law 12)
+└── tools/
+    ├── ci/
+    │   └── forbid_fabrication.py # Static AST/regex gate banning sleep, random, innerHTML, and bare catch
+    └── sim/
+        └── mutation_check.py     # 5-mutant fault-injection harness requiring 100% kills (Law 5)
 ```
 
 ---
 
-## 🛠️ Local Development & Deployment
+## 🛠️ Local Verification, Preview & Deployment
 
-### Local Preview
-Open `public/index.html` directly in any browser, or launch a lightweight HTTP server:
+### 1. Run Hermetic Verification Gate (`< 2s`, 100% Offline)
 ```bash
-cd public
-python3 -m http.server 8080
+make verify
 ```
-Then visit `http://localhost:8080` in your web browser.
 
-### Deployment to Firebase Hosting
-The repository is pre-configured to deploy directly to Firebase Hosting:
+### 2. Local Preview (Bound to `127.0.0.1:8080`)
+```bash
+make preview
+```
+Then visit `http://127.0.0.1:8080` in your web browser.
+
+### 3. Deployment to Firebase Hosting
+The repository is pre-configured to deploy `public/` directly to Firebase Hosting while excluding `tests/`, `tools/`, `docs/`, `STATE.md`, `assumptions.json`, and `Makefile`:
 
 ```bash
-# In project root:
-
-# Deploy update to live production target
 firebase deploy --project project-maui --only hosting:safe-kids
 ```
 

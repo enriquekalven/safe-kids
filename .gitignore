@@ -1,6 +1,8 @@
+*.log
+*.py[cod]
+.DS_Store
+.env*
 .firebase/
+__pycache__/
 node_modules/
 projects.txt
-*.log
-.env*
-.DS_Store

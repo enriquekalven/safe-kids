@@ -1,6 +1,7 @@
 // SafeKids Parent Portal - Client Interactive Logic (XSS-Safe DOM Architecture)
 
 document.addEventListener('DOMContentLoaded', () => {
+  restorePersistedDirectoryFilters();
   renderChannels();
   setupChannelFilterListeners();
   setupChannelSearch();
@@ -9,18 +10,19 @@ document.addEventListener('DOMContentLoaded', () => {
   renderGames();
   setupGameFilterListeners();
   setupGameSearch();
+  setupGamesExport();
 
   setupSemCalculator();
   setupCopyButtons();
 });
 
-// Comprehensive Database of 25 Unique Curated Low-Stimulus Channels (Deduplicated Multi-Age Bands)
+// Comprehensive Database of 28 Unique Curated Low-Stimulus Channels (Deduplicated Multi-Age Bands)
 const channelsData = [
   // --- ULTRA-LOW STIMULUS (1/10 - 2/10): TODDLERS & PRESCHOOL ---
   {
     name: "Puffin Rock",
     researchAnchor: "Lillard & Peterson (2011) Low-Pacing Baseline; CPM < 3",
-    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "1/10",
@@ -33,7 +35,7 @@ const channelsData = [
   {
     name: "Tumble Leaf",
     researchAnchor: "Hirsh-Pasek et al. (2015) Tactile Physical Inquiry & Constructivist Play",
-    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "1/10",
@@ -46,7 +48,7 @@ const channelsData = [
   {
     name: "Frog and Toad",
     researchAnchor: "Kostyrka-Allchorne et al. (2017) Slow Conversational Cadence & Prosocial Empathy",
-    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
     age: ["toddler", "preschool", "early-elementary"],
     ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
     stimulusScore: "1/10",
@@ -59,7 +61,7 @@ const channelsData = [
   {
     name: "Little Bear",
     researchAnchor: "Kostyrka-Allchorne et al. (2017) Low-Stimulus Narrative Framing; CPM < 4",
-    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "1/10",
@@ -72,7 +74,7 @@ const channelsData = [
   {
     name: "Trash Truck",
     researchAnchor: "Lillard & Peterson (2011) Naturalistic Pacing & Unhurried Dialogue",
-    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "1/10",
@@ -85,7 +87,7 @@ const channelsData = [
   {
     name: "Stillwater",
     researchAnchor: "Diamond (2013) Mindfulness, Perspective-Taking & Emotional Regulation",
-    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 1/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)",
     age: ["preschool", "early-elementary"],
     ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
     stimulusScore: "1/10",
@@ -98,7 +100,7 @@ const channelsData = [
   {
     name: "Sarah & Duck",
     researchAnchor: "Lillard & Peterson (2011) Deliberate Story Pacing & Everyday Routines",
-    semBreakdown: "Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 2/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "2/10",
@@ -111,7 +113,7 @@ const channelsData = [
   {
     name: "Daniel Tiger's Neighborhood",
     researchAnchor: "Fred Rogers Center (2016) Emotional Co-Regulation & Coping Songs",
-    semBreakdown: "Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 2/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "2/10",
@@ -124,7 +126,7 @@ const channelsData = [
   {
     name: "Super Simple Songs",
     researchAnchor: "Anderson & Pempek (2005) Toddler Linguistic Cadence & Clear Articulation",
-    semBreakdown: "Pacing: 0/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 2/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "2/10",
@@ -137,7 +139,7 @@ const channelsData = [
   {
     name: "Ms. Rachel - Songs for Littles",
     researchAnchor: "Kuhl et al. (2003) Social Gating & Parentese in Infant Speech Learning",
-    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)",
     age: ["toddler"],
     ageLabel: "Toddlers (Ages 2–3)",
     stimulusScore: "3/10",
@@ -150,7 +152,7 @@ const channelsData = [
   {
     name: "Bluey",
     researchAnchor: "Singer & Singer (2005) Sociodramatic Play & Emotional Co-Regulation",
-    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)",
     age: ["toddler", "preschool", "early-elementary"],
     ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
     stimulusScore: "3/10",
@@ -163,7 +165,7 @@ const channelsData = [
   {
     name: "Alphablocks",
     researchAnchor: "National Reading Panel (2000) Synthetic Phonics & Grapheme Mapping",
-    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)",
     age: ["toddler", "preschool", "early-elementary"],
     ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
     stimulusScore: "3/10",
@@ -176,7 +178,7 @@ const channelsData = [
   {
     name: "Numberblocks",
     researchAnchor: "NCETM (UK) & Singapore Math Number Bond Visual Framework",
-    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)",
     age: ["toddler", "preschool", "early-elementary"],
     ageLabel: "Ages 2–7 (Toddler to Early Elementary)",
     stimulusScore: "3/10",
@@ -189,7 +191,7 @@ const channelsData = [
   {
     name: "Hey Duggee",
     researchAnchor: "Bandura (1977) Social Modeling & Cooperative Activity Framing",
-    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)",
     age: ["toddler", "preschool"],
     ageLabel: "Toddlers (2–3) & Preschool (4–5)",
     stimulusScore: "3/10",
@@ -202,7 +204,7 @@ const channelsData = [
   {
     name: "Cosmic Kids Yoga",
     researchAnchor: "Diamond (2013) Embodied Self-Regulation & Motor Mindfulness",
-    semBreakdown: "Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 0/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)",
     age: ["preschool", "early-elementary"],
     ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
     stimulusScore: "3/10",
@@ -215,7 +217,7 @@ const channelsData = [
   {
     name: "Art for Kids Hub",
     researchAnchor: "Vygotsky (1978) Zone of Proximal Development in Fine Motor Drawing",
-    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)",
     age: ["early-elementary", "middle-elementary"],
     ageLabel: "Early & Middle Elementary (Ages 6–9)",
     stimulusScore: "3/10",
@@ -228,7 +230,7 @@ const channelsData = [
   {
     name: "3Blue1Brown / Numberphile",
     researchAnchor: "Papert (1980) & Lockhart (2009) Visual Geometric Intuition in Mathematics",
-    semBreakdown: "Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 1/2 • Host/Ad: 1/2 (Total: 3/10)",
+    semBreakdown: "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 1/2 • Reward: 0/2 (Total: 3/10)",
     age: ["preteen"],
     ageLabel: "Pre-Teens (Ages 10–12) & Teens",
     stimulusScore: "3/10",
@@ -243,7 +245,7 @@ const channelsData = [
   {
     name: "Sesame Street",
     researchAnchor: "Fisch & Truglio (2001) 'G' is for Growing: 30 Years of Research",
-    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 4/10)",
     age: ["preschool"],
     ageLabel: "Preschoolers (Ages 4–5)",
     stimulusScore: "4/10",
@@ -256,7 +258,7 @@ const channelsData = [
   {
     name: "PBS Kids",
     researchAnchor: "US Dept of Education Ready to Learn Grant Longitudinal Research",
-    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 4/10)",
     age: ["preschool", "early-elementary", "middle-elementary"],
     ageLabel: "Ages 4–9 (Preschool to Middle Elementary)",
     stimulusScore: "4/10",
@@ -269,7 +271,7 @@ const channelsData = [
   {
     name: "Mystery Doug / Mystery Science",
     researchAnchor: "Dewey (1938) & NGSS Phenomenon-Driven Socratic Inquiry",
-    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 4/10)",
     age: ["early-elementary", "middle-elementary", "preteen"],
     ageLabel: "Ages 6–12 (Elementary to Pre-Teen)",
     stimulusScore: "4/10",
@@ -282,7 +284,7 @@ const channelsData = [
   {
     name: "BBC Earth Kids",
     researchAnchor: "E.O. Wilson (1984) Biophilia Hypothesis & Natural History Observation",
-    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 4/10)",
     age: ["early-elementary", "middle-elementary", "preteen"],
     ageLabel: "Ages 6–12 (Elementary to Pre-Teen)",
     stimulusScore: "4/10",
@@ -295,7 +297,7 @@ const channelsData = [
   {
     name: "Veritasium",
     researchAnchor: "Muller et al. (2008) Addressing Physics Misconceptions via Dialogue",
-    semBreakdown: "Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 4/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 4/10)",
     age: ["preteen"],
     ageLabel: "Pre-Teens (Ages 10–12) & Teens",
     stimulusScore: "4/10",
@@ -308,7 +310,7 @@ const channelsData = [
   {
     name: "Smarter Every Day",
     researchAnchor: "Feynman Technique of Physical Observation & High-Speed Optics",
-    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 5/10)",
     age: ["preteen"],
     ageLabel: "Pre-Teens (Ages 10–12) & Teens",
     stimulusScore: "5/10",
@@ -321,7 +323,7 @@ const channelsData = [
   {
     name: "TED-Ed",
     researchAnchor: "Mayer (2009) Multimedia Learning Principles & Dual Coding",
-    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 5/10)",
     age: ["early-elementary", "middle-elementary", "preteen"],
     ageLabel: "Ages 7–12 (Elementary to Pre-Teen)",
     stimulusScore: "5/10",
@@ -334,7 +336,7 @@ const channelsData = [
   {
     name: "SciShow Kids / Crash Course Kids",
     researchAnchor: "NRC (2012) K-12 Framework & Next Generation Science Standards (NGSS)",
-    semBreakdown: "Pacing: 2/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    semBreakdown: "Base 1 + Pacing: 2/2 • Visual: 1/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 5/10)",
     age: ["early-elementary", "middle-elementary"],
     ageLabel: "Early & Middle Elementary (Ages 6–9)",
     stimulusScore: "5/10",
@@ -347,7 +349,7 @@ const channelsData = [
   {
     name: "StoryBots (Ask the StoryBots)",
     researchAnchor: "Mayer (2009) Multimodal Concept Integration & Musical Mnemonics",
-    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 5/10)",
     age: ["preschool", "early-elementary"],
     ageLabel: "Preschool (4–5) & Early Elementary (6–7)",
     stimulusScore: "5/10",
@@ -360,7 +362,7 @@ const channelsData = [
   {
     name: "National Geographic Kids",
     researchAnchor: "E.O. Wilson (1984) Biophilia & Empirical Natural World Literacy",
-    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 5/10)",
     age: ["early-elementary", "middle-elementary"],
     ageLabel: "Early & Middle Elementary (Ages 6–9)",
     stimulusScore: "5/10",
@@ -373,7 +375,7 @@ const channelsData = [
   {
     name: "Physics Girl / Kurzgesagt – In a Nutshell",
     researchAnchor: "Mayer (2009) Coherence Principle & Systems-Level Scientific Modeling",
-    semBreakdown: "Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Host/Ad: 1/2 (Total: 5/10)",
+    semBreakdown: "Base 1 + Pacing: 1/2 • Visual: 2/2 • Audio: 1/2 • Pressure: 0/2 • Reward: 0/2 (Total: 5/10)",
     age: ["preteen"],
     ageLabel: "Pre-Teens (Ages 10–12) & Teens",
     stimulusScore: "5/10",
@@ -424,7 +426,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://playpokpok.com",
     "researchAnchor": "Hirsh-Pasek et al. (2015) Active Mind-On Play; Montessori Auto-Education",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "Sago Mini World / Forest Flyer",
@@ -462,7 +464,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://sagomini.com",
     "researchAnchor": "Anderson & Pempek (2005) Sensory Pacing Guidelines in Toddlers",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Endless Alphabet",
@@ -499,7 +501,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.originatorkids.com",
     "researchAnchor": "National Reading Panel (2000) Synthetic Phonics & Phonemic Awareness",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Breathe, Think, Do with Sesame",
@@ -537,7 +539,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://sesameworkshop.org",
     "researchAnchor": "Diamond (2013) Inhibitory Control & Prefrontal Cortex Regulation",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Khan Academy Kids",
@@ -578,7 +580,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://www.khanacademy.org/kids",
     "researchAnchor": "Stanford Graduate School of Education (2018) Early Learning Evaluation",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "PBS KIDS Games",
@@ -616,7 +618,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://pbskids.org/games",
     "researchAnchor": "US Dept of Education Ready-to-Learn Grant Evaluation (2015-2020)",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Thinkrolls: Logic & Physics Puzzles",
@@ -653,7 +655,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://avokiddo.com",
     "researchAnchor": "Hirsh-Pasek et al. (2015) Spatial Problem-Solving & Physics Intuition",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Monument Valley Series (1, 2 & 3)",
@@ -694,7 +696,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.monumentvalleygame.com",
     "researchAnchor": "M.C. Escher Spatial Geometry; Dunckley (2015) Meditative Flow",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Toca Nature",
@@ -731,7 +733,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://tocaboca.com",
     "researchAnchor": "Dunckley (2015) Sensory De-escalation & Open-World Nature Cognition",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "Kahoot! DragonBox Numbers",
@@ -768,7 +770,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://dragonbox.com",
     "researchAnchor": "Singapore Ministry of Education CPA (Concrete-Pictorial-Abstract) Framework",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Daniel Tiger's Grr-ific Feelings",
@@ -805,7 +807,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://pbskids.org/apps/daniel-tigers-grr-ific-feelings.html",
     "researchAnchor": "Fred Rogers Center for Early Learning & Children's Media (2016)",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "ScratchJr",
@@ -846,7 +848,7 @@ const gamesData = [
     "monetizationType": "foss",
     "link": "https://www.scratchjr.org",
     "researchAnchor": "Bers et al. (2014), Computers & Education; Tufts DevTech Lab",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Slice Fractions",
@@ -884,7 +886,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://ululab.com/slice-fractions",
     "researchAnchor": "Charland et al. (2016), Universit\u00e9 du Qu\u00e9bec \u00e0 Montr\u00e9al (UQAM) Study",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Lightbot: Code Hour / Lightbot Jr.",
@@ -923,7 +925,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://lightbot.com",
     "researchAnchor": "Wing (2006) Computational Thinking & Algorithmic Decomposition",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Townscaper",
@@ -965,7 +967,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://oskarstalberg.com/Townscaper",
     "researchAnchor": "Papert (1980) Microworlds; Sensory De-escalation Spatial Flow",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "Kahoot! DragonBox Big Numbers",
@@ -1002,7 +1004,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://dragonbox.com",
     "researchAnchor": "Sj\u00f6man et al. (2015), Computers & Education; Base-10 Structuring",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "ChessKid",
@@ -1043,7 +1045,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://www.chesskid.com",
     "researchAnchor": "Diamond (2013) Inhibitory Control & Look-Ahead Strategic Planning",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Zoombinis (Logical Journey of the Zoombinis)",
@@ -1084,7 +1086,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.zoombinis.com",
     "researchAnchor": "Asbell-Clarke et al. (2012), TERC / NSF Grant DRL-1118534",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Scratch 3.0",
@@ -1126,7 +1128,7 @@ const gamesData = [
     "monetizationType": "foss",
     "link": "https://scratch.mit.edu",
     "researchAnchor": "Papert (1980) Constructionism; Resnick (2017) Lifelong Kindergarten",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Kahoot! DragonBox Algebra (5+ & 12+)",
@@ -1165,7 +1167,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://dragonbox.com",
     "researchAnchor": "Sj\u00f6man et al. (2015), Computers & Education; Norwegian Research Council",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "A Short Hike",
@@ -1206,7 +1208,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://ashorthike.com",
     "researchAnchor": "Ryan & Deci (2000) Self-Determination Theory (Intrinsic Autonomy)",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Human Resource Machine",
@@ -1247,7 +1249,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://tomorrowcorporation.com/humanresourcemachine",
     "researchAnchor": "Patterson & Hennessy (2013) Computer Architecture & Assembly Models",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Alba: A Wildlife Adventure",
@@ -1290,7 +1292,7 @@ const gamesData = [
     "monetizationType": "arcade",
     "link": "https://www.albawildlife.com",
     "researchAnchor": "Sobel (2008) Childhood & Nature; Place-Based Environmental Education",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Baba Is You",
@@ -1330,7 +1332,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://hempuli.com/baba",
     "researchAnchor": "Tarski (1956) Formal Semantics & Predicate Rule Induction",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Minecraft (Creative Mode & Redstone Logic)",
@@ -1371,7 +1373,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.minecraft.net",
     "researchAnchor": "Papert (1980) Constructionism; Digital Boolean Logic Gates",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Kerbal Space Program",
@@ -1409,7 +1411,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://www.kerbalspaceprogram.com",
     "researchAnchor": "NASA / ESA Orbital Physics & Newtonian Mechanics Education",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 1/2 \u2022 Reward: 0/2 (Total: 4/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 1/2 • Reward: 0/2 (Total: 4/10)"
   },
   {
     "name": "The Witness",
@@ -1448,7 +1450,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://the-witness.net",
     "researchAnchor": "Peirce (1903) Semiotic Induction; Silent Epistemic Discovery",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Civilization VI / Freeciv",
@@ -1487,7 +1489,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://civilization.com",
     "researchAnchor": "Sterman (2000) Business Dynamics: Complex Systems & Policy Trade-offs",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Turing Complete / Opus Magnum",
@@ -1525,7 +1527,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://turingcomplete.game",
     "researchAnchor": "Nisan & Schocken (2005) The Elements of Computing Systems (NAND to CPU)",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   },
   {
     "name": "Lucas & Friends (RV AppStudios)",
@@ -1564,7 +1566,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://www.rvappstudios.com",
     "researchAnchor": "National Reading Panel (2000) Letter-Sound & Kinesthetic Tracing",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Teach Your Monster to Read",
@@ -1604,7 +1606,7 @@ const gamesData = [
     "monetizationType": "free",
     "link": "https://www.teachyourmonster.org",
     "researchAnchor": "Rose (2006) Independent Review of Early Reading & Synthetic Phonics",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 2/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 2/10)"
   },
   {
     "name": "Dorfromantik",
@@ -1645,7 +1647,7 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://toukana.com/dorfromantik/",
     "researchAnchor": "Dunckley (2015) Low-Arousal Spatial Cognition & Tabletop Flow",
-    "semBreakdown": "Base 1 + Pacing: 0/2 \u2022 Audio: 0/2 \u2022 Visual: 0/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 1/10)"
+    "semBreakdown": "Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)"
   },
   {
     "name": "World of Goo 2 / Poly Bridge",
@@ -1685,9 +1687,120 @@ const gamesData = [
     "monetizationType": "paid",
     "link": "https://worldofgoo2.com",
     "researchAnchor": "Hirsh-Pasek et al. (2015) Constructivist Physics & Structural Statics",
-    "semBreakdown": "Base 1 + Pacing: 1/2 \u2022 Audio: 0/2 \u2022 Visual: 1/2 \u2022 Pressure: 0/2 \u2022 Reward: 0/2 (Total: 3/10)"
+    "semBreakdown": "Base 1 + Pacing: 1/2 • Visual: 1/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 3/10)"
   }
 ];
+
+// ==================== DETERMINISTIC SEM-10 ORACLE & SECURITY HELPERS ====================
+const ALLOWED_AGE_FILTERS = new Set(['all', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
+const ALLOWED_GAME_DOMAINS = new Set(['all', 'logic', 'spatial', 'coding', 'sandbox', 'stem', 'sel']);
+
+const STORAGE_KEYS = {
+  CHANNEL_AGE: 'safekids_channel_age_filter',
+  GAME_AGE: 'safekids_game_age_filter',
+  GAME_DOMAIN: 'safekids_game_domain_filter'
+};
+
+function clampSemDimension(val) {
+  if (typeof val === 'boolean' || val === null || val === undefined) return 0;
+  let num = 0;
+  if (typeof val === 'number') {
+    if (!Number.isFinite(val)) return 0;
+    num = val >= 0 ? Math.floor(val + 0.5) : Math.ceil(val - 0.5);
+  } else if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!/^-?\d+$/.test(trimmed)) return 0;
+    num = parseInt(trimmed, 10);
+  } else {
+    return 0;
+  }
+  return Math.max(0, Math.min(2, num));
+}
+
+function computeSem10Score(dims) {
+  const safeDims = dims && typeof dims === 'object' ? dims : {};
+  const pacing = clampSemDimension(safeDims.pacing);
+  const visual = clampSemDimension(safeDims.visual);
+  const audio = clampSemDimension(safeDims.audio);
+  const pressure = clampSemDimension(safeDims.pressure);
+  const reward = clampSemDimension(safeDims.reward);
+
+  const rawSum = pacing + visual + audio + pressure + reward;
+  const totalScore = Math.min(10, 1 + rawSum);
+
+  let tier = 'high';
+  let stimulusClass = 'stimulus-high';
+  if (totalScore <= 3) {
+    tier = 'low';
+    stimulusClass = 'stimulus-low';
+  } else if (totalScore <= 6) {
+    tier = 'med';
+    stimulusClass = 'stimulus-med';
+  }
+
+  const semBreakdown = `Base 1 + Pacing: ${pacing}/2 \u2022 Visual: ${visual}/2 \u2022 Audio: ${audio}/2 \u2022 Pressure: ${pressure}/2 \u2022 Reward: ${reward}/2 (Total: ${totalScore}/10)`;
+  return {
+    pacing,
+    visual,
+    audio,
+    pressure,
+    reward,
+    rawSum,
+    score: totalScore,
+    scoreLabel: `${totalScore}/10`,
+    tier,
+    stimulusClass,
+    semBreakdown
+  };
+}
+
+function sanitizeCsvCell(val) {
+  const raw = val === null || val === undefined ? '' : String(val);
+  const normalized = raw.replace(/\r\n/g, ' ').replace(/\r/g, ' ').replace(/\n/g, ' ');
+  const trimmedLeading = normalized.replace(/^[ \u00a0\u3000\u200b]+/, '');
+  let safe = normalized;
+  if (/^[=+\-@\t\r]/.test(trimmedLeading) || /^[=+\-@\t\r]/.test(normalized)) {
+    safe = "'" + normalized;
+  }
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
+function readPersistedFilter(key, allowedSet, fallback) {
+  try {
+    if (typeof localStorage === 'undefined' || !localStorage) return fallback;
+    const stored = localStorage.getItem(key);
+    if (typeof stored !== 'string') return fallback;
+    return allowedSet.has(stored) ? stored : fallback;
+  } catch (_err) {
+    return fallback;
+  }
+}
+
+function writePersistedFilter(key, value, allowedSet) {
+  try {
+    if (typeof localStorage === 'undefined' || !localStorage) return;
+    if (allowedSet.has(value)) {
+      localStorage.setItem(key, value);
+    }
+  } catch (_err) {
+    // Ignore storage quota or private-browsing restrictions
+  }
+}
+
+function safeCopyText(text, onSuccess, onFallback) {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text).then(
+        () => { if (onSuccess) onSuccess(); },
+        () => { if (onFallback) onFallback(); }
+      );
+      return;
+    }
+  } catch (_err) {
+    // Fallback when clipboard API throws synchronously
+  }
+  if (onFallback) onFallback();
+}
 
 // ==================== XSS-SAFE DOM HELPERS ====================
 function createExternalLinkSvg() {
@@ -1724,10 +1837,35 @@ function createEmptyState(primaryMsg, secondaryMsg) {
   return wrapper;
 }
 
-// ==================== CHANNEL CONTROLS & RENDERING ====================
+// ==================== CHANNEL & GAME STATE INITIALIZATION ====================
 let currentChannelFilter = 'all';
 let currentChannelSearch = '';
+let currentGameAgeFilter = 'all';
+let currentGameDomainFilter = 'all';
+let currentGameSearch = '';
 
+function syncFilterButtons(selector, activeValue) {
+  const buttons = document.querySelectorAll(selector);
+  buttons.forEach(btn => {
+    if (btn.getAttribute('data-filter') === activeValue) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
+function restorePersistedDirectoryFilters() {
+  currentChannelFilter = readPersistedFilter(STORAGE_KEYS.CHANNEL_AGE, ALLOWED_AGE_FILTERS, 'all');
+  currentGameAgeFilter = readPersistedFilter(STORAGE_KEYS.GAME_AGE, ALLOWED_AGE_FILTERS, 'all');
+  currentGameDomainFilter = readPersistedFilter(STORAGE_KEYS.GAME_DOMAIN, ALLOWED_GAME_DOMAINS, 'all');
+
+  syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
+  syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
+  syncFilterButtons('#game-domain-filters .filter-btn', currentGameDomainFilter);
+}
+
+// ==================== CHANNEL CONTROLS & RENDERING ====================
 function getFilteredChannels() {
   return channelsData.filter(ch => {
     const ageVal = Array.isArray(ch.age) ? ch.age : [ch.age || ''];
@@ -1803,7 +1941,7 @@ function buildChannelCard(ch) {
   semStrong.textContent = '🔬 SEM-10 Rubric: ';
   const semBadge = document.createElement('span');
   semBadge.className = 'sem-badge';
-  semBadge.textContent = ch.semBreakdown || 'Pacing: Low • Audio: Balanced • Visual: Calm';
+  semBadge.textContent = ch.semBreakdown || 'Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)';
   semDiv.appendChild(semStrong);
   semDiv.appendChild(semBadge);
 
@@ -1932,7 +2070,9 @@ function setupChannelFilterListeners() {
       const activeBtn = e.currentTarget || e.target;
       buttons.forEach(b => b.classList.remove('active'));
       activeBtn.classList.add('active');
-      currentChannelFilter = activeBtn.getAttribute('data-filter') || 'all';
+      const rawFilter = activeBtn.getAttribute('data-filter') || 'all';
+      currentChannelFilter = ALLOWED_AGE_FILTERS.has(rawFilter) ? rawFilter : 'all';
+      writePersistedFilter(STORAGE_KEYS.CHANNEL_AGE, currentChannelFilter, ALLOWED_AGE_FILTERS);
       renderChannels();
       if (window.trackSafeKidsEvent) {
         window.trackSafeKidsEvent('filter_channels', { filter: currentChannelFilter });
@@ -1957,7 +2097,7 @@ function setupChannelSearch() {
   });
 }
 
-// ==================== WHITELIST EXPORT TOOLS ====================
+// ==================== WHITELIST & CATALOG EXPORT TOOLS ====================
 function triggerFileDownload(filename, content, mimeType) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -1989,12 +2129,18 @@ function setupWhitelistExport() {
     btnCopyUrls.addEventListener('click', () => {
       const activeChannels = getFilteredChannels();
       const urlsText = activeChannels.map(ch => `${ch.name}: ${ch.link}`).join('\n');
-      navigator.clipboard.writeText(urlsText).then(() => {
-        flashButtonSuccess(btnCopyUrls, `✓ Copied ${activeChannels.length} URLs!`);
-        if (window.trackSafeKidsEvent) {
-          window.trackSafeKidsEvent('export_whitelist', { format: 'clipboard', count: activeChannels.length });
+      safeCopyText(
+        urlsText,
+        () => {
+          flashButtonSuccess(btnCopyUrls, `✓ Copied ${activeChannels.length} URLs!`);
+          if (window.trackSafeKidsEvent) {
+            window.trackSafeKidsEvent('export_whitelist', { format: 'clipboard', count: activeChannels.length });
+          }
+        },
+        () => {
+          flashButtonSuccess(btnCopyUrls, `✓ Prepared ${activeChannels.length} URLs`);
         }
-      });
+      );
     });
   }
 
@@ -2030,16 +2176,15 @@ function setupWhitelistExport() {
   if (btnExportCsv) {
     btnExportCsv.addEventListener('click', () => {
       const activeChannels = getFilteredChannels();
-      const escapeCsv = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
-      const header = ['Channel Name', 'Age Group', 'SEM-10 Score', 'SEM-10 Breakdown', 'Research Anchor', 'Recommended Starters', 'YouTube URL'];
+      const header = ['Channel Name', 'Age Group', 'SEM-10 Score', 'SEM-10 Breakdown', 'Research Anchor', 'Recommended Starters', 'YouTube URL'].map(sanitizeCsvCell);
       const rows = activeChannels.map(ch => [
-        escapeCsv(ch.name),
-        escapeCsv(ch.ageLabel),
-        escapeCsv(ch.stimulusScore),
-        escapeCsv(ch.semBreakdown),
-        escapeCsv(ch.researchAnchor),
-        escapeCsv((ch.startWith || []).join(' | ')),
-        escapeCsv(ch.link)
+        sanitizeCsvCell(ch.name),
+        sanitizeCsvCell(ch.ageLabel),
+        sanitizeCsvCell(ch.stimulusScore),
+        sanitizeCsvCell(ch.semBreakdown),
+        sanitizeCsvCell(ch.researchAnchor),
+        sanitizeCsvCell((ch.startWith || []).join(' | ')),
+        sanitizeCsvCell(ch.link)
       ].join(','));
       const csvContent = [header.join(','), ...rows].join('\n');
       triggerFileDownload(
@@ -2055,10 +2200,115 @@ function setupWhitelistExport() {
   }
 }
 
-// ==================== EDUCATOR GAMES CONTROLS & RENDERING ====================
-let currentGameAgeFilter = 'all';
-let currentGameDomainFilter = 'all';
-let currentGameSearch = '';
+// ==================== EDUCATOR GAMES CONTROLS, EXPORT & RENDERING ====================
+function getFilteredGames() {
+  return gamesData.filter(g => {
+    const ageVal = Array.isArray(g.age) ? g.age : [g.age || ''];
+    const matchesAge = currentGameAgeFilter === 'all' || ageVal.includes(currentGameAgeFilter);
+    const matchesDomain = currentGameDomainFilter === 'all' || g.category === currentGameDomainFilter;
+
+    const matchesSearch = !currentGameSearch ||
+      (g.name && g.name.toLowerCase().includes(currentGameSearch)) ||
+      (g.developer && g.developer.toLowerCase().includes(currentGameSearch)) ||
+      (g.researchAnchor && g.researchAnchor.toLowerCase().includes(currentGameSearch)) ||
+      (g.semBreakdown && g.semBreakdown.toLowerCase().includes(currentGameSearch)) ||
+      (g.whyEducatorsApprove && g.whyEducatorsApprove.toLowerCase().includes(currentGameSearch)) ||
+      (g.ageLabel && g.ageLabel.toLowerCase().includes(currentGameSearch)) ||
+      (g.categoryLabel && g.categoryLabel.toLowerCase().includes(currentGameSearch)) ||
+      (g.cognitiveSkills && g.cognitiveSkills.some(cs => cs.toLowerCase().includes(currentGameSearch))) ||
+      (g.endorsements && g.endorsements.some(ed => ed.toLowerCase().includes(currentGameSearch))) ||
+      (g.platforms && g.platforms.some(pl => pl.toLowerCase().includes(currentGameSearch)));
+
+    return matchesAge && matchesDomain && matchesSearch;
+  });
+}
+
+function setupGamesExport() {
+  const btnCopyGames = document.getElementById('btn-copy-games-urls');
+  const btnExportGamesJson = document.getElementById('btn-export-games-json');
+  const btnExportGamesCsv = document.getElementById('btn-export-games-csv');
+
+  if (btnCopyGames) {
+    btnCopyGames.addEventListener('click', () => {
+      const activeGames = getFilteredGames();
+      const text = activeGames.map(g => `${g.name} (${g.stimulusScore}): ${g.link}`).join('\n');
+      safeCopyText(
+        text,
+        () => {
+          flashButtonSuccess(btnCopyGames, `✓ Copied ${activeGames.length} Games!`);
+          if (window.trackSafeKidsEvent) {
+            window.trackSafeKidsEvent('export_games', { format: 'clipboard', count: activeGames.length });
+          }
+        },
+        () => {
+          flashButtonSuccess(btnCopyGames, `✓ Prepared ${activeGames.length} Games`);
+        }
+      );
+    });
+  }
+
+  if (btnExportGamesJson) {
+    btnExportGamesJson.addEventListener('click', () => {
+      const activeGames = getFilteredGames();
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        ageFilterApplied: currentGameAgeFilter,
+        domainFilterApplied: currentGameDomainFilter,
+        gameCount: activeGames.length,
+        games: activeGames.map(g => ({
+          name: g.name,
+          developer: g.developer,
+          ageBands: g.age,
+          ageLabel: g.ageLabel,
+          domain: g.category,
+          sem10Score: g.stimulusScore,
+          sem10Breakdown: g.semBreakdown,
+          researchAnchor: g.researchAnchor,
+          monetization: g.monetization,
+          platforms: g.platforms,
+          url: g.link
+        }))
+      };
+      triggerFileDownload(
+        `safekids-games-${currentGameAgeFilter}-${currentGameDomainFilter}.json`,
+        JSON.stringify(payload, null, 2),
+        'application/json'
+      );
+      flashButtonSuccess(btnExportGamesJson, '✓ Downloaded JSON!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_games', { format: 'json', count: activeGames.length });
+      }
+    });
+  }
+
+  if (btnExportGamesCsv) {
+    btnExportGamesCsv.addEventListener('click', () => {
+      const activeGames = getFilteredGames();
+      const header = ['Game Title', 'Developer', 'Age Group', 'Cognitive Domain', 'SEM-10 Score', 'SEM-10 Breakdown', 'Research Anchor', 'Monetization', 'Official URL'].map(sanitizeCsvCell);
+      const rows = activeGames.map(g => [
+        sanitizeCsvCell(g.name),
+        sanitizeCsvCell(g.developer),
+        sanitizeCsvCell(g.ageLabel),
+        sanitizeCsvCell(g.categoryLabel),
+        sanitizeCsvCell(g.stimulusScore),
+        sanitizeCsvCell(g.semBreakdown),
+        sanitizeCsvCell(g.researchAnchor),
+        sanitizeCsvCell(g.monetization),
+        sanitizeCsvCell(g.link)
+      ].join(','));
+      const csvContent = [header.join(','), ...rows].join('\n');
+      triggerFileDownload(
+        `safekids-games-${currentGameAgeFilter}-${currentGameDomainFilter}.csv`,
+        csvContent,
+        'text/csv;charset=utf-8;'
+      );
+      flashButtonSuccess(btnExportGamesCsv, '✓ Downloaded CSV!');
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('export_games', { format: 'csv', count: activeGames.length });
+      }
+    });
+  }
+}
 
 function buildGameCard(g) {
   const monetizationClass =
@@ -2294,25 +2544,7 @@ function renderGames() {
   const container = document.getElementById('game-grid');
   if (!container) return;
 
-  const filtered = gamesData.filter(g => {
-    const ageVal = Array.isArray(g.age) ? g.age : [g.age || ''];
-    const matchesAge = currentGameAgeFilter === 'all' || ageVal.includes(currentGameAgeFilter);
-    const matchesDomain = currentGameDomainFilter === 'all' || g.category === currentGameDomainFilter;
-
-    const matchesSearch = !currentGameSearch ||
-      (g.name && g.name.toLowerCase().includes(currentGameSearch)) ||
-      (g.developer && g.developer.toLowerCase().includes(currentGameSearch)) ||
-      (g.researchAnchor && g.researchAnchor.toLowerCase().includes(currentGameSearch)) ||
-      (g.semBreakdown && g.semBreakdown.toLowerCase().includes(currentGameSearch)) ||
-      (g.whyEducatorsApprove && g.whyEducatorsApprove.toLowerCase().includes(currentGameSearch)) ||
-      (g.ageLabel && g.ageLabel.toLowerCase().includes(currentGameSearch)) ||
-      (g.categoryLabel && g.categoryLabel.toLowerCase().includes(currentGameSearch)) ||
-      (g.cognitiveSkills && g.cognitiveSkills.some(cs => cs.toLowerCase().includes(currentGameSearch))) ||
-      (g.endorsements && g.endorsements.some(ed => ed.toLowerCase().includes(currentGameSearch))) ||
-      (g.platforms && g.platforms.some(pl => pl.toLowerCase().includes(currentGameSearch)));
-
-    return matchesAge && matchesDomain && matchesSearch;
-  });
+  const filtered = getFilteredGames();
 
   const countBadge = document.getElementById('game-count-badge');
   if (countBadge) {
@@ -2343,7 +2575,9 @@ function setupGameFilterListeners() {
       const activeBtn = e.currentTarget || e.target;
       ageButtons.forEach(b => b.classList.remove('active'));
       activeBtn.classList.add('active');
-      currentGameAgeFilter = activeBtn.getAttribute('data-filter') || 'all';
+      const rawAge = activeBtn.getAttribute('data-filter') || 'all';
+      currentGameAgeFilter = ALLOWED_AGE_FILTERS.has(rawAge) ? rawAge : 'all';
+      writePersistedFilter(STORAGE_KEYS.GAME_AGE, currentGameAgeFilter, ALLOWED_AGE_FILTERS);
       renderGames();
       if (window.trackSafeKidsEvent) {
         window.trackSafeKidsEvent('filter_games_age', { age: currentGameAgeFilter });
@@ -2357,7 +2591,9 @@ function setupGameFilterListeners() {
       const activeBtn = e.currentTarget || e.target;
       domainButtons.forEach(b => b.classList.remove('active'));
       activeBtn.classList.add('active');
-      currentGameDomainFilter = activeBtn.getAttribute('data-filter') || 'all';
+      const rawDomain = activeBtn.getAttribute('data-filter') || 'all';
+      currentGameDomainFilter = ALLOWED_GAME_DOMAINS.has(rawDomain) ? rawDomain : 'all';
+      writePersistedFilter(STORAGE_KEYS.GAME_DOMAIN, currentGameDomainFilter, ALLOWED_GAME_DOMAINS);
       renderGames();
       if (window.trackSafeKidsEvent) {
         window.trackSafeKidsEvent('filter_games_domain', { domain: currentGameDomainFilter });
@@ -2382,7 +2618,7 @@ function setupGameSearch() {
   });
 }
 
-// ==================== INTERACTIVE SEM-10 CALCULATOR ====================
+// ==================== INTERACTIVE SEM-10 CALCULATOR (MUST_RESET_ON_RELOAD) ====================
 function setupSemCalculator() {
   const calcContainer = document.getElementById('sem-calculator');
   if (!calcContainer) return;
@@ -2401,32 +2637,28 @@ function setupSemCalculator() {
   const resetBtn = document.getElementById('calc-reset-btn');
 
   function updateCalculatorView() {
-    const rawSum = scores.pacing + scores.visual + scores.audio + scores.pressure + scores.reward;
-    // Scale 1/10 to 10/10 (0 pts across all 5 dimensions = 1/10 ultra-calm baseline; 10 pts = 10/10 extreme)
-    const displayScore = rawSum === 0 ? 1 : rawSum;
+    const result = computeSem10Score(scores);
 
     if (breakdownText) {
-      breakdownText.textContent = `Pacing: ${scores.pacing}/2 • Visual: ${scores.visual}/2 • Audio: ${scores.audio}/2 • Pressure: ${scores.pressure}/2 • Reward/Ad: ${scores.reward}/2`;
+      breakdownText.textContent = result.semBreakdown;
     }
 
     if (scoreBadge && verdictDesc) {
-      if (rawSum <= 3) {
-        scoreBadge.className = 'stimulus-tag stimulus-low';
-        scoreBadge.textContent = `SEM-10 Score: ${displayScore}/10 — Low Stimulus (Approved)`;
+      scoreBadge.className = `stimulus-tag ${result.stimulusClass}`;
+      if (result.tier === 'low') {
+        scoreBadge.textContent = `SEM-10 Score: ${result.scoreLabel} — Low Stimulus (Approved)`;
         verdictDesc.textContent = 'Safe for developing executive function & bedtime wind-down. Protects endogenous attention (Lillard & Peterson, 2011; Dunckley, 2015).';
-      } else if (rawSum <= 6) {
-        scoreBadge.className = 'stimulus-tag stimulus-med';
-        scoreBadge.textContent = `SEM-10 Score: ${displayScore}/10 — Moderate Stimulus (Co-View)`;
+      } else if (result.tier === 'med') {
+        scoreBadge.textContent = `SEM-10 Score: ${result.scoreLabel} — Moderate Stimulus (Co-View)`;
         verdictDesc.textContent = 'Acceptable for daytime educational sessions (20–30 mins) with parent co-viewing. Avoid within 90 minutes of sleep.';
       } else {
-        scoreBadge.className = 'stimulus-tag stimulus-high';
-        scoreBadge.textContent = `SEM-10 Score: ${displayScore}/10 — High Stimulus (Block / Avoid)`;
+        scoreBadge.textContent = `SEM-10 Score: ${result.scoreLabel} — High Stimulus (Block / Avoid)`;
         verdictDesc.textContent = 'High risk of orienting reflex exhaustion, dopaminergic conditioning, and post-screen emotional dysregulation. Block via YouTube whitelist or NextDNS.';
       }
     }
   }
 
-  const dimGroups = calcContainer.querySelectorAll('.calc-options');
+  const dimGroups = calcContainer.querySelectorAll('.calc-dim-box');
   dimGroups.forEach(group => {
     const dim = group.getAttribute('data-dim');
     const buttons = group.querySelectorAll('.calc-opt-btn');
@@ -2434,10 +2666,11 @@ function setupSemCalculator() {
       btn.addEventListener('click', () => {
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        scores[dim] = parseInt(btn.getAttribute('data-pts') || '0', 10);
+        scores[dim] = clampSemDimension(btn.getAttribute('data-pts') || '0');
         updateCalculatorView();
         if (window.trackSafeKidsEvent) {
-          window.trackSafeKidsEvent('use_sem_calculator', { dimension: dim, total: scores.pacing + scores.visual + scores.audio + scores.pressure + scores.reward });
+          const currentResult = computeSem10Score(scores);
+          window.trackSafeKidsEvent('use_sem_calculator', { dimension: dim, total: currentResult.score });
         }
       });
     });
@@ -2468,16 +2701,25 @@ function setupCopyButtons() {
       const codeId = btn.getAttribute('data-target');
       const codeEl = document.getElementById(codeId);
       if (codeEl) {
-        navigator.clipboard.writeText(codeEl.innerText).then(() => {
-          if (window.trackSafeKidsEvent) {
-            window.trackSafeKidsEvent('copy_lockdown_code', { target: codeId });
+        safeCopyText(
+          codeEl.innerText,
+          () => {
+            if (window.trackSafeKidsEvent) {
+              window.trackSafeKidsEvent('copy_lockdown_code', { target: codeId });
+            }
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+          },
+          () => {
+            const orig = btn.textContent;
+            btn.textContent = 'Prepared';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
           }
-          const orig = btn.textContent;
-          btn.textContent = 'Copied!';
-          setTimeout(() => { btn.textContent = orig; }, 2000);
-        });
+        );
       }
     });
   });
 }
+
 

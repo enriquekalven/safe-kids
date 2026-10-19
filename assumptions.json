@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "project": "safe-kids-portal",
+  "updated_at": "2026-04-12",
+  "assumptions": [
+    {
+      "id": "ASM-001",
+      "status": "ASSUMPTION",
+      "verified": false,
+      "statement": "A Base-1 screen floor plus 5 additive stimulus dimensions (0-2 pts each, capped at 10) provides an interpretable parent screening proxy for audiovisual and interactive overstimulation.",
+      "owner_role": "Clinical & Pediatric Media Research Lead",
+      "verification_plan": "Calibrate SEM-10 tier cutoffs (Low 1-3, Moderate 4-6, High 7-10) against blinded pediatric developmental ratings across n >= 50 children's shows and games."
+    },
+    {
+      "id": "ASM-002",
+      "status": "ASSUMPTION",
+      "verified": false,
+      "statement": "Scene-cut pacing thresholds (>15s low, 5-15s moderate, <4s high) generalize from preschool fast-paced cartoon executive-function studies (Lillard & Peterson 2011) to interactive tablet games.",
+      "owner_role": "Cognitive Development SME",
+      "verification_plan": "Measure post-session inhibitory control and frustration tolerance following 15-minute exposures to Low-tier vs. High-tier interactive games."
+    },
+    {
+      "id": "ASM-003",
+      "status": "ASSUMPTION",
+      "verified": false,
+      "statement": "Static client-side whitelisting and DNS/OS lockdown guides reduce accidental algorithmic rabbit-hole drift without requiring server-side user accounts or telemetry collection.",
+      "owner_role": "Privacy & Family Systems Architect",
+      "verification_plan": "Conduct usability walkthroughs with 20 parent households configuring FreeTube/KidzTV and NextDNS/Control D from the portal's exported JSON/CSV allow-lists."
+    },
+    {
+      "id": "ASM-004",
+      "status": "ASSUMPTION",
+      "verified": false,
+      "statement": "YouTube channel handles and curated game store availability remain stable across regional storefronts between quarterly repository audits.",
+      "owner_role": "Curated Directory Maintainer",
+      "verification_plan": "Run an out-of-band quarterly link-health and monetization re-verification audit against all 28 channel URLs and 33 game entries."
+    }
+  ]
+}

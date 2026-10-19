@@ -422,12 +422,15 @@
 
       <!-- Interactive SEM-10 Self-Audit Calculator -->
       <div class="calc-card" id="sem-calculator">
-        <div class="card-title" style="margin-bottom:0.35rem;">
+        <div class="card-title" style="margin-bottom:0.35rem; flex-wrap:wrap; gap:0.5rem;">
           <span>Interactive SEM-10 Self-Audit Calculator: Score Any Show or Game</span>
-          <span class="tag-badge" style="background:#dcfce7; color:#15803d; font-weight:700;">Interactive Tool</span>
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <span class="tag-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700;">SIMULATED • WHAT-IF PREVIEW (RESETS ON RELOAD)</span>
+            <span class="tag-badge" style="background:#dcfce7; color:#15803d; font-weight:700;">Interactive Tool</span>
+          </div>
         </div>
         <p class="channel-desc" style="margin-bottom:0.75rem;">
-          Evaluating a new YouTube channel, streaming show, or mobile game your child asked for? Select the observed behavior across all 5 dimensions below to compute its live <strong>SEM-10 Stimulus Score</strong>:
+          Evaluating a new YouTube channel, streaming show, or mobile game your child asked for? Select the observed behavior across all 5 dimensions below to compute its live <strong>SEM-10 Stimulus Score</strong> (Base 1 screen floor + 0–2 pts per dimension):
         </p>
 
         <div class="calc-grid">
@@ -496,11 +499,11 @@
           <div>
             <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap;">
               <span style="font-size:0.9rem; font-weight:700; color:var(--text-main);">Calculated SEM-10 Result:</span>
-              <span id="calc-score-badge" class="stimulus-tag stimulus-low" style="font-size:0.9rem; padding:0.25rem 0.75rem;">1/10 • Ultra-Low Stimulus</span>
-              <span id="calc-breakdown-text" class="sem-badge">Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2</span>
+              <span id="calc-score-badge" class="stimulus-tag stimulus-low" style="font-size:0.9rem; padding:0.25rem 0.75rem;">SEM-10 Score: 1/10 — Low Stimulus (Approved)</span>
+              <span id="calc-breakdown-text" class="sem-badge">Base 1 + Pacing: 0/2 • Visual: 0/2 • Audio: 0/2 • Pressure: 0/2 • Reward: 0/2 (Total: 1/10)</span>
             </div>
             <p id="calc-verdict-desc" style="font-size:0.86rem; color:var(--text-muted); margin-top:0.4rem;">
-              🟢 <strong>Approved (Protective &amp; Restorative):</strong> Safe for toddlers and neurodivergent children. Protects prefrontal attention networks and emotional regulation.
+              Safe for developing executive function &amp; bedtime wind-down. Protects endogenous attention (Lillard &amp; Peterson, 2011; Dunckley, 2015).
             </p>
           </div>
           <button type="button" id="calc-reset-btn" class="btn btn-outline btn-sm">Reset Calculator</button>
@@ -729,6 +732,17 @@
             <button class="filter-btn" data-filter="sandbox">Creative, Montessori &amp; Sandbox</button>
             <button class="filter-btn" data-filter="stem">Science, Phonics &amp; Math</button>
             <button class="filter-btn" data-filter="sel">Emotional Regulation (SEL)</button>
+          </div>
+        </div>
+
+        <div class="export-toolbar">
+          <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">
+            ⚡ One-Click Games Directory Export (Exports currently filtered games with SEM-10 scores &amp; academic anchors):
+          </span>
+          <div class="export-actions">
+            <button type="button" id="btn-copy-games-urls" class="btn btn-outline btn-sm">📋 Copy Game Links</button>
+            <button type="button" id="btn-export-games-json" class="btn btn-outline btn-sm">⬇️ Download JSON Catalog</button>
+            <button type="button" id="btn-export-games-csv" class="btn btn-outline btn-sm">📊 Export CSV Rubric</button>
           </div>
         </div>
       </div>
@@ -1009,6 +1023,6 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
     </div>
   </footer>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

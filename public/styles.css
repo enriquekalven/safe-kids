@@ -46,6 +46,17 @@ body {
   color: var(--text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-number,
+.stimulus-tag,
+.sem-badge,
+.tag-badge,
+.rubric-table,
+table,
+.calc-opt-btn {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Header & Nav */
@@ -78,7 +89,8 @@ body {
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #2563eb, #0d9488);
+  background: #0f172a;
+  border: 2px solid #2563eb;
   color: white;
   border-radius: var(--radius-md);
   display: flex;
