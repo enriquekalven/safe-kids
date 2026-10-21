@@ -109,6 +109,12 @@ class AccountHygieneAndPiiGuardTests(unittest.TestCase):
             "rec-9-wholesome-food.jpg",
             "rec-10-listen-read.jpg",
             "nutrition-swap-guide.jpg",
+            "infographic-nourish-staples.jpg",
+            "infographic-nourish-swaps.jpg",
+            "infographic-watch-channels.jpg",
+            "infographic-play-games.jpg",
+            "infographic-listen-audio.jpg",
+            "infographic-lockdown-shield.jpg",
         }
         image_files = {p.name for p in (REPO_ROOT / "public" / "images").iterdir() if p.is_file()}
         self.assertEqual(image_files, approved_images)

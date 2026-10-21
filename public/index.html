@@ -67,6 +67,9 @@
 
       <div class="header-workspace-actions">
         <span class="header-mode-pill" id="header-active-pill">Focused Workspace • 7 Pillars</span>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-toggle-infographic-mode" aria-pressed="false" title="Switch to 2-Minute Parent Infographic Mode (shows only visual infographic posters and screenshot cheat-sheets per pillar)">
+          📸 2-Min Infographic View
+        </button>
         <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-clinical-details" aria-pressed="false" title="Expand or collapse all clinical rubrics, citations, and PhD/MD notes across every card">
           🔬 Expand All Science
         </button>
@@ -337,6 +340,126 @@
 
     <!-- SECTION 0: PARENT RECOMMENDATIONS & ACTION PLAN -->
     <section id="recommendations" class="section-block" data-tab-panel="overview">
+      <!-- NEW: 60-SECOND MOBILE-FRIENDLY ALL-PILLAR PARENT INFOGRAPHIC DECK (SWIPE / SCREENSHOT / SAVE TO PHONE) -->
+      <div id="parent-infographic-hub" class="pillar-infographic-card" style="margin-bottom: 1.75rem;">
+        <div class="pillar-infographic-header">
+          <div>
+            <span class="pillar-infographic-badge">📸 60-Second Parent Visual Cheat-Sheets • Tap Any Poster to Zoom or Save to Camera Roll</span>
+            <h4 class="pillar-infographic-title">In a Rush? Save or Screenshot These 6 Pillar Infographics</h4>
+            <p class="pillar-infographic-sub">Designed for busy parents standing in the grocery aisle or setting up a tablet. Tap any infographic to open fullscreen on your phone, download the image, or jump straight to that pillar.</p>
+          </div>
+        </div>
+        <div class="infographic-poster-grid">
+          <!-- Poster 1: Nourish Staples -->
+          <div class="infographic-poster-item">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-nourish-staples.jpg" data-zoom-title="Pillar 3 (Nourish): 16 Brain & Growth Whole-Food Staples">
+              <img src="images/infographic-nourish-staples.jpg" alt="Illustrated parent infographic showing 16 whole-food staples for kids grouped into Brain and DHA, Steady School Energy, Gut and Immunity, and Iron and Bone Growth" class="infographic-poster-img" width="640" height="480">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom / Screenshot</span>
+            </button>
+            <div class="infographic-poster-footer">
+              <div>
+                <strong>🥦 1. What to Feed Kids (16 Staples)</strong>
+                <span>Brain DHA, Steady Oats, Gut Kefir &amp; Iron</span>
+              </div>
+              <div class="infographic-poster-actions">
+                <a href="images/infographic-nourish-staples.jpg" download="SafeKids-Food-Staples-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save</a>
+                <a href="#nutrition-directory" class="btn btn-outline btn-sm">Open &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poster 2: Nourish Grocery Swaps -->
+          <div class="infographic-poster-item">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-nourish-swaps.jpg" data-zoom-title="Pillar 3 (Nourish): 6 Supermarket Aisle Swaps (Ditch This -> Grab This)">
+              <img src="images/infographic-nourish-swaps.jpg" alt="Illustrated supermarket swap infographic comparing fruit gummies, cheese puffs, pouches, sugary cereal, yogurt tubes, and juice boxes against whole-food alternatives" class="infographic-poster-img" width="640" height="480">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom / Screenshot</span>
+            </button>
+            <div class="infographic-poster-footer">
+              <div>
+                <strong>🛒 2. Grocery Aisle Swaps</strong>
+                <span>6 Instant Ditch This &rarr; Grab This Upgrades</span>
+              </div>
+              <div class="infographic-poster-actions">
+                <a href="images/infographic-nourish-swaps.jpg" download="SafeKids-Grocery-Swaps-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save</a>
+                <a href="#nutrition-directory" class="btn btn-outline btn-sm">Open &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poster 3: Watch Channels -->
+          <div class="infographic-poster-item">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-watch-channels.jpg" data-zoom-title="Pillar 1 (Watch): Low-Stimulus Shows by Age & Red-Flag Block List">
+              <img src="images/infographic-watch-channels.jpg" alt="Illustrated parent infographic listing top low-stimulus shows by age group, the 3 golden TV rules, and high-stimulus channels to block" class="infographic-poster-img" width="640" height="480">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom / Screenshot</span>
+            </button>
+            <div class="infographic-poster-footer">
+              <div>
+                <strong>📺 3. Low-Stimulus Shows (Watch)</strong>
+                <span>Calm TV by Age + Red-Flag Block List</span>
+              </div>
+              <div class="infographic-poster-actions">
+                <a href="images/infographic-watch-channels.jpg" download="SafeKids-Watch-Shows-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save</a>
+                <a href="#directory" class="btn btn-outline btn-sm">Open &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poster 4: Play Games -->
+          <div class="infographic-poster-item">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-play-games.jpg" data-zoom-title="Pillar 2 (Play): Brain-Building Games (Zero Ads, Zero Loot Boxes)">
+              <img src="images/infographic-play-games.jpg" alt="Illustrated parent infographic showing ad-free educational games grouped by age and stopping cue plus predatory games to block" class="infographic-poster-img" width="640" height="480">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom / Screenshot</span>
+            </button>
+            <div class="infographic-poster-footer">
+              <div>
+                <strong>🎮 4. Calm Brain Games (Play)</strong>
+                <span>Zero-Ad Toyboxes &amp; Logic Puzzles by Age</span>
+              </div>
+              <div class="infographic-poster-actions">
+                <a href="images/infographic-play-games.jpg" download="SafeKids-Play-Games-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save</a>
+                <a href="#games-directory" class="btn btn-outline btn-sm">Open &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poster 5: Listen & Read -->
+          <div class="infographic-poster-item">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-listen-audio.jpg" data-zoom-title="Pillar 4 (Listen & Read): Screen-Free Audio Players, Podcasts & Living Books">
+              <img src="images/infographic-listen-audio.jpg" alt="Illustrated parent infographic showing tactile screen-free players like Yoto and Toniebox, top kids podcasts, and bedtime phonics and living books" class="infographic-poster-img" width="640" height="480">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom / Screenshot</span>
+            </button>
+            <div class="infographic-poster-footer">
+              <div>
+                <strong>🎧 5. Screen-Free Audio &amp; Books</strong>
+                <span>Yoto/Tonie, Podcasts &amp; Living Books</span>
+              </div>
+              <div class="infographic-poster-actions">
+                <a href="images/infographic-listen-audio.jpg" download="SafeKids-Audio-Books-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save</a>
+                <a href="#listen-directory" class="btn btn-outline btn-sm">Open &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poster 6: 5-Minute Lockdown -->
+          <div class="infographic-poster-item">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-lockdown-shield.jpg" data-zoom-title="Pillar 5 (Shield): 5-Minute Device & Home Wi-Fi Lockdown Guide">
+              <img src="images/infographic-lockdown-shield.jpg" alt="Illustrated 4-step parent infographic covering Living Room TV setup, Tablet Whitelist, OS Single-App Guided Access Lock, and Home Wi-Fi NextDNS Shield" class="infographic-poster-img" width="640" height="480">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom / Screenshot</span>
+            </button>
+            <div class="infographic-poster-footer">
+              <div>
+                <strong>🛡️ 6. 5-Minute Device Lockdown</strong>
+                <span>TV, Tablet Whitelist, Guided Access &amp; DNS</span>
+              </div>
+              <div class="infographic-poster-actions">
+                <a href="images/infographic-lockdown-shield.jpg" download="SafeKids-Device-Lockdown-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save</a>
+                <a href="#solutions" class="btn btn-outline btn-sm">Open &rarr;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- INTERACTIVE AGE-STAGE DAILY RHYTHM, BUNDLE BUILDER & PRINTABLE FRIDGE QUICK-SHEET (FIRST ON HOME) -->
       <div id="daily-blueprint-builder" class="blueprint-card" style="margin-bottom: 1.75rem;">
         <div class="blueprint-header">
@@ -1333,6 +1456,88 @@
         <p>Curated low-stimulus, educational channels evaluated on the 1–10 SEM-10 stimulus scale. Deduplicated across age bands so you can filter by developmental stage or export directly to your whitelist player.</p>
       </div>
 
+      <!-- PILLAR 1 (WATCH): 60-SECOND MOBILE PARENT INFOGRAPHIC & SCREENSHOT VIEW -->
+      <div id="watch-pillar-infographic" class="pillar-infographic-card">
+        <div class="pillar-infographic-header">
+          <div>
+            <span class="pillar-infographic-badge">📺 Pillar 1 Quick-Glance Infographic • Screenshot or Save to Phone</span>
+            <h4 class="pillar-infographic-title">What Can My Kids Watch Safely? (60-Second Cheat-Sheet)</h4>
+            <p class="pillar-infographic-sub">Tap the poster to zoom fullscreen on your phone, save the image to your Photos, or screenshot the age-by-age calm show cards below.</p>
+          </div>
+          <div class="pillar-infographic-actions">
+            <a href="images/infographic-watch-channels.jpg" download="SafeKids-Watch-Shows-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save Watch Infographic</a>
+            <button type="button" class="btn btn-outline btn-sm infographic-zoom-trigger" data-zoom-src="images/infographic-watch-channels.jpg" data-zoom-title="Pillar 1 (Watch): Low-Stimulus Shows to Watch by Age">🔍 Fullscreen Poster</button>
+          </div>
+        </div>
+
+        <div class="pillar-infographic-split">
+          <div class="pillar-poster-showcase">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-watch-channels.jpg" data-zoom-title="Pillar 1 (Watch): Low-Stimulus Shows to Watch by Age">
+              <img src="images/infographic-watch-channels.jpg" alt="Pillar 1 Low-Stimulus Shows to Watch Infographic showing Top Calm Shows by Age, the 3 Golden TV Rules, and the Red-Flag Block List" class="infographic-poster-img" width="800" height="600">
+              <span class="infographic-zoom-pill">🔍 Tap Poster to Zoom / Screenshot</span>
+            </button>
+          </div>
+
+          <div class="infographic-flashcard-grid">
+            <div class="infographic-flashcard flashcard-blue">
+              <div class="flashcard-kicker">🧸 Ages 2–3 (Toddlers • SEM 1–2/10)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🐧 Puffin Rock</span>
+                <span class="flashcard-chip">🐻 Little Bear</span>
+                <span class="flashcard-chip">🚛 Trash Truck</span>
+                <span class="flashcard-chip">🐶 Kipper</span>
+              </div>
+              <div class="flashcard-rule">✓ &gt;15s scene cuts • Acoustic music • Shared TV only</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-teal">
+              <div class="flashcard-kicker">🎨 Ages 4–5 (Preschool • SEM 1–3/10)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🦊 Tumble Leaf</span>
+                <span class="flashcard-chip">🐾 Bluey</span>
+                <span class="flashcard-chip">🏠 Mister Rogers</span>
+                <span class="flashcard-chip">🦆 Sarah &amp; Duck</span>
+              </div>
+              <div class="flashcard-rule">✓ Real story arcs • Emotional co-regulation • Zero ads</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-green">
+              <div class="flashcard-kicker">🚀 Ages 6–9 (Elementary • SEM 2–3/10)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🐾 Wild Kratts</span>
+                <span class="flashcard-chip">🏔️ Molly of Denali</span>
+                <span class="flashcard-chip">🕵️ Odd Squad</span>
+                <span class="flashcard-chip">🎨 Art for Kids Hub</span>
+              </div>
+              <div class="flashcard-rule">✓ Biology, informational text &amp; hands-on drawing</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-amber">
+              <div class="flashcard-kicker">🔭 Ages 10–12 (Pre-Teen • SEM 2–3/10)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🔬 SmarterEveryDay</span>
+                <span class="flashcard-chip">🛠️ Mark Rober</span>
+                <span class="flashcard-chip">🌍 BBC Earth</span>
+                <span class="flashcard-chip">🌌 Kurzgesagt</span>
+              </div>
+              <div class="flashcard-rule">✓ Real engineering &amp; deep science • Zero Shorts</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-danger" style="grid-column: 1 / -1;">
+              <div class="flashcard-kicker">🚫 High-Dopamine Red Flags to Block Immediately (SEM 8–10/10)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip chip-danger">❌ CoComelon (&lt;2s cuts)</span>
+                <span class="flashcard-chip chip-danger">❌ Blippi</span>
+                <span class="flashcard-chip chip-danger">❌ Ryan's World</span>
+                <span class="flashcard-chip chip-danger">❌ Vlad &amp; Niki</span>
+                <span class="flashcard-chip chip-danger">❌ Diana / Like Nastya</span>
+                <span class="flashcard-chip chip-danger">❌ YouTube Shorts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Visual Showcase Banner for Low-Stimulus Video (Collapsible for Above-the-Fold Cards) -->
       <details class="showcase-collapsible">
         <summary class="showcase-summary-bar">🖼️ Visual Guide: Why Living-Room Co-Viewing &amp; PIN Whitelists Matter (Click to expand)</summary>
@@ -1420,6 +1625,76 @@
           <span id="game-count-badge" class="tag-badge" style="background:#ccfbf1; color:#0f766e; font-weight:700; font-size:0.85rem; padding:0.25rem 0.75rem;">33 games</span>
         </div>
         <p>Curated non-stimulating, curriculum-backed, and constructivist games evaluated on a 1–10 stimulus scale. Zero commercial ads, zero loot boxes, zero pay-to-win dark patterns.</p>
+      </div>
+
+      <!-- PILLAR 2 (PLAY): 60-SECOND MOBILE PARENT INFOGRAPHIC & SCREENSHOT VIEW -->
+      <div id="play-pillar-infographic" class="pillar-infographic-card">
+        <div class="pillar-infographic-header">
+          <div>
+            <span class="pillar-infographic-badge">🎮 Pillar 2 Quick-Glance Infographic • Screenshot or Save to Phone</span>
+            <h4 class="pillar-infographic-title">Which Games Build the Brain Without Tantrums? (60-Second Cheat-Sheet)</h4>
+            <p class="pillar-infographic-sub">Every game here has zero ads and zero loot boxes. Organized by how easily your child can stop playing when time is up.</p>
+          </div>
+          <div class="pillar-infographic-actions">
+            <a href="images/infographic-play-games.jpg" download="SafeKids-Play-Games-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save Games Infographic</a>
+            <button type="button" class="btn btn-outline btn-sm infographic-zoom-trigger" data-zoom-src="images/infographic-play-games.jpg" data-zoom-title="Pillar 2 (Play): Brain-Building Games (Zero Ads, Zero Loot Boxes)">🔍 Fullscreen Poster</button>
+          </div>
+        </div>
+
+        <div class="pillar-infographic-split">
+          <div class="pillar-poster-showcase">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-play-games.jpg" data-zoom-title="Pillar 2 (Play): Brain-Building Games (Zero Ads, Zero Loot Boxes)">
+              <img src="images/infographic-play-games.jpg" alt="Pillar 2 Brain-Building Games Infographic showing Ages 2-5 Calm Toyboxes, Ages 5-9 5-Minute Logic Levels, Ages 8-12 Deep STEM and Coding, and Red-Flag Games to Block" class="infographic-poster-img" width="800" height="600">
+              <span class="infographic-zoom-pill">🔍 Tap Poster to Zoom / Screenshot</span>
+            </button>
+          </div>
+
+          <div class="infographic-flashcard-grid">
+            <div class="infographic-flashcard flashcard-green">
+              <div class="flashcard-kicker">🟢 Ages 2–5: Calm Open Toyboxes (Stop Anytime)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🐻 Khan Academy Kids</span>
+                <span class="flashcard-chip">🐥 Sago Mini World</span>
+                <span class="flashcard-chip">🟡 Pok Pok Playroom</span>
+                <span class="flashcard-chip">🏠 Toca Life World</span>
+              </div>
+              <div class="flashcard-rule">✓ No timers • No game-over screens • Easy transition to dinner</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-teal">
+              <div class="flashcard-kicker">🟢 Ages 5–9: 3–5 Min Puzzle Levels (Tantrum-Free Exit)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🏛️ Monument Valley</span>
+                <span class="flashcard-chip">🐉 DragonBox Numbers</span>
+                <span class="flashcard-chip">🤖 Thinkrolls</span>
+                <span class="flashcard-chip">🍕 Slice Fractions</span>
+              </div>
+              <div class="flashcard-rule">✓ Say "Finish this puzzle level, then iPad goes to sleep"</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-amber">
+              <div class="flashcard-kicker">🟡 Ages 8–12: Deep STEM &amp; Coding (Set 5-Min Timer)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🐱 Scratch (MIT)</span>
+                <span class="flashcard-chip">🧩 Baba Is You</span>
+                <span class="flashcard-chip">♟️ ChessKid</span>
+                <span class="flashcard-chip">🚀 Kerbal Space Program</span>
+              </div>
+              <div class="flashcard-rule">✓ Pair with a visual kitchen timer so kids can save their build</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-danger">
+              <div class="flashcard-kicker">🚫 Predatory &amp; Trance Games to Block</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip chip-danger">❌ Roblox Chat/Gacha</span>
+                <span class="flashcard-chip chip-danger">❌ Subway Surfers</span>
+                <span class="flashcard-chip chip-danger">❌ Brawl Stars</span>
+                <span class="flashcard-chip chip-danger">❌ Talking Tom Ads</span>
+              </div>
+              <div class="flashcard-rule">✓ Lock play sessions in iOS Guided Access (Triple-Click)</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Visual Showcase Banner for Constructivist Play (Collapsible) -->
@@ -1548,6 +1823,121 @@
         <p>Every item is audited on the <strong>NFI-10 (Nutritional &amp; Food-Matrix Integrity)</strong> 1–10 scale and pairs a concrete <strong>"Swap This Ultra-Processed Trap &rarr; For This Whole-Food Upgrade"</strong> with bioavailability synergy, CDC/AAP choking &amp; allergen preparation rules, and primary clinical literature.</p>
       </div>
 
+      <!-- PILLAR 3 (NOURISH): 60-SECOND MOBILE PARENT INFOGRAPHIC & GROCERY AISLE SCREENSHOT VIEW -->
+      <div id="nourish-pillar-infographic" class="pillar-infographic-card">
+        <div class="pillar-infographic-header">
+          <div>
+            <span class="pillar-infographic-badge">🥦 Pillar 3 Grocery Aisle Infographic • Take a Picture or Save to Your Phone</span>
+            <h4 class="pillar-infographic-title">What Should I Feed My Kids Today? (Visual Staples &amp; 5-Second Swaps)</h4>
+            <p class="pillar-infographic-sub">Standing in the kitchen or grocery aisle? Tap either poster below to view fullscreen or save directly to your camera roll, or screenshot the 4 food groups and 6 instant swaps.</p>
+          </div>
+          <div class="pillar-infographic-actions">
+            <a href="images/infographic-nourish-staples.jpg" download="SafeKids-16-Whole-Food-Staples.jpg" class="btn btn-primary btn-sm">📲 Save 16 Staples Poster</a>
+            <a href="images/infographic-nourish-swaps.jpg" download="SafeKids-Supermarket-Swaps.jpg" class="btn btn-outline btn-sm">📲 Save Grocery Swaps Poster</a>
+          </div>
+        </div>
+
+        <!-- Dual Visual Posters: 16 Brain & Growth Staples + 6 Supermarket Aisle Swaps -->
+        <div class="nourish-dual-poster-grid">
+          <div class="pillar-poster-showcase">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-nourish-staples.jpg" data-zoom-title="What to Feed Your Kids: 16 Brain & Growth Whole-Food Staples">
+              <img src="images/infographic-nourish-staples.jpg" alt="What to Feed Your Kids 16 Brain and Growth Staples infographic showing Wild Salmon, Pasture Eggs, Avocado, Walnuts, Steel-Cut Oats, Sweet Potato, Brown Lentils, Sourdough Bread, Plain Greek Yogurt, Wild Blueberries, Broccoli Florets, Whole-Milk Kefir, Grass-Fed Beef, Cheddar Cubes, Pumpkin Seeds, and Canned Sardines" class="infographic-poster-img" width="800" height="600">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom: 16 Whole-Food Staples</span>
+            </button>
+          </div>
+          <div class="pillar-poster-showcase">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-nourish-swaps.jpg" data-zoom-title="Supermarket Aisle Swaps: Ditch This -> Grab This">
+              <img src="images/infographic-nourish-swaps.jpg" alt="Supermarket Aisle Swaps Ditch This Grab This infographic showing 6 side-by-side swaps for fruit gummies, cheese puffs, squeeze pouches, sugary cereal, sweetened yogurt tubes, and juice boxes" class="infographic-poster-img" width="800" height="600">
+              <span class="infographic-zoom-pill">🔍 Tap to Zoom: 6 Supermarket Swaps</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Screenshot-Ready Visual Food Groups & Instant Swap Cards -->
+        <div class="infographic-flashcard-grid" style="margin-top: 1rem;">
+          <div class="infographic-flashcard flashcard-blue">
+            <div class="flashcard-kicker">🧠 1. Brain &amp; Focus (DHA + Choline)</div>
+            <div class="flashcard-items">
+              <span class="flashcard-chip">🐟 Wild Salmon</span>
+              <span class="flashcard-chip">🥚 Pasture Eggs</span>
+              <span class="flashcard-chip">🥑 Avocado</span>
+              <span class="flashcard-chip">🌰 Walnuts</span>
+            </div>
+            <div class="flashcard-rule">✓ Builds myelin &amp; visual attention (2–3x/week)</div>
+          </div>
+
+          <div class="infographic-flashcard flashcard-amber">
+            <div class="flashcard-kicker">⚡ 2. Steady School Energy (Zero Crash)</div>
+            <div class="flashcard-items">
+              <span class="flashcard-chip">🥣 Steel-Cut Oats</span>
+              <span class="flashcard-chip">🍠 Sweet Potato</span>
+              <span class="flashcard-chip">🫘 Brown Lentils</span>
+              <span class="flashcard-chip">🍞 True Sourdough</span>
+            </div>
+            <div class="flashcard-rule">✓ Prevents the 10:30 AM blood-sugar meltdown</div>
+          </div>
+
+          <div class="infographic-flashcard flashcard-green">
+            <div class="flashcard-kicker">🦠 3. Gut &amp; Immunity (Microbiome)</div>
+            <div class="flashcard-items">
+              <span class="flashcard-chip">🥛 Plain Greek Yogurt</span>
+              <span class="flashcard-chip">🫐 Wild Blueberries</span>
+              <span class="flashcard-chip">🥦 Broccoli Florets</span>
+              <span class="flashcard-chip">🍶 Whole-Milk Kefir</span>
+            </div>
+            <div class="flashcard-rule">✓ Live cultures + polyphenols • Zero Red 40 dye</div>
+          </div>
+
+          <div class="infographic-flashcard flashcard-teal">
+            <div class="flashcard-kicker">🦴 4. Iron &amp; Bone Growth (Fe + D3 + K2)</div>
+            <div class="flashcard-items">
+              <span class="flashcard-chip">🥩 Grass-Fed Beef</span>
+              <span class="flashcard-chip">🧀 Cheddar Cubes</span>
+              <span class="flashcard-chip">🎃 Pumpkin Seeds</span>
+              <span class="flashcard-chip">🐟 Canned Sardines</span>
+            </div>
+            <div class="flashcard-rule">✓ Pair iron foods with Vitamin C (berries/citrus)</div>
+          </div>
+        </div>
+
+        <!-- 6 Grocery Aisle Swap Strips (Phone Screenshot Proportioned) -->
+        <div class="grocery-swap-strip-box">
+          <div class="grocery-swap-strip-title">🛒 5-Second Grocery Aisle Swaps (Screenshot for Your Shopping List)</div>
+          <div class="grocery-swap-strip-grid">
+            <div class="grocery-swap-pill">
+              <span class="swap-bad">❌ Fruit Gummies</span>
+              <span class="swap-arrow">&rarr;</span>
+              <span class="swap-good">✅ Freeze-Dried Berries</span>
+            </div>
+            <div class="grocery-swap-pill">
+              <span class="swap-bad">❌ Cheese Puffs / Straws</span>
+              <span class="swap-arrow">&rarr;</span>
+              <span class="swap-good">✅ Cheddar Cubes &amp; Apple</span>
+            </div>
+            <div class="grocery-swap-pill">
+              <span class="swap-bad">❌ Squeeze Pouches</span>
+              <span class="swap-arrow">&rarr;</span>
+              <span class="swap-good">✅ Banana &amp; Nut Butter</span>
+            </div>
+            <div class="grocery-swap-pill">
+              <span class="swap-bad">❌ Sugary Kids Cereal</span>
+              <span class="swap-arrow">&rarr;</span>
+              <span class="swap-good">✅ Rolled Oats &amp; Berries</span>
+            </div>
+            <div class="grocery-swap-pill">
+              <span class="swap-bad">❌ Sweet Yogurt Tubes</span>
+              <span class="swap-arrow">&rarr;</span>
+              <span class="swap-good">✅ Plain Greek Yogurt + Fruit</span>
+            </div>
+            <div class="grocery-swap-pill">
+              <span class="swap-bad">❌ Juice Boxes / Sports Drinks</span>
+              <span class="swap-arrow">&rarr;</span>
+              <span class="swap-good">✅ Water + Citrus Slices</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Visual Showcase Banner for Pediatric Nutrition & Lunchbox Swaps (Collapsible) -->
       <details class="showcase-collapsible">
         <summary class="showcase-summary-bar">🖼️ Visual Guide: NOVA-4 Pouch/Puff Swaps &amp; First-1,000-Days Brain Bento (Click to expand)</summary>
@@ -1671,6 +2061,77 @@
         <p>Curated screen-free science &amp; folklore podcasts, tactile Yoto/Tonie audiobook cards, systematic synthetic phonics decodables, and Caldecott/Newbery living books. Every item is scored on the <strong>SEM-10 (1–2/10 Ultra-Low Stimulus)</strong> rubric and paired with an <strong>Educational PhD Dialogic Reading &amp; Mental Imagery Prompt</strong> grounded in fMRI neuroimaging (<i>Hutton et al., Pediatrics, 2018</i>).</p>
       </div>
 
+      <!-- PILLAR 4 (LISTEN & READ): 60-SECOND MOBILE PARENT INFOGRAPHIC & SCREENSHOT VIEW -->
+      <div id="listen-pillar-infographic" class="pillar-infographic-card">
+        <div class="pillar-infographic-header">
+          <div>
+            <span class="pillar-infographic-badge">🎧 Pillar 4 Quick-Glance Infographic • Screenshot or Save to Phone</span>
+            <h4 class="pillar-infographic-title">What Screen-Free Audio &amp; Books Should We Use? (60-Second Cheat-Sheet)</h4>
+            <p class="pillar-infographic-sub">Replace evening screens and car-ride tablets with tactile card players, curiosity podcasts, and systematic phonics books.</p>
+          </div>
+          <div class="pillar-infographic-actions">
+            <a href="images/infographic-listen-audio.jpg" download="SafeKids-Audio-Books-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save Audio &amp; Books Infographic</a>
+            <button type="button" class="btn btn-outline btn-sm infographic-zoom-trigger" data-zoom-src="images/infographic-listen-audio.jpg" data-zoom-title="Pillar 4 (Listen & Read): Screen-Free Audio & Living Books">🔍 Fullscreen Poster</button>
+          </div>
+        </div>
+
+        <div class="pillar-infographic-split">
+          <div class="pillar-poster-showcase">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-listen-audio.jpg" data-zoom-title="Pillar 4 (Listen & Read): Screen-Free Audio & Living Books">
+              <img src="images/infographic-listen-audio.jpg" alt="Pillar 4 Screen-Free Audio and Living Books Infographic showing Tactile Screen-Free Players, Best Kids Podcasts, Phonics and Living Books, and Why It Matters for Melatonin and Imagination" class="infographic-poster-img" width="800" height="600">
+              <span class="infographic-zoom-pill">🔍 Tap Poster to Zoom / Screenshot</span>
+            </button>
+          </div>
+
+          <div class="infographic-flashcard-grid">
+            <div class="infographic-flashcard flashcard-amber">
+              <div class="flashcard-kicker">📻 1. Tactile Audio Players (Zero Mic, Zero Screen)</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🟧 Yoto Player (3rd Gen)</span>
+                <span class="flashcard-chip">🟧 Yoto Mini (Travel)</span>
+                <span class="flashcard-chip">🟥 Toniebox (Ages 2–5)</span>
+                <span class="flashcard-chip">🟨 Voxblock (Zero Wi-Fi)</span>
+              </div>
+              <div class="flashcard-rule">✓ Kids insert physical cards • No voice assistants in bedrooms</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-blue">
+              <div class="flashcard-kicker">🎙️ 2. Best Car-Ride &amp; Quiet-Time Podcasts</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">🧠 Brains On! (STEM)</span>
+                <span class="flashcard-chip">🌕 Circle Round (Folklore)</span>
+                <span class="flashcard-chip">🏔️ Molly of Denali</span>
+                <span class="flashcard-chip">❓ But Why (NPR)</span>
+                <span class="flashcard-chip">⚡ Greeking Out</span>
+              </div>
+              <div class="flashcard-rule">✓ Download MP3s or play via ad-free public radio feeds</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-green">
+              <div class="flashcard-kicker">🔤 3. Science-of-Reading Phonics &amp; Living Books</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">📘 Bob Books (Phonics)</span>
+                <span class="flashcard-chip">🐸 Frog and Toad</span>
+                <span class="flashcard-chip">🐰 Beatrix Potter</span>
+                <span class="flashcard-chip">🕸️ Charlotte's Web</span>
+                <span class="flashcard-chip">🦁 Chronicles of Narnia</span>
+              </div>
+              <div class="flashcard-rule">✓ Sound out graphemes letter-by-letter (no picture guessing)</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-teal">
+              <div class="flashcard-kicker">🌙 4. The 60-Minute Bedtime Golden Rule</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">✓ Zero Blue Light</span>
+                <span class="flashcard-chip">✓ 1.7x Richer Vocabulary</span>
+                <span class="flashcard-chip">✓ Wires Visual Cortex</span>
+              </div>
+              <div class="flashcard-rule">✓ Swap all screens for audio cards or print books 60m before sleep</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Visual Showcase Banner for Screen-Free Audio & Living Books (Collapsible) -->
       <details class="showcase-collapsible">
         <summary class="showcase-summary-bar">🖼️ Visual Guide: The "Goldilocks Effect" fMRI &amp; Screen-Free Audio Players (Click to expand)</summary>
@@ -1781,6 +2242,72 @@
           6. Open-Source &amp; Infrastructure Parental Control Tools Comparison
         </h3>
         <p>A comprehensive review of open-source applications, self-hosted bots, local media servers, and DNS shields for managing kids' media.</p>
+      </div>
+
+      <!-- PILLAR 5 (LOCKDOWN): 60-SECOND MOBILE PARENT INFOGRAPHIC & SCREENSHOT VIEW -->
+      <div id="lockdown-pillar-infographic" class="pillar-infographic-card">
+        <div class="pillar-infographic-header">
+          <div>
+            <span class="pillar-infographic-badge">🛡️ Pillar 5 Quick-Glance Infographic • Screenshot or Save to Phone</span>
+            <h4 class="pillar-infographic-title">How Do I Lock Down Our TV, Tablets &amp; Home Wi-Fi in 5 Minutes?</h4>
+            <p class="pillar-infographic-sub">Follow these 4 visual steps so algorithms, YouTube Shorts, and in-app purchase traps are blocked at the hardware and network level.</p>
+          </div>
+          <div class="pillar-infographic-actions">
+            <a href="images/infographic-lockdown-shield.jpg" download="SafeKids-Device-Lockdown-Infographic.jpg" class="btn btn-primary btn-sm">📲 Save Lockdown Infographic</a>
+            <button type="button" class="btn btn-outline btn-sm infographic-zoom-trigger" data-zoom-src="images/infographic-lockdown-shield.jpg" data-zoom-title="Pillar 5 (Shield): 5-Minute Device & Home Lockdown Guide">🔍 Fullscreen Poster</button>
+          </div>
+        </div>
+
+        <div class="pillar-infographic-split">
+          <div class="pillar-poster-showcase">
+            <button type="button" class="infographic-zoom-trigger" data-zoom-src="images/infographic-lockdown-shield.jpg" data-zoom-title="Pillar 5 (Shield): 5-Minute Device & Home Lockdown Guide">
+              <img src="images/infographic-lockdown-shield.jpg" alt="Pillar 5 5-Minute Device and Home Lockdown Guide Infographic showing Step 1 Living Room TV, Step 2 Tablet Whitelist, Step 3 OS Single-App Lock, and Step 4 Home Wi-Fi Shield" class="infographic-poster-img" width="800" height="600">
+              <span class="infographic-zoom-pill">🔍 Tap Poster to Zoom / Screenshot</span>
+            </button>
+          </div>
+
+          <div class="infographic-flashcard-grid">
+            <div class="infographic-flashcard flashcard-blue">
+              <div class="flashcard-kicker">📺 Step 1: Living-Room TV</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">✓ SmartTube (Android TV)</span>
+                <span class="flashcard-chip">✓ Apple TV + PBS Kids</span>
+                <span class="flashcard-chip">✓ Disable Autoplay &amp; Shorts</span>
+              </div>
+              <div class="flashcard-rule">✓ Keep screens in shared family spaces, never bedrooms</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-green">
+              <div class="flashcard-kicker">📱 Step 2: Whitelist Player Only</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">✓ KidTube (PIN Grid)</span>
+                <span class="flashcard-chip">✓ BrainRotGuard (Telegram)</span>
+                <span class="flashcard-chip">✓ FreeTube / NewPipe</span>
+              </div>
+              <div class="flashcard-rule">✓ Hide the stock YouTube app; only allow whitelisted channels</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-teal">
+              <div class="flashcard-kicker">🔒 Step 3: OS Single-App Lock</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">✓ iPad Guided Access (3x Click)</span>
+                <span class="flashcard-chip">✓ Android App Pinning</span>
+                <span class="flashcard-chip">✓ Block In-App Purchases</span>
+              </div>
+              <div class="flashcard-rule">✓ Prevents kids from switching to Safari/Chrome or App Store</div>
+            </div>
+
+            <div class="infographic-flashcard flashcard-amber">
+              <div class="flashcard-kicker">🌐 Step 4: Home Wi-Fi DNS Shield</div>
+              <div class="flashcard-items">
+                <span class="flashcard-chip">✓ NextDNS.io (Free Kids Profile)</span>
+                <span class="flashcard-chip">✓ Cloudflare 1.1.1.3</span>
+                <span class="flashcard-chip">✓ Kitchen Charger Curfew</span>
+              </div>
+              <div class="flashcard-rule">✓ Forces YouTube Strict Restricted Mode on every home device</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="table-wrapper">
@@ -2039,7 +2566,62 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
     </div>
   </footer>
 
-  <script src="app.js?v=14"></script>
+  <!-- Sticky Mobile Bottom Pillar Bar (1-Thumb Switching on Phones) -->
+  <nav class="mobile-pillar-bar" id="mobile-pillar-bar" aria-label="Mobile Pillar Quick Switcher">
+    <button type="button" class="mobile-pillar-btn active" data-tab="overview">
+      <span class="mobile-pillar-icon">📸</span>
+      <span class="mobile-pillar-text">All 6</span>
+    </button>
+    <button type="button" class="mobile-pillar-btn" data-tab="nutrition">
+      <span class="mobile-pillar-icon">🥗</span>
+      <span class="mobile-pillar-text">Food</span>
+    </button>
+    <button type="button" class="mobile-pillar-btn" data-tab="channels">
+      <span class="mobile-pillar-icon">📺</span>
+      <span class="mobile-pillar-text">Watch</span>
+    </button>
+    <button type="button" class="mobile-pillar-btn" data-tab="games">
+      <span class="mobile-pillar-icon">🎮</span>
+      <span class="mobile-pillar-text">Play</span>
+    </button>
+    <button type="button" class="mobile-pillar-btn" data-tab="listen">
+      <span class="mobile-pillar-icon">🎧</span>
+      <span class="mobile-pillar-text">Audio</span>
+    </button>
+    <button type="button" class="mobile-pillar-btn" data-tab="lockdown">
+      <span class="mobile-pillar-icon">🛡️</span>
+      <span class="mobile-pillar-text">Shield</span>
+    </button>
+  </nav>
+
+  <!-- Fullscreen Infographic Lightbox Modal (Pinch-to-Zoom & Direct Save to Phone) -->
+  <div class="infographic-lightbox" id="infographic-lightbox" role="dialog" aria-modal="true" aria-labelledby="infographic-lightbox-title" aria-hidden="true">
+    <div class="infographic-lightbox-backdrop" id="infographic-lightbox-backdrop"></div>
+    <div class="infographic-lightbox-dialog">
+      <div class="infographic-lightbox-header">
+        <div class="infographic-lightbox-title" id="infographic-lightbox-title">
+          Pillar 3A: What to Feed Your Kids — 16 Brain &amp; Growth Staples
+        </div>
+        <div class="infographic-lightbox-actions">
+          <a id="infographic-lightbox-download" href="images/infographic-nourish-staples.jpg" download="SafeKids-Infographic.jpg" class="btn btn-primary btn-sm">
+            ⬇️ Save Image to Phone
+          </a>
+          <button type="button" class="btn btn-outline btn-sm" id="infographic-lightbox-close" aria-label="Close fullscreen infographic">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+      <div class="infographic-lightbox-body">
+        <img id="infographic-lightbox-img" src="images/infographic-nourish-staples.jpg" alt="Fullscreen parent infographic poster preview for saving to phone" class="infographic-lightbox-image" width="1200" height="900">
+      </div>
+      <div class="infographic-lightbox-hint">
+        📱 <strong>Mobile Tip:</strong> Pinch to zoom in on details, or long-press the image and tap <strong>"Save to Photos"</strong> to keep in your camera roll for grocery shopping.
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=15"></script>
 </body>
 </html>
+
 

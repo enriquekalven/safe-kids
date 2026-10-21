@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSemCalculator();
   setupFoodCalculator();
   setupCopyButtons();
+  setupInfographicExperience();
 });
 
 // Comprehensive Database of 28 Unique Curated Low-Stimulus Channels (Deduplicated Multi-Age Bands)
@@ -5030,6 +5031,16 @@ function switchWorkspaceTab(rawTab, opts) {
     }
   });
 
+  const mobileBtns = document.querySelectorAll('.mobile-pillar-btn');
+  mobileBtns.forEach(btn => {
+    const btnTab = btn.getAttribute('data-tab');
+    if (btnTab === tab) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
   const meta = WORKSPACE_TAB_METADATA[tab] || WORKSPACE_TAB_METADATA.overview;
   const kickerEl = document.getElementById('workspace-context-kicker');
   const titleEl = document.getElementById('workspace-context-title');
@@ -5567,3 +5578,107 @@ function setupCopyButtons() {
     });
   });
 }
+
+// ==================== MOBILE INFOGRAPHIC QUICK MODE, LIGHTBOX & BOTTOM BAR ====================
+let infographicQuickModeActive = false;
+
+function setupInfographicExperience() {
+  const modeBtn = document.getElementById('btn-toggle-infographic-mode');
+  if (modeBtn) {
+    modeBtn.addEventListener('click', () => {
+      infographicQuickModeActive = !infographicQuickModeActive;
+      if (document.body && document.body.classList) {
+        if (infographicQuickModeActive) {
+          document.body.classList.add('infographic-quick-mode');
+        } else {
+          document.body.classList.remove('infographic-quick-mode');
+        }
+      }
+      if (infographicQuickModeActive) {
+        modeBtn.classList.add('active');
+        modeBtn.textContent = '📸 Exit 2-Min Infographic View';
+      } else {
+        modeBtn.classList.remove('active');
+        modeBtn.textContent = '📸 2-Min Infographic View';
+      }
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('toggle_infographic_mode', { active: infographicQuickModeActive });
+      }
+    });
+  }
+
+  // Jump buttons inside Overview Infographic Hub
+  const jumpBtns = document.querySelectorAll('.infographic-jump-btn');
+  jumpBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget || e.target;
+      const targetTab = targetBtn.getAttribute('data-jump-tab') || 'nutrition';
+      switchWorkspaceTab(targetTab, { persist: true, scrollToTop: true });
+    });
+  });
+
+  // Sticky Mobile Bottom Pillar Bar
+  const mobilePillarBtns = document.querySelectorAll('.mobile-pillar-btn');
+  mobilePillarBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget || e.target;
+      const targetTab = targetBtn.getAttribute('data-tab') || 'overview';
+      switchWorkspaceTab(targetTab, { persist: true, scrollToTop: true });
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('mobile_pillar_switch', { tab: targetTab });
+      }
+    });
+  });
+
+  // Fullscreen Poster Lightbox Modal
+  const lightbox = document.getElementById('infographic-lightbox');
+  const lightboxImg = document.getElementById('infographic-lightbox-img');
+  const lightboxTitle = document.getElementById('infographic-lightbox-title');
+  const lightboxDownload = document.getElementById('infographic-lightbox-download');
+  const lightboxClose = document.getElementById('infographic-lightbox-close');
+  const lightboxBackdrop = document.getElementById('infographic-lightbox-backdrop');
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+  }
+
+  const zoomTriggers = document.querySelectorAll('.infographic-zoom-trigger');
+  zoomTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      const btn = e.currentTarget || e.target;
+      const src = btn.getAttribute('data-zoom-src');
+      const title = btn.getAttribute('data-zoom-title') || 'SafeKids Parent Infographic Poster';
+      if (!lightbox || !src) return;
+
+      if (lightboxImg) {
+        lightboxImg.setAttribute('src', src);
+        lightboxImg.setAttribute('alt', `${title} — Fullscreen parent infographic poster`);
+      }
+      if (lightboxTitle) {
+        lightboxTitle.textContent = title;
+      }
+      if (lightboxDownload) {
+        lightboxDownload.setAttribute('href', src);
+        const filename = src.split('/').pop() || 'SafeKids-Infographic.jpg';
+        lightboxDownload.setAttribute('download', filename);
+      }
+
+      lightbox.classList.add('open');
+      lightbox.setAttribute('aria-hidden', 'false');
+
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('open_infographic_lightbox', { poster: src });
+      }
+    });
+  });
+
+  if (lightboxClose) {
+    lightboxClose.addEventListener('click', closeLightbox);
+  }
+  if (lightboxBackdrop) {
+    lightboxBackdrop.addEventListener('click', closeLightbox);
+  }
+}
+

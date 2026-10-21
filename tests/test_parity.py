@@ -477,6 +477,22 @@ registerEl(new MockElement('span', 'workspace-pager-indicator', 'workspace-pager
 registerEl(new MockElement('button', 'btn-prev-tab', 'btn btn-outline btn-sm'));
 registerEl(new MockElement('button', 'btn-next-tab', 'btn btn-outline btn-sm'));
 
+// Infographic Quick Mode, Lightbox & Zoom Triggers
+registerEl(new MockElement('button', 'btn-toggle-infographic-mode', 'btn btn-outline btn-sm'));
+registerEl(new MockElement('div', 'infographic-lightbox', 'infographic-lightbox', { 'aria-hidden': 'true' }));
+registerEl(new MockElement('img', 'infographic-lightbox-img', 'infographic-lightbox-image', { src: 'images/infographic-nourish-staples.jpg' }));
+registerEl(new MockElement('div', 'infographic-lightbox-title', 'infographic-lightbox-title'));
+registerEl(new MockElement('a', 'infographic-lightbox-download', 'btn btn-primary btn-sm', { href: 'images/infographic-nourish-staples.jpg', download: 'SafeKids-Infographic.jpg' }));
+registerEl(new MockElement('button', 'infographic-lightbox-close', 'btn btn-outline btn-sm'));
+registerEl(new MockElement('div', 'infographic-lightbox-backdrop', 'infographic-lightbox-backdrop'));
+
+const zoomTriggerBtns = [
+  new MockElement('button', '', 'infographic-zoom-trigger', {
+    'data-zoom-src': 'images/infographic-nourish-swaps.jpg',
+    'data-zoom-title': 'Supermarket Aisle Swaps: Ditch This -> Grab This'
+  })
+];
+
 const storageMap = { ...(payload.initialStorage || {}) };
 const localStorageMock = {
   getItem: (k) => Object.prototype.hasOwnProperty.call(storageMap, k) ? storageMap[k] : null,
@@ -517,6 +533,9 @@ const documentMock = {
     if (sel === '.card-drawer-toggle') return queryAllGrids('.card-drawer-toggle');
     if (sel === '[data-tab-panel]') return tabPanels;
     if (sel === '.sidebar-nav-btn') return tabSwitchBtns.filter(b => b.classList.contains('sidebar-nav-btn'));
+    if (sel === '.mobile-pillar-btn') return tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn'));
+    if (sel === '.infographic-zoom-trigger') return zoomTriggerBtns;
+    if (sel === '.infographic-jump-btn') return [];
     if (sel === '[data-tab]') return tabSwitchBtns;
     if (sel === 'a[href^="#"]') return [];
     if (sel === '.copy-btn') return [];
@@ -688,6 +707,24 @@ if (payload.clickPrevTabCount) {
   }
 }
 
+if (payload.clickToggleInfographicMode) {
+  if (elementsById['btn-toggle-infographic-mode']) elementsById['btn-toggle-infographic-mode'].click();
+}
+
+if (payload.clickZoomTrigger) {
+  if (zoomTriggerBtns[0]) zoomTriggerBtns[0].click();
+}
+
+if (payload.clickCloseLightbox) {
+  if (elementsById['infographic-lightbox-close']) elementsById['infographic-lightbox-close'].click();
+}
+
+if (payload.clickMobilePillarTab) {
+  const mobileBtns = tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn'));
+  const target = mobileBtns.find(b => b.getAttribute('data-tab') === payload.clickMobilePillarTab);
+  if (target) target.click();
+}
+
 if (payload.triggerExports) {
   if (elementsById['btn-export-csv']) elementsById['btn-export-csv'].click();
   if (elementsById['btn-export-json']) elementsById['btn-export-json'].click();
@@ -801,6 +838,13 @@ const out = {
   workspaceContextTitle: elementsById['workspace-context-title'].textContent,
   workspaceContextBadge: elementsById['workspace-context-badge'].textContent,
   workspacePagerIndicator: elementsById['workspace-pager-indicator'].textContent,
+  infographicQuickModeBody: documentMock.body.classList.contains('infographic-quick-mode'),
+  infographicModeBtnText: elementsById['btn-toggle-infographic-mode'].textContent,
+  lightboxOpen: elementsById['infographic-lightbox'].classList.contains('open'),
+  lightboxAriaHidden: elementsById['infographic-lightbox'].getAttribute('aria-hidden'),
+  lightboxImgSrc: elementsById['infographic-lightbox-img'].getAttribute('src'),
+  lightboxDownloadHref: elementsById['infographic-lightbox-download'].getAttribute('href'),
+  activeMobilePillarTabs: tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn') && b.classList.contains('active')).map(b => b.getAttribute('data-tab')),
   evalResults,
   evalFoodResults,
   csvSanitizeResults
@@ -1405,7 +1449,72 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertEqual(res_global["storageAfter"].get("safekids_listen_age_filter"), "preschool")
         self.assertIn("Preschool (Ages 4–5)", res_global["bpStageHeadline"])
 
+    # -----------------------------------------------------------------------
+    # R-10: Mobile-Friendly Parent Infographic View Across All 5 Pillars
+    # -----------------------------------------------------------------------
+    def test_r10_mobile_parent_infographic_posters_lightbox_and_quick_mode(self) -> None:
+        """Every pillar must render a screenshot-ready visual infographic card, downloadable poster, and mobile quick switcher."""
+        html_text = INDEX_HTML.read_text(encoding="utf-8")
+        css_text = STYLES_CSS.read_text(encoding="utf-8")
+
+        required_sections = (
+            "parent-infographic-hub",
+            "watch-pillar-infographic",
+            "play-pillar-infographic",
+            "nourish-pillar-infographic",
+            "listen-pillar-infographic",
+            "lockdown-pillar-infographic",
+            "mobile-pillar-bar",
+            "infographic-lightbox",
+            "btn-toggle-infographic-mode",
+        )
+        for sec_id in required_sections:
+            self.assertIn(f'id="{sec_id}"', html_text, f"Missing infographic element #{sec_id} in index.html")
+
+        required_posters = (
+            "images/infographic-nourish-staples.jpg",
+            "images/infographic-nourish-swaps.jpg",
+            "images/infographic-watch-channels.jpg",
+            "images/infographic-play-games.jpg",
+            "images/infographic-listen-audio.jpg",
+            "images/infographic-lockdown-shield.jpg",
+        )
+        for poster in required_posters:
+            self.assertIn(f'src="{poster}"', html_text, f"Missing poster image {poster} in index.html")
+            self.assertIn(f'data-zoom-src="{poster}"', html_text, f"Missing zoom trigger for {poster}")
+            poster_path = REPO_ROOT / "public" / poster
+            self.assertTrue(poster_path.is_file(), f"Poster missing on disk: {poster}")
+            self.assertGreater(poster_path.stat().st_size, 100_000, f"Poster unexpectedly small: {poster}")
+
+        self.assertIn("body.infographic-quick-mode", css_text)
+        self.assertIn(".mobile-pillar-bar", css_text)
+        self.assertIn(".infographic-lightbox.open", css_text)
+
+        # Interactive DOM verification: 2-Min Infographic Quick Mode + Zoom Lightbox + Mobile Pillar Bar
+        res_open = run_node_harness(
+            {
+                "clickToggleInfographicMode": True,
+                "clickZoomTrigger": True,
+                "clickMobilePillarTab": "nutrition",
+            }
+        )
+        self.assertTrue(res_open["infographicQuickModeBody"])
+        self.assertIn("Exit 2-Min Infographic View", res_open["infographicModeBtnText"])
+        self.assertTrue(res_open["lightboxOpen"])
+        self.assertEqual(res_open["lightboxAriaHidden"], "false")
+        self.assertEqual(res_open["lightboxImgSrc"], "images/infographic-nourish-swaps.jpg")
+        self.assertEqual(res_open["lightboxDownloadHref"], "images/infographic-nourish-swaps.jpg")
+        self.assertEqual(res_open["visibleTabPanels"], ["nutrition"])
+        self.assertEqual(res_open["activeMobilePillarTabs"], ["nutrition"])
+
+        # Closing lightbox resets open state and aria-hidden
+        res_closed = run_node_harness({"clickZoomTrigger": True, "clickCloseLightbox": True})
+        self.assertFalse(res_closed["lightboxOpen"])
+        self.assertEqual(res_closed["lightboxAriaHidden"], "true")
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
 
