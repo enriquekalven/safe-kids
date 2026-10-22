@@ -23,7 +23,7 @@
       "id": "ASM-003",
       "status": "ASSUMPTION",
       "verified": false,
-      "statement": "Static client-side whitelisting and DNS/OS lockdown guides reduce accidental algorithmic rabbit-hole drift without requiring server-side user accounts or telemetry collection.",
+      "statement": "Static client-side whitelisting and DNS/OS lockdown guides reduce accidental algorithmic rabbit-hole drift without requiring server-side user accounts or PII collection (beyond anonymous GA4 UI interaction events).",
       "owner_role": "Privacy & Family Systems Architect",
       "verification_plan": "Conduct usability walkthroughs with 20 parent households configuring FreeTube/KidzTV and NextDNS/Control D from the portal's exported JSON/CSV allow-lists."
     },
@@ -42,7 +42,14 @@
       "statement": "A Base-1 nutritional load floor plus 5 additive dimensions (processing/NOVA tier, added sugar/glycemic load, fiber/matrix integrity, synthetic dyes/additives, and brain-nutrient bioavailability, 0-2 pts each, capped at 10) provides an actionable parent screening proxy for pediatric snacks and staples.",
       "owner_role": "Pediatric Clinical Nutrition & Feeding Safety SME",
       "verification_plan": "Cross-validate NFI-10 tier classifications (1-3 Whole-Food Staple, 4-6 Transitional Swap, 7-10 Ultra-Processed Trap) against registered dietitian (RDN) audits of n >= 100 supermarket kids' snacks."
+    },
+    {
+      "id": "ASM-006",
+      "status": "ASSUMPTION",
+      "verified": false,
+      "statement": "Agent-authored Spanish, Simplified Chinese, Japanese, and Korean translations of the portal chrome and Daily Blueprint stage rules are clinically equivalent to the English source. Numbers, ages, and the choking, chat, and dye-labeling rules are machine-checked; tone, regional terminology, and nuance are not.",
+      "owner_role": "Localization & Pediatric Clinical Review Lead (native es / zh-Hans / ja / ko reviewers)",
+      "verification_plan": "Native-speaker pediatric clinicians review every PORTAL_I18N string per language against the English source and record sign-off before the portal is promoted in those languages."
     }
   ]
 }
-

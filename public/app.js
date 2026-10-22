@@ -2,6 +2,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   restorePersistedDirectoryFilters();
+  setupDarkModeToggle();
+  setupLanguageSwitcher();
   setupWorkspaceTabs();
   setupDailyBlueprintBuilder();
   setupGlobalAgeBar();
@@ -30,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFoodCalculator();
   setupCopyButtons();
   setupInfographicExperience();
+  if (currentLanguage !== 'en') {
+    applyPortalLanguage(currentLanguage, { persist: false });
+  }
 });
 
 // Comprehensive Database of 28 Unique Curated Low-Stimulus Channels (Deduplicated Multi-Age Bands)
@@ -2757,6 +2762,8 @@ const ALLOWED_FOOD_DOMAINS = new Set(['all', 'brain-dha', 'iron-focus', 'steady-
 const ALLOWED_LISTEN_DOMAINS = new Set(['all', 'stem-podcast', 'story-podcast', 'audiobook-card', 'phonics-decodable', 'living-book', 'hardware-player']);
 const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown', 'all']);
 const ALLOWED_BLUEPRINT_AGES = new Set(['under-2', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
+const ALLOWED_THEMES = new Set(['light', 'dark']);
+const ALLOWED_LANGUAGES = new Set(['en', 'es', 'zh', 'ja', 'ko']);
 const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown'];
 
 const STORAGE_KEYS = {
@@ -2769,7 +2776,9 @@ const STORAGE_KEYS = {
   LISTEN_AGE: 'safekids_listen_age_filter',
   LISTEN_DOMAIN: 'safekids_listen_domain_filter',
   ACTIVE_TAB: 'safekids_active_tab',
-  BLUEPRINT_AGE: 'safekids_blueprint_age'
+  BLUEPRINT_AGE: 'safekids_blueprint_age',
+  THEME: 'safekids_theme',
+  LANGUAGE: 'safekids_language'
 };
 
 function clampSemDimension(val) {
@@ -3057,13 +3066,15 @@ function getListenVisualMeta(item) {
 let expandAllClinicalDrawers = false;
 
 function appendClinicalDrawer(body, card, drawerNodes) {
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const showLabel = (i18n && i18n.drawerShowLabel) || '🔬 + Why It Works, Parent Guide & Citations';
+  const hideLabel = (i18n && i18n.drawerHideLabel) || '🔬 \u2212 Hide Clinical Details & Parent Guide';
+
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
   toggleBtn.className = 'card-drawer-toggle';
   toggleBtn.setAttribute('aria-expanded', expandAllClinicalDrawers ? 'true' : 'false');
-  toggleBtn.textContent = expandAllClinicalDrawers
-    ? '🔬 \u2212 Hide Clinical Details & Parent Guide'
-    : '🔬 + Why It Works, Parent Guide & Citations';
+  toggleBtn.textContent = expandAllClinicalDrawers ? hideLabel : showLabel;
 
   const drawer = document.createElement('div');
   drawer.className = expandAllClinicalDrawers
@@ -3078,17 +3089,20 @@ function appendClinicalDrawer(body, card, drawerNodes) {
   });
 
   toggleBtn.addEventListener('click', () => {
+    const curI18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+    const curShow = (curI18n && curI18n.drawerShowLabel) || '🔬 + Why It Works, Parent Guide & Citations';
+    const curHide = (curI18n && curI18n.drawerHideLabel) || '🔬 \u2212 Hide Clinical Details & Parent Guide';
     const isOpen = drawer.classList.contains('drawer-open');
     if (isOpen) {
       drawer.classList.remove('drawer-open');
       card.classList.remove('card-expanded');
       toggleBtn.setAttribute('aria-expanded', 'false');
-      toggleBtn.textContent = '🔬 + Why It Works, Parent Guide & Citations';
+      toggleBtn.textContent = curShow;
     } else {
       drawer.classList.add('drawer-open');
       card.classList.add('card-expanded');
       toggleBtn.setAttribute('aria-expanded', 'true');
-      toggleBtn.textContent = '🔬 \u2212 Hide Clinical Details & Parent Guide';
+      toggleBtn.textContent = curHide;
     }
   });
 
@@ -3263,6 +3277,8 @@ let currentListenAgeFilter = 'all';
 let currentListenDomainFilter = 'all';
 let currentListenSearch = '';
 let currentBlueprintAge = 'toddler';
+let currentTheme = 'light';
+let currentLanguage = 'en';
 
 function syncFilterButtons(selector, activeValue) {
   const buttons = document.querySelectorAll(selector);
@@ -3285,6 +3301,8 @@ function restorePersistedDirectoryFilters() {
   currentListenAgeFilter = readPersistedFilter(STORAGE_KEYS.LISTEN_AGE, ALLOWED_AGE_FILTERS, 'all');
   currentListenDomainFilter = readPersistedFilter(STORAGE_KEYS.LISTEN_DOMAIN, ALLOWED_LISTEN_DOMAINS, 'all');
   currentBlueprintAge = readPersistedFilter(STORAGE_KEYS.BLUEPRINT_AGE, ALLOWED_BLUEPRINT_AGES, 'toddler');
+  currentTheme = readPersistedFilter(STORAGE_KEYS.THEME, ALLOWED_THEMES, 'light');
+  currentLanguage = readPersistedFilter(STORAGE_KEYS.LANGUAGE, ALLOWED_LANGUAGES, 'en');
 
   syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
   syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
@@ -3339,10 +3357,7 @@ function buildChannelCard(ch) {
   const ageWrap = document.createElement('div');
   ageWrap.style.marginBottom = '0.55rem';
   const ageBadge = document.createElement('span');
-  ageBadge.className = 'tag-badge';
-  ageBadge.style.background = '#e0f2fe';
-  ageBadge.style.color = '#0369a1';
-  ageBadge.style.fontWeight = '600';
+  ageBadge.className = 'tag-badge age-range-badge';
   ageBadge.textContent = ch.ageLabel;
   ageWrap.appendChild(ageBadge);
   body.appendChild(ageWrap);
@@ -3438,6 +3453,8 @@ function buildChannelCard(ch) {
   card.appendChild(body);
 
   // Action Link
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const viewChannelLabel = (i18n && i18n.viewChannelBtn) || 'View Channel';
   const link = document.createElement('a');
   link.href = ch.link;
   link.target = '_blank';
@@ -3447,7 +3464,7 @@ function buildChannelCard(ch) {
   link.style.width = '100%';
   link.style.justifyContent = 'center';
   link.appendChild(createExternalLinkSvg());
-  link.appendChild(document.createTextNode(' View Channel'));
+  link.appendChild(document.createTextNode(' ' + viewChannelLabel));
 
   link.addEventListener('click', () => {
     if (window.trackSafeKidsEvent) {
@@ -3464,17 +3481,20 @@ function renderChannels() {
   if (!container) return;
 
   const filtered = getFilteredChannels();
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
 
   const countBadge = document.getElementById('channel-count-badge');
   if (countBadge) {
-    countBadge.textContent = `${filtered.length} channels`;
+    countBadge.textContent = (i18n && typeof i18n.formatChannelsCount === 'function')
+      ? i18n.formatChannelsCount(filtered.length)
+      : `${filtered.length} channels`;
   }
 
   if (filtered.length === 0) {
     container.replaceChildren(
       createEmptyState(
-        'No channels match your search criteria.',
-        'Try adjusting your age filter or search term.'
+        (i18n && i18n.emptyChannelsTitle) || 'No channels match your search criteria.',
+        (i18n && i18n.emptyChannelsSub) || 'Try adjusting your age filter or search term.'
       )
     );
     return;
@@ -3784,10 +3804,7 @@ function buildGameCard(g) {
   metaRow.style.margin = '0.5rem 0';
 
   const ageBadge = document.createElement('span');
-  ageBadge.className = 'tag-badge';
-  ageBadge.style.background = '#e0f2fe';
-  ageBadge.style.color = '#0369a1';
-  ageBadge.style.fontWeight = '600';
+  ageBadge.className = 'tag-badge age-range-badge';
   ageBadge.textContent = g.ageLabel;
 
   const monBadge = document.createElement('span');
@@ -3936,6 +3953,8 @@ function buildGameCard(g) {
   card.appendChild(body);
 
   // Action Link
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const visitGameLabel = (i18n && i18n.visitGameBtn) || 'Visit Official Game / App';
   const link = document.createElement('a');
   link.href = g.link;
   link.target = '_blank';
@@ -3945,7 +3964,7 @@ function buildGameCard(g) {
   link.style.width = '100%';
   link.style.justifyContent = 'center';
   link.appendChild(createExternalLinkSvg());
-  link.appendChild(document.createTextNode(' Visit Official Game / App'));
+  link.appendChild(document.createTextNode(' ' + visitGameLabel));
 
   link.addEventListener('click', () => {
     if (window.trackSafeKidsEvent) {
@@ -3962,17 +3981,20 @@ function renderGames() {
   if (!container) return;
 
   const filtered = getFilteredGames();
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
 
   const countBadge = document.getElementById('game-count-badge');
   if (countBadge) {
-    countBadge.textContent = `${filtered.length} games`;
+    countBadge.textContent = (i18n && typeof i18n.formatGamesCount === 'function')
+      ? i18n.formatGamesCount(filtered.length)
+      : `${filtered.length} games`;
   }
 
   if (filtered.length === 0) {
     container.replaceChildren(
       createEmptyState(
-        'No educational games match your search criteria.',
-        "Try selecting 'All Games' or clearing the domain, stopping-cue, and search filters."
+        (i18n && i18n.emptyGamesTitle) || 'No educational games match your search criteria.',
+        (i18n && i18n.emptyGamesSub) || "Try selecting 'All Games' or clearing the domain, stopping-cue, and search filters."
       )
     );
     return;
@@ -4256,9 +4278,7 @@ function buildFoodCard(f) {
   nameDiv.textContent = f.name;
 
   const catDiv = document.createElement('div');
-  catDiv.style.fontSize = '0.75rem';
-  catDiv.style.color = '#15803d';
-  catDiv.style.fontWeight = '600';
+  catDiv.className = 'food-category-label';
   catDiv.textContent = f.categoryLabel;
 
   titleWrap.appendChild(nameDiv);
@@ -4280,10 +4300,7 @@ function buildFoodCard(f) {
   metaRow.style.margin = '0.5rem 0';
 
   const ageBadge = document.createElement('span');
-  ageBadge.className = 'tag-badge';
-  ageBadge.style.background = '#e0f2fe';
-  ageBadge.style.color = '#0369a1';
-  ageBadge.style.fontWeight = '600';
+  ageBadge.className = 'tag-badge age-range-badge';
   ageBadge.textContent = f.ageLabel;
 
   const novaBadge = document.createElement('span');
@@ -4296,23 +4313,17 @@ function buildFoodCard(f) {
 
   // 3. Glanceable Swap Box: Trap Replaced -> Whole-Food Upgrade
   const swapBox = document.createElement('div');
-  swapBox.style.background = '#f0fdf4';
-  swapBox.style.border = '1px solid #bbf7d0';
-  swapBox.style.borderRadius = 'var(--radius-sm)';
-  swapBox.style.padding = '0.55rem 0.65rem';
-  swapBox.style.marginBottom = '0.6rem';
-  swapBox.style.fontSize = '0.8rem';
+  swapBox.className = 'food-swap-box';
 
   const trapDiv = document.createElement('div');
-  trapDiv.style.color = '#991b1b';
-  trapDiv.style.marginBottom = '0.25rem';
+  trapDiv.className = 'food-trap-line';
   const trapStrong = document.createElement('strong');
   trapStrong.textContent = '❌ Replaces Trap: ';
   trapDiv.appendChild(trapStrong);
   trapDiv.appendChild(document.createTextNode(f.trapReplaced));
 
   const upgDiv = document.createElement('div');
-  upgDiv.style.color = '#14532d';
+  upgDiv.className = 'food-upgrade-line';
   const upgStrong = document.createElement('strong');
   upgStrong.textContent = '✅ Whole-Food Swap: ';
   upgDiv.appendChild(upgStrong);
@@ -4351,13 +4362,7 @@ function buildFoodCard(f) {
   drawerNodes.push(descP);
 
   const synBox = document.createElement('div');
-  synBox.style.background = '#eff6ff';
-  synBox.style.border = '1px solid #bfdbfe';
-  synBox.style.borderRadius = 'var(--radius-sm)';
-  synBox.style.padding = '0.6rem';
-  synBox.style.marginBottom = '0.6rem';
-  synBox.style.fontSize = '0.8rem';
-  synBox.style.color = '#1e3a8a';
+  synBox.className = 'food-synergy-box';
 
   const synStrong = document.createElement('strong');
   synStrong.textContent = '🧬 Bioavailability Synergy & Prep Safety: ';
@@ -4400,6 +4405,8 @@ function buildFoodCard(f) {
   card.appendChild(body);
 
   // Action Link
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const viewFoodRefLabel = (i18n && i18n.viewFoodRefBtn) || 'View Clinical & Nutrient Reference';
   const link = document.createElement('a');
   link.href = f.link;
   link.target = '_blank';
@@ -4409,7 +4416,7 @@ function buildFoodCard(f) {
   link.style.width = '100%';
   link.style.justifyContent = 'center';
   link.appendChild(createExternalLinkSvg());
-  link.appendChild(document.createTextNode(' View Clinical & Nutrient Reference'));
+  link.appendChild(document.createTextNode(' ' + viewFoodRefLabel));
 
   link.addEventListener('click', () => {
     if (window.trackSafeKidsEvent) {
@@ -4426,17 +4433,20 @@ function renderFoods() {
   if (!container) return;
 
   const filtered = getFilteredFoods();
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
 
   const countBadge = document.getElementById('food-count-badge');
   if (countBadge) {
-    countBadge.textContent = `${filtered.length} whole foods & swaps`;
+    countBadge.textContent = (i18n && typeof i18n.formatFoodsCount === 'function')
+      ? i18n.formatFoodsCount(filtered.length)
+      : `${filtered.length} whole foods & swaps`;
   }
 
   if (filtered.length === 0) {
     container.replaceChildren(
       createEmptyState(
-        'No whole foods or swaps match your search criteria.',
-        "Try selecting 'All Whole Foods & Swaps' or clearing the nutrient domain and search filters."
+        (i18n && i18n.emptyFoodsTitle) || 'No whole foods or swaps match your search criteria.',
+        (i18n && i18n.emptyFoodsSub) || "Try selecting 'All Whole Foods & Swaps' or clearing the nutrient domain and search filters."
       )
     );
     return;
@@ -4631,9 +4641,7 @@ function buildListenCard(item) {
   nameDiv.textContent = item.name;
 
   const creatorDiv = document.createElement('div');
-  creatorDiv.style.fontSize = '0.75rem';
-  creatorDiv.style.color = '#92400e';
-  creatorDiv.style.fontWeight = '600';
+  creatorDiv.className = 'listen-creator-label';
   creatorDiv.textContent = `${item.categoryLabel} • ${item.creator}`;
 
   titleWrap.appendChild(nameDiv);
@@ -4655,10 +4663,7 @@ function buildListenCard(item) {
   metaRow.style.margin = '0.5rem 0';
 
   const ageBadge = document.createElement('span');
-  ageBadge.className = 'tag-badge';
-  ageBadge.style.background = '#e0f2fe';
-  ageBadge.style.color = '#0369a1';
-  ageBadge.style.fontWeight = '600';
+  ageBadge.className = 'tag-badge age-range-badge';
   ageBadge.textContent = item.ageLabel;
 
   const formatBadge = document.createElement('span');
@@ -4750,6 +4755,8 @@ function buildListenCard(item) {
   card.appendChild(body);
 
   // Action Link
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const viewListenRefLabel = (i18n && i18n.viewListenRefBtn) || 'Listen / View Book Reference';
   const link = document.createElement('a');
   link.href = item.link;
   link.target = '_blank';
@@ -4759,7 +4766,7 @@ function buildListenCard(item) {
   link.style.width = '100%';
   link.style.justifyContent = 'center';
   link.appendChild(createExternalLinkSvg());
-  link.appendChild(document.createTextNode(' Listen / View Book Reference'));
+  link.appendChild(document.createTextNode(' ' + viewListenRefLabel));
 
   link.addEventListener('click', () => {
     if (window.trackSafeKidsEvent) {
@@ -4776,17 +4783,20 @@ function renderListenItems() {
   if (!container) return;
 
   const filtered = getFilteredListenItems();
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
 
   const countBadge = document.getElementById('listen-count-badge');
   if (countBadge) {
-    countBadge.textContent = `${filtered.length} audio & book picks`;
+    countBadge.textContent = (i18n && typeof i18n.formatListenCount === 'function')
+      ? i18n.formatListenCount(filtered.length)
+      : `${filtered.length} audio & book picks`;
   }
 
   if (filtered.length === 0) {
     container.replaceChildren(
       createEmptyState(
-        'No podcasts, audiobooks, or books match your search criteria.',
-        "Try selecting 'All Audio & Books' or clearing the format and search filters."
+        (i18n && i18n.emptyListenTitle) || 'No podcasts, audiobooks, or books match your search criteria.',
+        (i18n && i18n.emptyListenSub) || "Try selecting 'All Audio & Books' or clearing the format and search filters."
       )
     );
     return;
@@ -5041,7 +5051,9 @@ function switchWorkspaceTab(rawTab, opts) {
     }
   });
 
-  const meta = WORKSPACE_TAB_METADATA[tab] || WORKSPACE_TAB_METADATA.overview;
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const tabMetaMap = (i18n && i18n.tabs) ? i18n.tabs : WORKSPACE_TAB_METADATA;
+  const meta = tabMetaMap[tab] || WORKSPACE_TAB_METADATA[tab] || WORKSPACE_TAB_METADATA.overview;
   const kickerEl = document.getElementById('workspace-context-kicker');
   const titleEl = document.getElementById('workspace-context-title');
   const subEl = document.getElementById('workspace-context-sub');
@@ -5052,14 +5064,22 @@ function switchWorkspaceTab(rawTab, opts) {
   if (kickerEl) kickerEl.textContent = meta.kicker;
   if (titleEl) titleEl.textContent = meta.title;
   if (subEl) subEl.textContent = meta.sub;
-  if (headerPill) headerPill.textContent = `Active: ${meta.shortLabel}`;
+  if (headerPill) {
+    const activePrefix = (i18n && i18n.activePrefix) || 'Active:';
+    const prefixGap = activePrefix.endsWith('：') ? '' : ' ';
+    headerPill.textContent = `${activePrefix}${prefixGap}${meta.shortLabel}`;
+  }
 
   if (contextToggleBtn) {
-    contextToggleBtn.textContent = tab === 'all' ? 'Return to Focused Tabs' : 'Show All Sections';
+    const returnTabsLabel = (i18n && i18n.returnFocusedTabsBtn) || 'Return to Focused Tabs';
+    const showAllLabel = (i18n && i18n.showAllSectionsBtn) || 'Show All Sections';
+    contextToggleBtn.textContent = tab === 'all' ? returnTabsLabel : showAllLabel;
     contextToggleBtn.setAttribute('data-tab', tab === 'all' ? 'overview' : 'all');
   }
   if (headerToggleBtn) {
-    headerToggleBtn.textContent = tab === 'all' ? '🎯 Focused Tabs' : '📖 View Full Guide';
+    const focusedTabsLabel = (i18n && i18n.headerFocusedTabsBtn) || '🎯 Focused Tabs';
+    const fullGuideLabel = (i18n && i18n.headerViewFullGuideBtn) || '📖 View Full Guide';
+    headerToggleBtn.textContent = tab === 'all' ? focusedTabsLabel : fullGuideLabel;
     headerToggleBtn.setAttribute('data-tab', tab === 'all' ? 'overview' : 'all');
   }
 
@@ -5071,28 +5091,34 @@ function switchWorkspaceTab(rawTab, opts) {
   if (idx !== -1) {
     const prevTab = ORDERED_WORKSPACE_TABS[(idx - 1 + ORDERED_WORKSPACE_TABS.length) % ORDERED_WORKSPACE_TABS.length];
     const nextTab = ORDERED_WORKSPACE_TABS[(idx + 1) % ORDERED_WORKSPACE_TABS.length];
+    const prevMeta = tabMetaMap[prevTab] || WORKSPACE_TAB_METADATA[prevTab];
+    const nextMeta = tabMetaMap[nextTab] || WORKSPACE_TAB_METADATA[nextTab];
+    const prevPrefix = (i18n && i18n.prevPrefix) || 'Prev:';
+    const nextPrefix = (i18n && i18n.nextPrefix) || 'Next:';
     if (prevBtn) {
-      prevBtn.textContent = `\u2190 Prev: ${WORKSPACE_TAB_METADATA[prevTab].shortLabel}`;
+      prevBtn.textContent = `\u2190 ${prevPrefix} ${prevMeta.shortLabel}`;
       prevBtn.setAttribute('data-target-tab', prevTab);
     }
     if (nextBtn) {
-      nextBtn.textContent = `Next: ${WORKSPACE_TAB_METADATA[nextTab].shortLabel} \u2192`;
+      nextBtn.textContent = `${nextPrefix} ${nextMeta.shortLabel} \u2192`;
       nextBtn.setAttribute('data-target-tab', nextTab);
     }
     if (indicatorEl) {
-      indicatorEl.textContent = `Viewing Tab ${idx + 1} of ${ORDERED_WORKSPACE_TABS.length} • ${meta.shortLabel}`;
+      indicatorEl.textContent = (i18n && typeof i18n.formatPagerIndicator === 'function')
+        ? i18n.formatPagerIndicator(idx + 1, ORDERED_WORKSPACE_TABS.length, meta.shortLabel)
+        : `Viewing Tab ${idx + 1} of ${ORDERED_WORKSPACE_TABS.length} • ${meta.shortLabel}`;
     }
   } else {
     if (prevBtn) {
-      prevBtn.textContent = '\u2190 Back to Daily Plan & Overview';
+      prevBtn.textContent = (i18n && i18n.backToOverviewBtn) || '\u2190 Back to Daily Plan & Overview';
       prevBtn.setAttribute('data-target-tab', 'overview');
     }
     if (nextBtn) {
-      nextBtn.textContent = 'Jump to Watch · Channels (28) \u2192';
+      nextBtn.textContent = (i18n && i18n.jumpToChannelsBtn) || 'Jump to Watch · Channels (28) \u2192';
       nextBtn.setAttribute('data-target-tab', 'channels');
     }
     if (indicatorEl) {
-      indicatorEl.textContent = 'Full Handbook Mode • All 7 Tabs Visible';
+      indicatorEl.textContent = (i18n && i18n.fullHandbookModeLabel) || 'Full Handbook Mode • All 7 Tabs Visible';
     }
   }
 
@@ -5234,13 +5260,15 @@ const BLUEPRINT_STAGE_RULES = {
 
 function computeDailyBlueprint(rawAgeKey) {
   const ageKey = ALLOWED_BLUEPRINT_AGES.has(rawAgeKey) ? rawAgeKey : 'toddler';
-  const stageMeta = BLUEPRINT_STAGE_RULES[ageKey] || BLUEPRINT_STAGE_RULES.toddler;
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const stageRulesMap = (i18n && i18n.blueprintStages) ? i18n.blueprintStages : BLUEPRINT_STAGE_RULES;
+  const stageMeta = stageRulesMap[ageKey] || BLUEPRINT_STAGE_RULES[ageKey] || BLUEPRINT_STAGE_RULES.toddler;
 
   if (ageKey === 'under-2') {
     return {
       ageKey,
       ageLabelShort: stageMeta.ageLabelShort,
-      directoryFilterAge: stageMeta.directoryFilterAge,
+      directoryFilterAge: stageMeta.directoryFilterAge || 'toddler',
       stageHeadline: stageMeta.stageHeadline,
       stageSummary: stageMeta.stageSummary,
       screenBudget: stageMeta.screenBudget,
@@ -5299,7 +5327,7 @@ function computeDailyBlueprint(rawAgeKey) {
   return {
     ageKey,
     ageLabelShort: stageMeta.ageLabelShort,
-    directoryFilterAge: stageMeta.directoryFilterAge,
+    directoryFilterAge: stageMeta.directoryFilterAge || ageKey,
     stageHeadline: stageMeta.stageHeadline,
     stageSummary: stageMeta.stageSummary,
     screenBudget: stageMeta.screenBudget,
@@ -5534,9 +5562,10 @@ function setupClinicalDrawerToggleAll() {
 
   toggleBtn.addEventListener('click', () => {
     expandAllClinicalDrawers = !expandAllClinicalDrawers;
+    const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
     toggleBtn.textContent = expandAllClinicalDrawers
-      ? '🔬 Hide Clinical Details'
-      : '🔬 Expand All Science';
+      ? ((i18n && i18n.hideClinicalDetailsBtn) || '🔬 Hide Clinical Details')
+      : ((i18n && i18n.expandAllScienceBtn) || '🔬 Expand All Science');
     if (expandAllClinicalDrawers) {
       toggleBtn.classList.add('active');
     } else {
@@ -5594,12 +5623,13 @@ function setupInfographicExperience() {
           document.body.classList.remove('infographic-quick-mode');
         }
       }
+      const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
       if (infographicQuickModeActive) {
         modeBtn.classList.add('active');
-        modeBtn.textContent = '📸 Exit 2-Min Infographic View';
+        modeBtn.textContent = (i18n && i18n.infographicExitBtn) || '📸 Exit 2-Min Infographic View';
       } else {
         modeBtn.classList.remove('active');
-        modeBtn.textContent = '📸 2-Min Infographic View';
+        modeBtn.textContent = (i18n && i18n.infographicEnterBtn) || '📸 2-Min Infographic View';
       }
       if (window.trackSafeKidsEvent) {
         window.trackSafeKidsEvent('toggle_infographic_mode', { active: infographicQuickModeActive });
@@ -5681,4 +5711,1148 @@ function setupInfographicExperience() {
     lightboxBackdrop.addEventListener('click', closeLightbox);
   }
 }
+
+// ==================== DARK MODE & 5-LANGUAGE I18N ENGINE (EN / ES / ZH / JA / KO) ====================
+const PORTAL_I18N = {
+  en: {
+    langCode: 'en',
+    langName: 'English',
+    darkModeBtnOff: '🌙 Dark Mode',
+    darkModeBtnOn: '☀️ Light Mode',
+    darkModeToggleTitle: 'Toggle Dark / Light Mode',
+    languageSwitcherLabel: 'Language Switcher',
+    languageSelectLabel: 'Select Language',
+    languagePillsLabel: 'Quick Language Buttons',
+    infographicEnterBtn: '📸 2-Min Infographic View',
+    infographicExitBtn: '📸 Exit 2-Min Infographic View',
+    expandAllScienceBtn: '🔬 Expand All Science',
+    hideClinicalDetailsBtn: '🔬 Hide Clinical Details',
+    headerViewFullGuideBtn: '📖 View Full Guide',
+    headerFocusedTabsBtn: '🎯 Focused Tabs',
+    showAllSectionsBtn: 'Show All Sections',
+    returnFocusedTabsBtn: 'Return to Focused Tabs',
+    activePrefix: 'Active:',
+    prevPrefix: 'Prev:',
+    nextPrefix: 'Next:',
+    formatPagerIndicator: (cur, total, label) => `Viewing Tab ${cur} of ${total} • ${label}`,
+    backToOverviewBtn: '\u2190 Back to Daily Plan & Overview',
+    jumpToChannelsBtn: 'Jump to Watch · Channels (28) \u2192',
+    fullHandbookModeLabel: 'Full Handbook Mode • All 7 Tabs Visible',
+    globalAgeLabel: "👶 Child's Age:",
+    globalAges: {
+      'all': 'All Ages',
+      'under-2': '0–24m',
+      'toddler': '2–3 yrs',
+      'preschool': '4–5 yrs',
+      'early-elementary': '6–7 yrs',
+      'middle-elementary': '8–9 yrs',
+      'preteen': '10–12 yrs'
+    },
+    sidebarBrandTitle: 'Watch • Play • Nourish • Listen',
+    sidebarBrandSub: 'Pick an age above or jump to any focused directory below.',
+    sidebarGroups: ['1. Start Here', '2. Curated Daily Directories', '3. Tools & Clinical Science'],
+    sidebarNav: {
+      overview: { title: 'Daily Plan & 10 Rules', caption: 'Fridge sheet & 4-pillar hub', pill: 'Start' },
+      channels: { title: 'Watch: Safe Channels', caption: 'Low-stimulus video whitelist', pill: '28' },
+      games: { title: 'Play: Educator Games', caption: 'Ad-free logic & STEM play', pill: '33' },
+      nutrition: { title: 'Nourish: Whole Foods', caption: 'Lunchbox swaps & NFI-10', pill: '32' },
+      listen: { title: 'Listen & Read: Audio', caption: 'Podcasts, Yoto & living books', pill: '26' },
+      science: { title: 'Science & Self-Auditors', caption: 'SEM-10, NFI-10 & 30 studies', pill: '30 Cited' },
+      lockdown: { title: 'Lockdown Guides', caption: 'FOSS apps, OS & DNS shields', pill: '13 Tools' },
+      all: { title: 'View Full Guide / Print All', caption: 'Show all sections on one page', pill: 'All' }
+    },
+    mobileBar: {
+      overview: 'All 6',
+      channels: 'Watch',
+      games: 'Play',
+      nutrition: 'Food',
+      listen: 'Audio',
+      lockdown: 'Shield'
+    },
+    heroHeading: 'Calm, Evidence-Backed Media, Play, Whole-Food & Audio Hub for Parents',
+    heroSubtitle: "Pick your child's age to get an instant daily rhythm, or browse 119 curated low-stimulus shows, constructivist games, whole-food lunchbox swaps, and screen-free podcasts & living books—with 1-click expandable clinical science.",
+    heroStats: [
+      'Curated Calm Channels',
+      'Educator-Approved Games',
+      'Whole-Food Swaps & Staples',
+      'Screen-Free Audio & Books',
+      'Dual 10-Pt Audit Rubrics',
+      'Studies & Laws Cited'
+    ],
+    blueprintSyncBtn: '🔗 Sync All 4 Directories to This Age',
+    blueprintCopyBtn: '📋 Copy Caregiver Plan',
+    blueprintPrintBtn: '🖨️ Print Fridge Quick-Sheet',
+    searchPlaceholders: {
+      channel: 'Search approved channels by title, research anchor, or topic (e.g. STEM, Nature, Phonics, Mindfulness)...',
+      game: 'Search approved games by title, developer, cognitive skill (e.g. Spatial, Phonics, Boolean Logic, Montessori), or platform...',
+      food: 'Search 32 whole foods & swaps by food, ultra-processed trap (e.g. Fruit Snacks, Goldfish, Pouches, Cereal), nutrient (DHA, Iron, Choline, K2), or study...',
+      listen: 'Search 26 podcasts, audiobooks, phonics decodables, living books, or screen-free players (e.g. Brains On, Yoto, Bob Books, Narnia)...'
+    },
+    viewChannelBtn: 'View Channel',
+    visitGameBtn: 'Visit Official Game / App',
+    viewFoodRefBtn: 'View Clinical & Nutrient Reference',
+    viewListenRefBtn: 'Listen / View Book Reference',
+    drawerShowLabel: '🔬 + Why It Works, Parent Guide & Citations',
+    drawerHideLabel: '🔬 \u2212 Hide Clinical Details & Parent Guide',
+    formatChannelsCount: (n) => (n === 1 ? '1 channel' : `${n} channels`),
+    formatGamesCount: (n) => (n === 1 ? '1 game' : `${n} games`),
+    formatFoodsCount: (n) => (n === 1 ? '1 whole food or swap' : `${n} whole foods & swaps`),
+    formatListenCount: (n) => (n === 1 ? '1 audio or book pick' : `${n} audio & book picks`),
+    emptyChannelsTitle: 'No channels match your search criteria.',
+    emptyChannelsSub: 'Try adjusting your age filter or search term.',
+    emptyGamesTitle: 'No educational games match your search criteria.',
+    emptyGamesSub: "Try selecting 'All Games' or clearing the domain, stopping-cue, and search filters.",
+    emptyFoodsTitle: 'No whole foods or swaps match your search criteria.',
+    emptyFoodsSub: "Try selecting 'All Whole Foods & Swaps' or clearing the nutrient domain and search filters.",
+    emptyListenTitle: 'No podcasts, audiobooks, or books match your search criteria.',
+    emptyListenSub: "Try selecting 'All Audio & Books' or clearing the format and search filters.",
+    tabs: WORKSPACE_TAB_METADATA,
+    blueprintStages: BLUEPRINT_STAGE_RULES
+  },
+  es: {
+    langCode: 'es',
+    langName: 'Español',
+    darkModeBtnOff: '🌙 Modo Oscuro',
+    darkModeBtnOn: '☀️ Modo Claro',
+    darkModeToggleTitle: 'Cambiar entre modo oscuro y claro',
+    languageSwitcherLabel: 'Selector de idioma',
+    languageSelectLabel: 'Seleccionar idioma',
+    languagePillsLabel: 'Botones rápidos de idioma',
+    infographicEnterBtn: '📸 Vista Infográfica (2 min)',
+    infographicExitBtn: '📸 Salir de Vista Infográfica',
+    expandAllScienceBtn: '🔬 Expandir Ciencia Clínica',
+    hideClinicalDetailsBtn: '🔬 Ocultar Detalles Clínicos',
+    headerViewFullGuideBtn: '📖 Ver Guía Completa',
+    headerFocusedTabsBtn: '🎯 Pestañas Enfocadas',
+    showAllSectionsBtn: 'Mostrar Todas las Secciones',
+    returnFocusedTabsBtn: 'Volver a Pestañas Enfocadas',
+    activePrefix: 'Activo:',
+    prevPrefix: 'Ant.:',
+    nextPrefix: 'Sig.:',
+    formatPagerIndicator: (cur, total, label) => `Pestaña ${cur} de ${total} • ${label}`,
+    backToOverviewBtn: '\u2190 Volver al Plan Diario y Resumen',
+    jumpToChannelsBtn: 'Ir a Ver · Canales (28) \u2192',
+    fullHandbookModeLabel: 'Modo Manual Completo • Las 7 Pestañas Visibles',
+    globalAgeLabel: '👶 Edad del Niño:',
+    globalAges: {
+      'all': 'Todas las Edades',
+      'under-2': '0–24 m',
+      'toddler': '2–3 años',
+      'preschool': '4–5 años',
+      'early-elementary': '6–7 años',
+      'middle-elementary': '8–9 años',
+      'preteen': '10–12 años'
+    },
+    sidebarBrandTitle: 'Ver • Jugar • Nutrir • Escuchar',
+    sidebarBrandSub: 'Elige una edad arriba o salta a cualquier directorio especializado abajo.',
+    sidebarGroups: ['1. Empieza Aquí', '2. Directorios Diarios Curados', '3. Herramientas y Ciencia Clínica'],
+    sidebarNav: {
+      overview: { title: 'Plan Diario y 10 Reglas', caption: 'Hoja de refrigerador y 4 pilares', pill: 'Inicio' },
+      channels: { title: 'Ver: Canales Seguros', caption: 'Lista blanca de baja estimulación', pill: '28' },
+      games: { title: 'Jugar: Juegos Educativos', caption: 'Lógica y STEM sin anuncios', pill: '33' },
+      nutrition: { title: 'Nutrir: Alimentos Reales', caption: 'Cambios de lonchera y NFI-10', pill: '32' },
+      listen: { title: 'Escuchar y Leer: Audio', caption: 'Pódcasts, Yoto y libros vivos', pill: '26' },
+      science: { title: 'Ciencia y Auditores', caption: 'SEM-10, NFI-10 y 30 estudios', pill: '30 Citas' },
+      lockdown: { title: 'Guías de Bloqueo', caption: 'Apps libres, SO y escudos DNS', pill: '13 Herr.' },
+      all: { title: 'Ver Guía Completa / Imprimir', caption: 'Mostrar todas las secciones juntas', pill: 'Todo' }
+    },
+    mobileBar: {
+      overview: 'Plan',
+      channels: 'Ver',
+      games: 'Jugar',
+      nutrition: 'Nutrir',
+      listen: 'Audio',
+      lockdown: 'Escudo'
+    },
+    heroHeading: 'Centro Calmo con Evidencia Científica de Medios, Juego, Nutrición y Audio para Padres',
+    heroSubtitle: 'Selecciona la edad de tu hijo para obtener una rutina diaria al instante o explora 119 recursos seleccionados: programas de baja estimulación, juegos constructivistas, cambios de lonchera con alimentos integrales y pódcasts y libros sin pantalla.',
+    heroStats: [
+      'Canales Calmos Curados',
+      'Juegos Aprobados por Educadores',
+      'Alimentos Reales y Cambios',
+      'Audio y Libros Sin Pantalla',
+      'Doble Rúbrica de 10 Puntos',
+      'Estudios y Leyes Citadas'
+    ],
+    blueprintSyncBtn: '🔗 Sincronizar los 4 Directorios a Esta Edad',
+    blueprintCopyBtn: '📋 Copiar Plan para Cuidadores',
+    blueprintPrintBtn: '🖨️ Imprimir Hoja de Refrigerador',
+    searchPlaceholders: {
+      channel: 'Buscar canales (ej., Bluey, naturaleza, matemáticas, fonética)...',
+      game: 'Buscar juegos (ej., ajedrez, programación, DragonBox, Montessori)...',
+      food: 'Buscar alimentos y cambios (ej., salmón, hierro, sin colorantes, lonchera)...',
+      listen: 'Buscar audio y libros (ej., Yoto, Brains On, fonética, cuentos)...'
+    },
+    viewChannelBtn: 'Ver Canal Oficial',
+    visitGameBtn: 'Visitar Juego / App Oficial',
+    viewFoodRefBtn: 'Ver Referencia Clínica y Nutricional',
+    viewListenRefBtn: 'Escuchar / Ver Referencia del Libro',
+    drawerShowLabel: '🔬 + Por Qué Funciona, Guía para Padres y Citas',
+    drawerHideLabel: '🔬 \u2212 Ocultar Detalles Clínicos y Guía',
+    formatChannelsCount: (n) => (n === 1 ? '1 canal' : `${n} canales`),
+    formatGamesCount: (n) => (n === 1 ? '1 juego' : `${n} juegos`),
+    formatFoodsCount: (n) => (n === 1 ? '1 alimento o cambio' : `${n} alimentos y cambios`),
+    formatListenCount: (n) => (n === 1 ? '1 audio o libro' : `${n} audios y libros`),
+    emptyChannelsTitle: 'Ningún canal coincide con tu búsqueda.',
+    emptyChannelsSub: 'Intenta cambiar el filtro de edad o el término de búsqueda.',
+    emptyGamesTitle: 'Ningún juego educativo coincide con tu búsqueda.',
+    emptyGamesSub: 'Intenta limpiar los filtros de edad, dominio, señal de parada y búsqueda.',
+    emptyFoodsTitle: 'Ningún alimento o cambio coincide con tu búsqueda.',
+    emptyFoodsSub: 'Intenta seleccionar todos los alimentos o limpiar el filtro nutricional.',
+    emptyListenTitle: 'Ningún pódcast, audiolibro o libro coincide con tu búsqueda.',
+    emptyListenSub: 'Intenta seleccionar todos los formatos o limpiar la búsqueda.',
+    tabs: {
+      overview: {
+        kicker: 'Pestaña 1 de 7 • Empieza Aquí',
+        title: 'Resumen, Plan Diario por Edad y 10 Reglas Familiares Clave',
+        sub: 'Rutina diaria calma, hoja imprimible de 4 pilares para el refrigerador y guía esencial para padres.',
+        shortLabel: 'Plan Diario y Resumen'
+      },
+      science: {
+        kicker: 'Pestaña 2 de 7 • Evidencia Clínica y Rúbricas',
+        title: 'Ciencia Clínica, Auditores Dobles de 10 Puntos (SEM-10 y NFI-10) y 30 Citas',
+        sub: 'Neuroimagen revisada por pares, psicología del desarrollo, nutrición pediátrica y calculadoras de 60 segundos.',
+        shortLabel: 'Ciencia y Rúbricas (30)'
+      },
+      channels: {
+        kicker: 'Pestaña 3 de 7 • Pilar 1 (Ver)',
+        title: 'Directorio de Canales de Baja Estimulación Aprobados por Padres (28 Canales)',
+        sub: 'Canales de video calmos evaluados con la rúbrica SEM-10 y exportación de lista blanca en JSON/CSV.',
+        shortLabel: 'Ver · Canales (28)'
+      },
+      games: {
+        kicker: 'Pestaña 4 de 7 • Pilar 2 (Jugar)',
+        title: 'Directorio de Juegos Cognitivos y Apps Aprobados por Educadores (33 Juegos)',
+        sub: 'Mundos constructivistas, acertijos espaciales y apps Montessori con cero anuncios y cero cajas de botín.',
+        shortLabel: 'Jugar · Juegos (33)'
+      },
+      nutrition: {
+        kicker: 'Pestaña 5 de 7 • Pilar 3 (Nutrir)',
+        title: 'Alimentos Integrales y Cambios de Lonchera Avalados por Pediatras (32 Cambios)',
+        sub: 'Alternativas reales NOVA-1 que reemplazan snacks ultraprocesados, bolsas exprimibles y colorantes sintéticos.',
+        shortLabel: 'Nutrir · Alimentos (32)'
+      },
+      listen: {
+        kicker: 'Pestaña 6 de 7 • Pilar 4 (Escuchar y Leer)',
+        title: 'Escuchar y Leer: Directorio de Audio Sin Pantalla, Pódcasts y Libros Vivos (26 Selecciones)',
+        sub: 'Pódcasts de ciencia y cuentos, tarjetas Yoto/Tonie, libros fonéticos decodificables y lectura dialógica.',
+        shortLabel: 'Escuchar y Leer (26)'
+      },
+      lockdown: {
+        kicker: 'Pestaña 7 de 7 • Defensa Técnica',
+        title: 'Herramientas Abiertas de Control Parental y Guías Paso a Paso de Bloqueo DNS',
+        sub: '13 arquitecturas de código abierto más los Pasos A–E para BrainRotGuard, KidTube, Family Link, Acceso Guiado y NextDNS.',
+        shortLabel: 'Bloqueo de Dispositivos y DNS'
+      },
+      all: {
+        kicker: 'Modo Manual Completo • Las 7 Pestañas Visibles',
+        title: 'Referencia Completa del Portal para Padres SafeKids (Todas las Secciones)',
+        sub: 'Mostrando las 10 recomendaciones, 30+ estudios clínicos, 28 canales, 33 juegos, 32 alimentos, 26 audios/libros y 5 guías.',
+        shortLabel: 'Guía Completa (Todo)'
+      }
+    },
+    blueprintStages: {
+      'under-2': {
+        ageLabelShort: 'Menores de 2 años (0–24 m)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '👶 Menores de 2 Años (0–24 Meses) — 100% Cero Pantallas, Base Sensoriomotora y Hierro/DHA',
+        stageSummary: 'AAP (2016) y Kuhl (2003): Por el efecto de déficit de video, los menores de 24 meses aprenden poco de las pantallas y necesitan interacción vocal en vivo con los padres, exploración en el suelo y alimentos ricos en hierro hemo, colina y DHA marino.',
+        screenBudget: '0 min/día de video pasivo (Solo videollamadas familiares en vivo según AAP)',
+        sleepCutoff: 'Habitación 100% oscura y libre de pantallas; 12–16 h de sueño total y siestas',
+        mealRule: 'Cero azúcar añadido y cero miel (<12 m); alimentos suaves ricos en hierro + DHA'
+      },
+      'toddler': {
+        ageLabelShort: 'Pequeños (2–3 años)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '🧸 Pequeños (2–3 Años) — Ritmo Lento en Familia (SEM-10 ≤ 2/10) y Alimentos Seguros contra el Atragantamiento',
+        stageSummary: 'OMS (2019) y Lillard (2011): Mantener el tiempo total de pantalla bajo 30–45 min/día, siempre acompañado en TV compartida, con cajas de juguetes digitales calmadas y alimentos integrales NOVA-1 cortados en cuartos o machacados.',
+        screenBudget: '≤ 30–45 min/día (100% acompañado por padres en TV compartida)',
+        sleepCutoff: 'Pantallas APAGADAS 60+ min antes de siesta y noche (Protección de melatonina)',
+        mealRule: 'Mesa 100% sin pantallas; cortar uvas y tomates cherry en cuartos a lo largo; untar crema de cacahuate o de frutos secos en capa fina'
+      },
+      'preschool': {
+        ageLabelShort: 'Preescolar (4–5 años)',
+        directoryFilterAge: 'preschool',
+        stageHeadline: '🎨 Preescolar (4–5 Años) — Función Ejecutiva Prefrontal, Fonética y Puentes Sensoriales',
+        stageSummary: 'Diamond (2013) y Hirsh-Pasek (2015): Desarrolla control inhibitorio, fonética sintética y sentido numérico espacial mediante cuentos calmos, apps táctiles y comidas familiares sin presión.',
+        screenBudget: '≤ 45–60 min/día de TV de baja estimulación o app educativa guiada',
+        sleepCutoff: 'Pantallas APAGADAS 60+ min antes de dormir (Rutina de cuentos leídos)',
+        mealRule: 'Comidas 100% sin pantallas; cero colorantes sintéticos (Rojo 40 / Amarillo 5; E129 / E102); fruta entera en lugar de purés en bolsita'
+      },
+      'early-elementary': {
+        ageLabelShort: 'Primaria Inicial (6–7 años)',
+        directoryFilterAge: 'early-elementary',
+        stageHeadline: '🚀 Primaria Inicial (6–7 Años) — Indagación STEM Práctica, Lógica Espacial y Glucosa Estable',
+        stageSummary: 'Papert (1980) y Benton (2007): Transición hacia dibujo práctico, ciencia en la naturaleza, acertijos espaciales por niveles y desayunos/loncheras de baja carga glucémica.',
+        screenBudget: '≤ 60 min/día recreativo en días escolares (Solo en sala compartida)',
+        sleepCutoff: 'Apagado físico 60+ min antes de dormir; cero pantallas en dormitorios',
+        mealRule: 'Desayuno y lonchera de baja carga glucémica (avena/huevos/semillas) para 4 h de concentración en clase'
+      },
+      'middle-elementary': {
+        ageLabelShort: 'Primaria Media (8–9 años)',
+        directoryFilterAge: 'middle-elementary',
+        stageHeadline: '🧩 Primaria Media (8–9 Años) — Programación Constructivista, Deducción y Nutrición Cerebral',
+        stageSummary: 'Resnick (2017) y Asbell-Clarke (2012): Canaliza la autonomía hacia programación por bloques en Scratch, lógica booleana y mundos de ingeniería (con temporizador visual de 5 min) junto con hierro, zinc y DHA.',
+        screenBudget: '≤ 60–75 min/día (Priorizar programación creativa y acertijos cooperativos)',
+        sleepCutoff: 'Dispositivos cargando en la cocina 60+ min antes de apagar luces (Chang et al., 2015)',
+        mealRule: 'Cena familiar sin pantallas; Hierro hemo/lentejas + Vitamina C y DHA marino 2–3 veces/sem'
+      },
+      'preteen': {
+        ageLabelShort: 'Preadolescentes (10–12 años)',
+        directoryFilterAge: 'preteen',
+        stageHeadline: '🔭 Preadolescentes (10–12 Años) — Pensamiento Sistémico, Mineralización Ósea y Cero Redes',
+        stageSummary: 'Nisan y Schocken (2005) y Weaver (2016): Reemplaza feeds algorítmicos cortos (Shorts/TikTok) y cajas de botín con física orbital, arquitectura de CPU y estrategia profunda, apoyado por calcio/D3/K2 y polifenoles.',
+        screenBudget: '≤ 60–90 min/día recreativo (Cero feeds de desplazamiento infinito o chat)',
+        sleepCutoff: 'Toque de queda estricto 60 min antes de dormir; cargadores fuera de la habitación',
+        mealRule: 'Calcio + D3 + K2 + fibra prebiótica para pico de masa ósea; cero cafeína o bebidas energéticas'
+      }
+    }
+  },
+  zh: {
+    langCode: 'zh',
+    langName: '中文',
+    darkModeBtnOff: '🌙 深色模式',
+    darkModeBtnOn: '☀️ 浅色模式',
+    darkModeToggleTitle: '切换深色 / 浅色模式',
+    languageSwitcherLabel: '语言切换',
+    languageSelectLabel: '选择语言',
+    languagePillsLabel: '快捷语言按钮',
+    infographicEnterBtn: '📸 2分钟信息图速览',
+    infographicExitBtn: '📸 退出2分钟信息图模式',
+    expandAllScienceBtn: '🔬 展开全部临床科学',
+    hideClinicalDetailsBtn: '🔬 隐藏临床科学细节',
+    headerViewFullGuideBtn: '📖 查看完整指南',
+    headerFocusedTabsBtn: '🎯 分栏专注视图',
+    showAllSectionsBtn: '显示全部章节',
+    returnFocusedTabsBtn: '返回分栏专注视图',
+    activePrefix: '当前：',
+    prevPrefix: '上一页：',
+    nextPrefix: '下一页：',
+    formatPagerIndicator: (cur, total, label) => `正在浏览第 ${cur} / ${total} 页 • ${label}`,
+    backToOverviewBtn: '\u2190 返回每日计划与总览',
+    jumpToChannelsBtn: '前往 观看 · 低刺激频道 (28) \u2192',
+    fullHandbookModeLabel: '完整手册模式 • 全部 7 个分栏已展开',
+    globalAgeLabel: '👶 孩子年龄：',
+    globalAges: {
+      'all': '全部年龄',
+      'under-2': '0–24个月',
+      'toddler': '2–3岁',
+      'preschool': '4–5岁',
+      'early-elementary': '6–7岁',
+      'middle-elementary': '8–9岁',
+      'preteen': '10–12岁'
+    },
+    sidebarBrandTitle: '观看 • 益智 • 营养 • 倾听',
+    sidebarBrandSub: '在上方选择孩子年龄，或点击下方任一临床严选目录。',
+    sidebarGroups: ['1. 从这里开始', '2. 每日严选四大目录', '3. 自测工具与临床科学'],
+    sidebarNav: {
+      overview: { title: '每日计划与10大原则', caption: '冰箱速查表与四大支柱中心', pill: '首页' },
+      channels: { title: '观看：低刺激安全频道', caption: '温和慢节奏视频白名单', pill: '28' },
+      games: { title: '益智：教育家严选游戏', caption: '无广告逻辑与STEM探索', pill: '33' },
+      nutrition: { title: '营养：天然原型食物', caption: '健康餐盒替换与NFI-10评分', pill: '32' },
+      listen: { title: '倾听与阅读：无屏音频', caption: '科普播客、音频卡与绘本', pill: '26' },
+      science: { title: '临床科学与自测计算器', caption: 'SEM-10、NFI-10与30项研究', pill: '30篇文献' },
+      lockdown: { title: '设备与DNS锁定指南', caption: '开源工具、系统限制与DNS防护', pill: '13项工具' },
+      all: { title: '查看完整指南 / 打印全部', caption: '在同一页面展开所有章节', pill: '全部' }
+    },
+    mobileBar: {
+      overview: '计划',
+      channels: '观看',
+      games: '益智',
+      nutrition: '营养',
+      listen: '倾听',
+      lockdown: '防护'
+    },
+    heroHeading: '循证温和的儿童媒体、益智游戏、天然脑营养与无屏音频家长门户',
+    heroSubtitle: '选择孩子的年龄即可生成专属24小时健康作息，或浏览119项严选低刺激节目、建构主义益智游戏、NOVA-1原型食物便当替换方案及无屏播客与绘本。',
+    heroStats: [
+      '严选低刺激频道',
+      '教育家认可益智游戏',
+      '原型食物与健康替换',
+      '无屏音频与经典绘本',
+      '双10分制临床评估量表',
+      '引用临床研究与法规'
+    ],
+    blueprintSyncBtn: '🔗 将全部4个目录同步至此年龄段',
+    blueprintCopyBtn: '📋 复制看护人每日计划',
+    blueprintPrintBtn: '🖨️ 打印冰箱速查表',
+    searchPlaceholders: {
+      channel: '搜索频道（例如：Bluey、自然、数学、自然拼读）...',
+      game: '搜索游戏（例如：国际象棋、编程、DragonBox、空间逻辑）...',
+      food: '搜索食物与替换方案（例如：三文鱼、补铁、无人工色素、便当）...',
+      listen: '搜索音频与绘本（例如：Yoto、科普播客、自然拼读、青蛙和蟾蜍）...'
+    },
+    viewChannelBtn: '访问官方频道',
+    visitGameBtn: '访问官方游戏 / 应用',
+    viewFoodRefBtn: '查看临床与营养学参考',
+    viewListenRefBtn: '收听 / 查看绘本参考',
+    drawerShowLabel: '🔬 + 科学原理、家长引导与文献引用',
+    drawerHideLabel: '🔬 \u2212 收起临床科学细节与家长指南',
+    formatChannelsCount: (n) => `${n} 个频道`,
+    formatGamesCount: (n) => `${n} 款游戏`,
+    formatFoodsCount: (n) => `${n} 项天然食物与替换`,
+    formatListenCount: (n) => `${n} 项音频与绘本精选`,
+    emptyChannelsTitle: '没有符合搜索条件的频道。',
+    emptyChannelsSub: '请尝试调整年龄筛选或搜索关键词。',
+    emptyGamesTitle: '没有符合搜索条件的益智游戏。',
+    emptyGamesSub: '请尝试选择“全部游戏”或清除领域与停止信号筛选。',
+    emptyFoodsTitle: '没有符合搜索条件的天然食物或替换方案。',
+    emptyFoodsSub: '请尝试选择“全部食物”或清除营养领域筛选。',
+    emptyListenTitle: '没有符合搜索条件的播客、有声书或绘本。',
+    emptyListenSub: '请尝试选择“全部音频与图书”或清除搜索条件。',
+    tabs: {
+      overview: {
+        kicker: '第 1 / 7 页 • 从这里开始',
+        title: '总览、分龄每日作息计划与 10 大核心家庭准则',
+        sub: '温和的日常作息节奏、可打印的四维支柱冰箱速查表以及核心家庭指导框架。',
+        shortLabel: '每日计划与总览'
+      },
+      science: {
+        kicker: '第 2 / 7 页 • 临床证据与量表',
+        title: '临床科学、双10分制评估器（SEM-10 与 NFI-10）及 30 篇权威文献',
+        sub: '同行评审神经影像学、发展心理学、儿科营养随机对照试验及60秒交互式自测工具。',
+        shortLabel: '科学与量表 (30)'
+      },
+      channels: {
+        kicker: '第 3 / 7 页 • 第一支柱（观看）',
+        title: '家长严选低刺激视频频道目录（28 个频道）',
+        sub: '基于 SEM-10 量表评分的温和视频频道，支持一键导出 JSON/CSV 白名单。',
+        shortLabel: '观看 · 频道 (28)'
+      },
+      games: {
+        kicker: '第 4 / 7 页 • 第二支柱（益智）',
+        title: '教育家严选认知游戏与应用目录（33 款游戏）',
+        sub: '建构主义沙盒、空间几何解谜与蒙氏应用，零广告、零开箱抽奖机制。',
+        shortLabel: '益智 · 游戏 (33)'
+      },
+      nutrition: {
+        kicker: '第 5 / 7 页 • 第三支柱（营养）',
+        title: '儿科医生与营养师严选天然食物及便当替换方案（32 项替换）',
+        sub: '用 NOVA-1 完整细胞基质食物替换超加工儿童零食、果泥吸吸袋与人工合成色素。',
+        shortLabel: '营养 · 食物 (32)'
+      },
+      listen: {
+        kicker: '第 6 / 7 页 • 第四支柱（倾听与阅读）',
+        title: '倾听与阅读：无屏音频、科普播客与经典绘本目录（26 项精选）',
+        sub: '严选 STEM 科普与故事播客、Yoto/Tonie 实体音频卡、自然拼读读物与对话式阅读绘本。',
+        shortLabel: '倾听与阅读 (26)'
+      },
+      lockdown: {
+        kicker: '第 7 / 7 页 • 技术防护体系',
+        title: '开源家长控制工具与分步设备 / DNS 锁定指南',
+        sub: '13 项开源家长控制架构，以及 BrainRotGuard、KidTube、Family Link、引导式访问与 NextDNS 设置指南。',
+        shortLabel: '设备与 DNS 防护'
+      },
+      all: {
+        kicker: '完整手册模式 • 全部 7 个分栏可见',
+        title: 'SafeKids 家长门户完整参考手册（全部章节）',
+        sub: '展示全部 10 项建议、30+ 项临床研究、28 个频道、33 款游戏、32 项食物替换、26 项音频绘本与 5 份锁定指南。',
+        shortLabel: '完整指南（全部章节）'
+      }
+    },
+    blueprintStages: {
+      'under-2': {
+        ageLabelShort: '2岁以下 (0–24个月)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '👶 2岁以下（0–24个月）— 100% 零屏幕感官运动与铁 / DHA 脑发育基石',
+        stageSummary: 'AAP (2016) 与 Kuhl (2003)：24个月以下婴幼儿存在“视频缺陷效应”，需要真人面对面发声互动、地板探索以及富含血红素铁、胆碱与海洋 DHA 的辅食。',
+        screenBudget: '0 分钟/天被动视频（按 AAP 指南仅限亲友真人视频通话）',
+        sleepCutoff: '100% 无屏幕暗光婴儿房；每日 12–16 小时总睡眠（含小睡）',
+        mealRule: '零添加糖、1岁（12个月）内禁蜂蜜；软烂富铁与 DHA 天然原型辅食'
+      },
+      'toddler': {
+        ageLabelShort: '幼儿期 (2–3岁)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '🧸 幼儿期（2–3岁）— 家长共视慢节奏媒体（SEM-10 ≤ 2/10）与防噎天然食物',
+        stageSummary: 'WHO (2019) 与 Lillard (2011)：每日屏幕时间控制在 30–45 分钟以内，始终在客厅电视上由家长陪同观看；优先选择无失败惩罚的数字玩具箱与纵向切四瓣的 NOVA-1 原型食物。',
+        screenBudget: '≤ 30–45 分钟/天（100% 客厅电视家长陪同共视）',
+        sleepCutoff: '午睡与夜间入睡前 60+ 分钟关闭所有屏幕（保护褪黑素分泌）',
+        mealRule: '100% 无屏幕餐桌；整颗葡萄/小番茄纵向切四瓣；坚果酱需稀释涂抹'
+      },
+      'preschool': {
+        ageLabelShort: '学龄前 (4–5岁)',
+        directoryFilterAge: 'preschool',
+        stageHeadline: '🎨 学龄前（4–5岁）— 前额叶执行功能、自然拼读与感官食物过渡桥',
+        stageSummary: 'Diamond (2013) 与 Hirsh-Pasek (2015)：通过低唤醒度故事与触觉动手应用培养抑制控制、自然拼读和空间数感，配合无压力的家庭共餐。',
+        screenBudget: '≤ 45–60 分钟/天 严选低刺激电视或引导式教学应用',
+        sleepCutoff: '睡前 60+ 分钟关闭全部屏幕（纸质绘本共读放松）',
+        mealRule: '100% 无屏幕进餐；零人工合成色素（美国标示红40/黄5，即诱惑红 E129、柠檬黄 E102）；用完整水果替代果泥吸吸袋'
+      },
+      'early-elementary': {
+        ageLabelShort: '小学低年级 (6–7岁)',
+        directoryFilterAge: 'early-elementary',
+        stageHeadline: '🚀 小学低年级（6–7岁）— 动手 STEM 探究、空间逻辑解谜与平稳校园血糖',
+        stageSummary: 'Papert (1980) 与 Benton (2007)：从被动观看转向动手绘画、自然科普与分关卡空间逻辑解谜；搭配低升糖负荷（Low-GL）早餐与便当，预防上午课堂注意力骤降。',
+        screenBudget: '≤ 60 分钟/天 上学日娱乐上限（仅限客厅公共区域）',
+        sleepCutoff: '睡前 60+ 分钟硬件断电；卧室 100% 零屏幕',
+        mealRule: '低升糖负荷早餐与便当（燕麦/全蛋/种子），维持上午 4 小时课堂专注'
+      },
+      'middle-elementary': {
+        ageLabelShort: '小学中年级 (8–9岁)',
+        directoryFilterAge: 'middle-elementary',
+        stageHeadline: '🧩 小学中年级（8–9岁）— 建构主义编程、演绎数学与神经辅因子营养',
+        stageSummary: 'Resnick (2017) 与 Asbell-Clarke (2012)：将成长的自主性引导至 Scratch 积木编程、布尔逻辑解谜与工程沙盒（配合 5 分钟视觉计时器），并补充铁、锌与海洋 DHA。',
+        screenBudget: '≤ 60–75 分钟/天（优先创意编程与双人合作解谜）',
+        sleepCutoff: '熄灯前 60+ 分钟所有设备集中在厨房充电（Chang et al., 2015）',
+        mealRule: '无屏幕家庭晚餐；每周 2–3 次血红素/扁豆铁 + 维C 与深海鱼 DHA'
+      },
+      'preteen': {
+        ageLabelShort: '青春期前夕 (10–12岁)',
+        directoryFilterAge: 'preteen',
+        stageHeadline: '🔭 青春期前夕（10–12岁）— 深度系统思维、骨矿化高峰营养与零算法短视频',
+        stageSummary: 'Nisan & Schocken (2005) 与 Weaver (2016)：用轨道物理、CPU 架构与深度策略游戏替代算法短视频（Shorts/TikTok）与开箱射击游戏，同时强化钙/D3/K2 与高多酚健脑食物。',
+        screenBudget: '≤ 60–90 分钟/天 娱乐时间（禁止无限下拉信息流与聊天功能）',
+        sleepCutoff: '睡前 60 分钟严格宵禁；充电器整夜留在卧室外',
+        mealRule: '骨量峰值期补足 D3 + K2 + 钙 + 益生元纤维；严禁咖啡因与能量饮料'
+      }
+    }
+  },
+  ja: {
+    langCode: 'ja',
+    langName: '日本語',
+    darkModeBtnOff: '🌙 ダークモード',
+    darkModeBtnOn: '☀️ ライトモード',
+    darkModeToggleTitle: 'ダーク / ライトモードを切り替え',
+    languageSwitcherLabel: '言語切り替え',
+    languageSelectLabel: '言語を選択',
+    languagePillsLabel: 'クイック言語ボタン',
+    infographicEnterBtn: '📸 2分インフォグラフィック表示',
+    infographicExitBtn: '📸 インフォグラフィック表示を終了',
+    expandAllScienceBtn: '🔬 すべての科学的根拠を展開',
+    hideClinicalDetailsBtn: '🔬 科学的根拠を折りたたむ',
+    headerViewFullGuideBtn: '📖 全ガイドを表示',
+    headerFocusedTabsBtn: '🎯 タブ表示に戻る',
+    showAllSectionsBtn: '全セクションを一括表示',
+    returnFocusedTabsBtn: 'タブ表示に戻る',
+    activePrefix: '表示中：',
+    prevPrefix: '前へ：',
+    nextPrefix: '次へ：',
+    formatPagerIndicator: (cur, total, label) => `タブ ${cur} / ${total} を表示中 • ${label}`,
+    backToOverviewBtn: '\u2190 1日のプランと概要へ戻る',
+    jumpToChannelsBtn: '観る · 低刺激チャンネル (28) へ移動 \u2192',
+    fullHandbookModeLabel: 'フルハンドブックモード • 全 7 タブ表示中',
+    globalAgeLabel: '👶 お子様の年齢：',
+    globalAges: {
+      'all': '全年齢',
+      'under-2': '0–24ヶ月',
+      'toddler': '2–3歳',
+      'preschool': '4–5歳',
+      'early-elementary': '6–7歳',
+      'middle-elementary': '8–9歳',
+      'preteen': '10–12歳'
+    },
+    sidebarBrandTitle: '観る • 遊ぶ • 食べる • 聴く',
+    sidebarBrandSub: '上で年齢を選択するか、下の各専門ディレクトリへ移動してください。',
+    sidebarGroups: ['1. はじめに', '2. 厳選デイリーディレクトリ', '3. 評価ツールと臨床科学'],
+    sidebarNav: {
+      overview: { title: '1日のプランと10のルール', caption: '冷蔵庫シート＆4つの柱', pill: '開始' },
+      channels: { title: '観る：安全な低刺激番組', caption: '低刺激動画ホワイトリスト', pill: '28' },
+      games: { title: '遊ぶ：教育者推奨ゲーム', caption: '広告なし論理＆STEM遊び', pill: '33' },
+      nutrition: { title: '食べる：自然食品と弁当', caption: '超加工食品の代替＆NFI-10', pill: '32' },
+      listen: { title: '聴く・読む：音声と絵本', caption: 'ポッドキャスト・Yoto・絵本', pill: '26' },
+      science: { title: '臨床科学と自己診断ツール', caption: 'SEM-10・NFI-10・30の研究', pill: '30文献' },
+      lockdown: { title: '端末・DNSロック手順', caption: 'オープンソース＆DNS防御', pill: '13ツール' },
+      all: { title: '全ガイド表示 / 印刷モード', caption: '全セクションを1ページに表示', pill: 'すべて' }
+    },
+    mobileBar: {
+      overview: 'プラン',
+      channels: '観る',
+      games: '遊ぶ',
+      nutrition: '食べる',
+      listen: '聴く',
+      lockdown: '防御'
+    },
+    heroHeading: '科学的根拠に基づく低刺激メディア・知育ゲーム・自然食・音声読書ポータル',
+    heroSubtitle: 'お子様の年齢を選んで1日の理想的なリズムを作成したり、厳選された119の低刺激番組・構築主義ゲーム・NOVA-1自然食ランチ代替案・画面なしの音声＆絵本を探索できます。',
+    heroStats: [
+      '厳選された低刺激チャンネル',
+      '教育者推奨の知育ゲーム',
+      '自然食品＆ランチ代替案',
+      '画面なしの音声＆良書',
+      '2つの10点満点評価基準',
+      '引用された臨床研究と法規'
+    ],
+    blueprintSyncBtn: '🔗 全4ディレクトリをこの年齢に同期',
+    blueprintCopyBtn: '📋 ケアプランをコピー',
+    blueprintPrintBtn: '🖨️ 冷蔵庫シートを印刷',
+    searchPlaceholders: {
+      channel: 'チャンネルを検索（例：Bluey、自然、算数、フォニックス）...',
+      game: 'ゲームを検索（例：チェス、プログラミング、DragonBox、空間パズル）...',
+      food: '食品・代替案を検索（例：サーモン、鉄分、無着色、お弁当）...',
+      listen: '音声・本を検索（例：Yoto、科学ポッドキャスト、フォニックス、絵本）...'
+    },
+    viewChannelBtn: '公式チャンネルを見る',
+    visitGameBtn: '公式ゲーム / アプリを見る',
+    viewFoodRefBtn: '臨床・栄養リファレンスを見る',
+    viewListenRefBtn: '聴く / 書籍リファレンスを見る',
+    drawerShowLabel: '🔬 + 科学的根拠・親向けガイド・引用文献を表示',
+    drawerHideLabel: '🔬 \u2212 臨床詳細とガイドを折りたたむ',
+    formatChannelsCount: (n) => `${n} チャンネル`,
+    formatGamesCount: (n) => `${n} ゲーム`,
+    formatFoodsCount: (n) => `${n} 種類の自然食品・代替案`,
+    formatListenCount: (n) => `${n} 種類の音声・書籍`,
+    emptyChannelsTitle: '検索条件に一致するチャンネルがありません。',
+    emptyChannelsSub: '年齢フィルターや検索キーワードを変更してお試しください。',
+    emptyGamesTitle: '検索条件に一致する教育ゲームがありません。',
+    emptyGamesSub: '「すべて」を選択するか、フィルター条件をクリアしてください。',
+    emptyFoodsTitle: '検索条件に一致する自然食品・代替案がありません。',
+    emptyFoodsSub: '栄養ドメインや検索フィルターをリセットしてお試しください。',
+    emptyListenTitle: '検索条件に一致するポッドキャストや書籍がありません。',
+    emptyListenSub: 'フォーマットフィルターや検索キーワードをクリアしてお試しください。',
+    tabs: {
+      overview: {
+        kicker: 'タブ 1 / 7 • はじめに',
+        title: '概要・年齢別デイリープラン＆家庭のための10大ルール',
+        sub: '落ち着いた1日の生活リズム、印刷できる冷蔵庫用4柱シート、家庭向け基本ガイドライン。',
+        shortLabel: 'デイリープランと概要'
+      },
+      science: {
+        kicker: 'タブ 2 / 7 • 臨床エビデンスと評価基準',
+        title: '臨床科学・10点満点デュアル評価ツール（SEM-10 & NFI-10）・30の引用研究',
+        sub: '査読付き脳画像研究、発達心理学、小児栄養学RCT、および60秒で判定できる対話型計算機。',
+        shortLabel: '科学と評価基準 (30)'
+      },
+      channels: {
+        kicker: 'タブ 3 / 7 • 第1の柱（観る）',
+        title: '保護者承認・低刺激動画チャンネルディレクトリ（全28チャンネル）',
+        sub: 'SEM-10基準で採点された穏やかな動画チャンネルと、ワンクリックJSON/CSVホワイトリスト出力。',
+        shortLabel: '観る · チャンネル (28)'
+      },
+      games: {
+        kicker: 'タブ 4 / 7 • 第2の柱（遊ぶ）',
+        title: '教育者推奨・知育ゲーム＆アプリディレクトリ（全33ゲーム）',
+        sub: '広告ゼロ・ガチャ課金ゼロの構築主義サンドボックス、空間パズル、モンテッソーリ知育アプリ。',
+        shortLabel: '遊ぶ · ゲーム (33)'
+      },
+      nutrition: {
+        kicker: 'タブ 5 / 7 • 第3の柱（食べる）',
+        title: '小児科医・管理栄養士監修の自然食品＆お弁当スワップ（全32種）',
+        sub: '超加工スナックやパウチ飲料、合成着色料を置き換えるNOVA-1ホールフード代替ガイド。',
+        shortLabel: '食べる · 自然食 (32)'
+      },
+      listen: {
+        kicker: 'タブ 6 / 7 • 第4の柱（聴く・読む）',
+        title: '聴く・読む：スクリーンフリー音声・ポッドキャスト＆絵本ディレクトリ（全26選）',
+        sub: '科学＆物語ポッドキャスト、Yoto/Tonieオーディオカード、フォニックス読本、対話型読み聞かせ名作本。',
+        shortLabel: '聴く・読む (26)'
+      },
+      lockdown: {
+        kicker: 'タブ 7 / 7 • 技術的ディフェンス',
+        title: 'オープンソース保護者管理ツール＆端末 / DNSロックダウン手順',
+        sub: '13のオープンソース管理ツールと、BrainRotGuard・KidTube・ファミリー リンク・アクセスガイド・NextDNS設定手順。',
+        shortLabel: '端末＆DNSロック設定'
+      },
+      all: {
+        kicker: 'フルハンドブックモード • 全7タブを表示中',
+        title: 'SafeKids 保護者ポータル完全リファレンス（全セクション表示）',
+        sub: '10の推奨事項、30以上の臨床研究、28チャンネル、33ゲーム、32の食品スワップ、26の音声・書籍、5つのロック手順を表示。',
+        shortLabel: '全ガイド（全セクション）'
+      }
+    },
+    blueprintStages: {
+      'under-2': {
+        ageLabelShort: '2歳未満 (0–24ヶ月)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '👶 2歳未満（0–24ヶ月）— 100% スクリーンゼロ・感覚運動と鉄分/DHAの基盤',
+        stageSummary: 'AAP (2016) & Kuhl (2003)：24ヶ月未満の乳幼児は「ビデオ欠損効果」により画面から学びにくいため、親子の生の声のやり取り、床での全身遊び、ヘム鉄・コリン・海洋性DHAを含む離乳食が不可欠です。',
+        screenBudget: '受動的動画 0分/日（AAP基準により家族とのライブビデオ通話のみ可）',
+        sleepCutoff: '100%スクリーンなしの暗い寝室；昼寝を含め1日計12–16時間の睡眠',
+        mealRule: '砂糖添加ゼロ・1歳（12ヶ月）未満はハチミツ厳禁；柔らかい鉄分＋DHA自然食'
+      },
+      'toddler': {
+        ageLabelShort: '幼児前期 (2–3歳)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '🧸 幼児前期（2–3歳）— 親子で一緒に観るスロー映像（SEM-10 ≤ 2/10）と誤嚥防止の自然食',
+        stageSummary: 'WHO (2019) & Lillard (2011)：画面時間は1日30–45分以内に抑え、必ずリビングのテレビで親子一緒に視聴。失敗ペナルティのない知育トイボックスと縦4等分に切ったNOVA-1自然食品を優先します。',
+        screenBudget: '≤ 30–45分/日（リビングの共有テレビで100%保護者と一緒）',
+        sleepCutoff: '昼寝および就寝の60分以上前に画面オフ（メラトニン保護）',
+        mealRule: '食事中は100%画面オフ；ブドウやミニトマトは縦4等分；ナッツバターは薄く伸ばす'
+      },
+      'preschool': {
+        ageLabelShort: '幼児後期 (4–5歳)',
+        directoryFilterAge: 'preschool',
+        stageHeadline: '🎨 幼児後期（4–5歳）— 前頭前野の実行機能・フォニックス・感覚の食育ブリッジ',
+        stageSummary: 'Diamond (2013) & Hirsh-Pasek (2015)：穏やかな物語と手先を使うアプリで抑制制御・フォニックス・空間数感覚を育て、プレッシャーのない楽しい食卓を作ります。',
+        screenBudget: '≤ 45–60分/日 厳選された低刺激テレビまたはガイド付き知育アプリ',
+        sleepCutoff: '就寝60分以上前にすべての画面をオフ（絵本の読み聞かせへ移行）',
+        mealRule: '食事中は100%画面なし；合成着色料ゼロ（米国表示 Red 40 / Yellow 5＝日本の赤色40号・黄色4号）；パウチ入りピューレより丸ごとの果物を'
+      },
+      'early-elementary': {
+        ageLabelShort: '小学校低学年 (6–7歳)',
+        directoryFilterAge: 'early-elementary',
+        stageHeadline: '🚀 小学校低学年（6–7歳）— 体験型STEM探究・空間論理パズルと安定した血糖値',
+        stageSummary: 'Papert (1980) & Benton (2007)：受動的な視聴から工作・自然観察・ステージ完結型パズルへ移行。低GLの朝食とお弁当で午前中の集中力低下を防ぎます。',
+        screenBudget: '≤ 60分/日 平日の娯楽上限（リビング共有スペースのみ）',
+        sleepCutoff: '就寝60分以上前にハードウェア終了；子供部屋への端末持ち込みゼロ',
+        mealRule: '低GL朝食＋お弁当（オーツ麦・卵・種子類）で午前4時間の授業集中を維持'
+      },
+      'middle-elementary': {
+        ageLabelShort: '小学校中学年 (8–9歳)',
+        directoryFilterAge: 'middle-elementary',
+        stageHeadline: '🧩 小学校中学年（8–9歳）— 構築主義プログラミング・論理推論と脳補酵素栄養',
+        stageSummary: 'Resnick (2017) & Asbell-Clarke (2012)：Scratchブロックプログラミングや論理パズル、工学サンドボックス（5分視覚タイマー併用）と、鉄・亜鉛・DHA豊富な食事を組み合わせます。',
+        screenBudget: '≤ 60–75分/日（創作プログラミングと協力型パズルを優先）',
+        sleepCutoff: '消灯60分以上前に端末をキッチンで充電（Chang et al., 2015）',
+        mealRule: '画面なしの家族の夕食；週2–3回のヘム鉄/レンズ豆＋ビタミンC＆青魚DHA'
+      },
+      'preteen': {
+        ageLabelShort: 'プレティーン (10–12歳)',
+        directoryFilterAge: 'preteen',
+        stageHeadline: '🔭 プレティーン（10–12歳）— システム思考・骨密度ピーク期の栄養とSNSフィード遮断',
+        stageSummary: 'Nisan & Schocken (2005) & Weaver (2016)：ショート動画（Shorts/TikTok）やルートボックス型ゲームを軌道物理・CPU設計・戦略ゲームに置き換え、カルシウム/D3/K2とポリフェノールで脳と骨を支えます。',
+        screenBudget: '≤ 60–90分/日 娯楽上限（無限スクロールのフィードとチャットは禁止）',
+        sleepCutoff: '就寝60分前の厳格な門限；充電器は一晩中寝室の外に配置',
+        mealRule: '最大骨量のためのD3 + K2 + カルシウム + 食物繊維；カフェイン・エナジードリンク禁止'
+      }
+    }
+  },
+  ko: {
+    langCode: 'ko',
+    langName: '한국어',
+    darkModeBtnOff: '🌙 다크 모드',
+    darkModeBtnOn: '☀️ 라이트 모드',
+    darkModeToggleTitle: '다크 / 라이트 모드 전환',
+    languageSwitcherLabel: '언어 전환',
+    languageSelectLabel: '언어 선택',
+    languagePillsLabel: '빠른 언어 버튼',
+    infographicEnterBtn: '📸 2분 인포그래픽 보기',
+    infographicExitBtn: '📸 인포그래픽 보기 종료',
+    expandAllScienceBtn: '🔬 모든 임상 과학 펼치기',
+    hideClinicalDetailsBtn: '🔬 임상 과학 세부정보 접기',
+    headerViewFullGuideBtn: '📖 전체 가이드 보기',
+    headerFocusedTabsBtn: '🎯 집중 탭 보기',
+    showAllSectionsBtn: '모든 섹션 한눈에 보기',
+    returnFocusedTabsBtn: '집중 탭 보기로 돌아가기',
+    activePrefix: '현재 탭:',
+    prevPrefix: '이전:',
+    nextPrefix: '다음:',
+    formatPagerIndicator: (cur, total, label) => `탭 ${cur} / ${total} 보는 중 • ${label}`,
+    backToOverviewBtn: '\u2190 일일 플랜 및 개요로 돌아가기',
+    jumpToChannelsBtn: '시청 · 저자극 채널 (28)로 이동 \u2192',
+    fullHandbookModeLabel: '전체 핸드북 모드 • 7개 탭 모두 표시됨',
+    globalAgeLabel: '👶 자녀 연령:',
+    globalAges: {
+      'all': '전체 연령',
+      'under-2': '0–24개월',
+      'toddler': '2–3세',
+      'preschool': '4–5세',
+      'early-elementary': '6–7세',
+      'middle-elementary': '8–9세',
+      'preteen': '10–12세'
+    },
+    sidebarBrandTitle: '시청 • 놀이 • 영양 • 청취',
+    sidebarBrandSub: '위에서 자녀 연령을 선택하거나 아래의 전문 디렉토리로 바로 이동하세요.',
+    sidebarGroups: ['1. 시작하기', '2. 일일 엄선 4대 디렉토리', '3. 자가 진단 도구 및 임상 과학'],
+    sidebarNav: {
+      overview: { title: '일일 플랜 및 10대 원칙', caption: '냉장고 시트 & 4대 핵심 허브', pill: '시작' },
+      channels: { title: '시청: 안전한 저자극 채널', caption: '저자극 영상 화이트리스트', pill: '28' },
+      games: { title: '놀이: 교육자 추천 게임', caption: '광고 없는 논리 & STEM 놀이', pill: '33' },
+      nutrition: { title: '영양: 자연식품 & 도시락', caption: '초가공 간식 대체 & NFI-10', pill: '32' },
+      listen: { title: '청취 및 독서: 오디오북', caption: '팟캐스트, Yoto & 살아있는 책', pill: '26' },
+      science: { title: '임상 과학 및 자가 판독기', caption: 'SEM-10, NFI-10 & 30편 논문', pill: '30편 인용' },
+      lockdown: { title: '기기 및 DNS 차단 가이드', caption: '오픈소스 앱, OS & DNS 방어', pill: '13개 도구' },
+      all: { title: '전체 가이드 보기 / 인쇄', caption: '모든 섹션을 한 페이지에 표시', pill: '전체' }
+    },
+    mobileBar: {
+      overview: '플랜',
+      channels: '시청',
+      games: '놀이',
+      nutrition: '영양',
+      listen: '청취',
+      lockdown: '차단'
+    },
+    heroHeading: '과학적 근거 기반의 저자극 미디어, 창의 놀이, 자연식 두뇌 영양 및 오디오 부모 포털',
+    heroSubtitle: '자녀의 연령을 선택해 맞춤형 일일 리듬을 확인하거나, 엄선된 119개의 저자극 프로그램, 구성주의 게임, NOVA-1 자연식 도시락 대체식, 스크린 없는 팟캐스트와 그림책을 살펴보세요.',
+    heroStats: [
+      '엄선된 저자극 채널',
+      '교육자 승인 두뇌 게임',
+      '자연식품 및 간식 대체안',
+      '스크린 없는 오디오 & 도서',
+      '듀얼 10점 임상 평가 루브릭',
+      '인용된 임상 연구 및 법령'
+    ],
+    blueprintSyncBtn: '🔗 4대 디렉토리를 이 연령으로 동기화',
+    blueprintCopyBtn: '📋 돌봄 일일 플랜 복사',
+    blueprintPrintBtn: '🖨️ 냉장고 요약 시트 인쇄',
+    searchPlaceholders: {
+      channel: '채널 검색 (예: Bluey, 자연, 수학, 파닉스)...',
+      game: '게임 검색 (예: 체스, 코딩, DragonBox, 공간 퍼즐)...',
+      food: '식품 및 대체안 검색 (예: 연어, 철분, 무색소, 도시락)...',
+      listen: '오디오 및 도서 검색 (예: Yoto, 과학 팟캐스트, 파닉스, 그림책)...'
+    },
+    viewChannelBtn: '공식 채널 보기',
+    visitGameBtn: '공식 게임 / 앱 방문',
+    viewFoodRefBtn: '임상 및 영양 참고자료 보기',
+    viewListenRefBtn: '오디오 듣기 / 도서 참고자료 보기',
+    drawerShowLabel: '🔬 + 과학적 원리, 부모 가이드 및 인용 논문 보기',
+    drawerHideLabel: '🔬 \u2212 임상 세부정보 및 부모 가이드 접기',
+    formatChannelsCount: (n) => `${n}개 채널`,
+    formatGamesCount: (n) => `${n}개 게임`,
+    formatFoodsCount: (n) => `${n}개 자연식품 및 대체안`,
+    formatListenCount: (n) => `${n}개 오디오 및 도서`,
+    emptyChannelsTitle: '검색 조건에 일치하는 채널이 없습니다.',
+    emptyChannelsSub: '연령 필터나 검색어를 변경해 보세요.',
+    emptyGamesTitle: '검색 조건에 일치하는 교육용 게임이 없습니다.',
+    emptyGamesSub: "'전체 게임'을 선택하거나 도메인 및 검색 필터를 초기화해 보세요.",
+    emptyFoodsTitle: '검색 조건에 일치하는 자연식품이나 대체안이 없습니다.',
+    emptyFoodsSub: '영양 도메인 필터나 검색어를 초기화해 보세요.',
+    emptyListenTitle: '검색 조건에 일치하는 팟캐스트나 도서가 없습니다.',
+    emptyListenSub: '포맷 필터나 검색어를 지우고 다시 시도해 보세요.',
+    tabs: {
+      overview: {
+        kicker: '탭 1 / 7 • 시작하기',
+        title: '개요, 연령별 일일 플랜 및 부모를 위한 10대 핵심 원칙',
+        sub: '차분한 일일 연령별 리듬, 인쇄 가능한 4대 영역 냉장고 시트 및 핵심 가족 가이드라인.',
+        shortLabel: '일일 플랜 및 개요'
+      },
+      science: {
+        kicker: '탭 2 / 7 • 임상 근거 및 루브릭',
+        title: '임상 과학, 듀얼 10점 판독기(SEM-10 & NFI-10) 및 30편의 학술 인용',
+        sub: '동료 심사 뇌영상 연구, 발달심리학, 소아영양학 무작위 대조시험 및 60초 대화형 계산기.',
+        shortLabel: '과학 및 루브릭 (30)'
+      },
+      channels: {
+        kicker: '탭 3 / 7 • 영역 1 (시청)',
+        title: '부모 승인 저자극 영상 채널 디렉토리 (28개 채널)',
+        sub: 'SEM-10 기준으로 평가된 차분한 영상 채널 및 원클릭 JSON/CSV 화이트리스트 내보내기.',
+        shortLabel: '시청 · 채널 (28)'
+      },
+      games: {
+        kicker: '탭 4 / 7 • 영역 2 (놀이)',
+        title: '교육자 승인 인지 발달 게임 및 앱 디렉토리 (33개 게임)',
+        sub: '광고 제로, 확률형 아이템 제로의 구성주의 샌드박스, 공간 퍼즐 및 몬테소리 앱.',
+        shortLabel: '놀이 · 게임 (33)'
+      },
+      nutrition: {
+        kicker: '탭 5 / 7 • 영역 3 (영양)',
+        title: '소아과 전문의 및 영양사 검증 자연식품 & 도시락 대체안 (32개 대체안)',
+        sub: '초가공 어린이 간식, 파우치 음료, 합성 착색료를 대체하는 NOVA-1 자연식품 업그레이드.',
+        shortLabel: '영양 · 식품 (32)'
+      },
+      listen: {
+        kicker: '탭 6 / 7 • 영역 4 (청취 및 독서)',
+        title: '청취 및 독서: 스크린 없는 오디오, 팟캐스트 & 살아있는 책 디렉토리 (26선)',
+        sub: '엄선된 STEM 및 동화 팟캐스트, Yoto/Tonie 오디오 카드, 파닉스 리더스 및 대화형 그림책.',
+        shortLabel: '청취 및 독서 (26)'
+      },
+      lockdown: {
+        kicker: '탭 7 / 7 • 기술적 방어',
+        title: '오픈소스 자녀 보호 도구 및 단계별 기기 / DNS 차단 가이드',
+        sub: '13개의 오픈소스 자녀 보호 아키텍처와 BrainRotGuard, KidTube, 패밀리 링크, 사용법 유도, NextDNS 설정 가이드.',
+        shortLabel: '기기 및 DNS 차단'
+      },
+      all: {
+        kicker: '전체 핸드북 모드 • 7개 탭 모두 표시',
+        title: 'SafeKids 부모 포털 전체 레퍼런스 (모든 섹션)',
+        sub: '10대 권장사항, 30+ 임상 연구, 28개 채널, 33개 게임, 32개 식품 대체안, 26개 오디오/도서 및 5개 차단 가이드 표시.',
+        shortLabel: '전체 가이드 (모든 섹션)'
+      }
+    },
+    blueprintStages: {
+      'under-2': {
+        ageLabelShort: '2세 미만 (0–24개월)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '👶 2세 미만 (0–24개월) — 100% 스크린 제로 감각운동 & 철분/DHA 두뇌 기초',
+        stageSummary: 'AAP (2016) & Kuhl (2003): 24개월 미만 영유아는 비디오 결핍 효과를 겪으므로 부모와의 실시간 3D 음성 상호작용, 바닥 탐색 놀이, 헴철·콜린·해양성 DHA가 풍부한 이유식이 필수적입니다.',
+        screenBudget: '수동적 영상 0분/일 (AAP 지침에 따라 가족 실시간 영상통화만 허용)',
+        sleepCutoff: '100% 스크린 없는 어두운 침실; 낮잠 포함 하루 총 12–16시간 수면',
+        mealRule: '첨가당 제로 & 12개월 미만 꿀 금지; 부드러운 철분 + DHA 자연식 이유식'
+      },
+      'toddler': {
+        ageLabelShort: '유아기 (2–3세)',
+        directoryFilterAge: 'toddler',
+        stageHeadline: '🧸 유아기 (2–3세) — 부모와 함께 보는 느린 템포 영상(SEM-10 ≤ 2/10) & 질식 예방 자연식',
+        stageSummary: 'WHO (2019) & Lillard (2011): 총 화면 시간을 하루 30–45분 이내로 제한하고 거실 TV로 부모와 함께 시청하세요. 실패 패널티가 없는 디지털 토이박스와 세로로 4등분한 NOVA-1 자연식을 제공합니다.',
+        screenBudget: '≤ 30–45분/일 (거실 공유 TV에서 100% 부모 동반 시청)',
+        sleepCutoff: '낮잠 및 취침 60분 이상 전 화면 끄기 (멜라토닌 분비 보호)',
+        mealRule: '100% 스크린 없는 식탁; 포도/방울토마토 세로 4등분; 견과류 버터는 얇게 펴 바르기'
+      },
+      'preschool': {
+        ageLabelShort: '학령전기 (4–5세)',
+        directoryFilterAge: 'preschool',
+        stageHeadline: '🎨 학령전기 (4–5세) — 전두엽 실행 기능, 파닉스 & 감각 식습관 브릿지',
+        stageSummary: 'Diamond (2013) & Hirsh-Pasek (2015): 자극이 적은 이야기와 촉각 앱으로 억제 조절력, 파닉스, 공간 수 감각을 키우고 압박감 없는 가족 식사를 실천합니다.',
+        screenBudget: '≤ 45–60분/일 엄선된 저자극 TV 또는 가이드형 교육 앱',
+        sleepCutoff: '취침 60분 이상 전 모든 화면 끄기 (종이책 낭독으로 수면 유도)',
+        mealRule: '100% 스크린 없는 식사; 합성 착색료 제로 (미국 표기 Red 40 / Yellow 5 = 한국 적색 40호 · 황색 4호); 파우치 퓨레 대신 통과일 제공'
+      },
+      'early-elementary': {
+        ageLabelShort: '초등 저학년 (6–7세)',
+        directoryFilterAge: 'early-elementary',
+        stageHeadline: '🚀 초등 저학년 (6–7세) — 체험형 STEM 탐구, 공간 논리 퍼즐 & 안정적인 학교 혈당',
+        stageSummary: 'Papert (1980) & Benton (2007): 수동적 시청에서 손으로 그리기, 자연 탐구, 단계별 공간 논리 퍼즐로 전환하세요. 혈당부하지수(GL)가 낮은 아침 식사와 도시락으로 오전 수업 집중력을 지켜줍니다.',
+        screenBudget: '≤ 60분/일 평일 여가 화면 상한선 (거실 공용 공간만 허용)',
+        sleepCutoff: '취침 60분 이상 전 기기 종료; 침실 내 스크린 반입 금지',
+        mealRule: '저혈당부하(Low-GL) 아침 식사 + 도시락(귀리/달걀/씨앗류)으로 오전 4시간 집중력 유지'
+      },
+      'middle-elementary': {
+        ageLabelShort: '초등 중학년 (8–9세)',
+        directoryFilterAge: 'middle-elementary',
+        stageHeadline: '🧩 초등 중학년 (8–9세) — 구성주의 코딩, 연역적 수학 & 신경 보조인자 영양',
+        stageSummary: 'Resnick (2017) & Asbell-Clarke (2012): 자라나는 자율성을 스크래치 블록 코딩, 불리언 논리 퍼즐, 공학 샌드박스(5분 시각 타이머 활용)로 연결하고 철분·아연·DHA 식품을 보충합니다.',
+        screenBudget: '≤ 60–75분/일 (창의적 코딩 및 협동 퍼즐 우선)',
+        sleepCutoff: '소등 60분 이상 전 모든 기기를 주방 충전소에 거치 (Chang et al., 2015)',
+        mealRule: '스크린 없는 가족 저녁 식사; 주 2–3회 헴철/렌틸콩 + 비타민 C & 등푸른생선 DHA'
+      },
+      'preteen': {
+        ageLabelShort: '프리틴 (10–12세)',
+        directoryFilterAge: 'preteen',
+        stageHeadline: '🔭 프리틴 (10–12세) — 심층 시스템 사고, 최대 골밀도 형성 영양 & 알고리즘 피드 차단',
+        stageSummary: 'Nisan & Schocken (2005) & Weaver (2016): 알고리즘 숏폼 피드(Shorts/TikTok)와 확률형 아이템 게임을 궤도 물리, CPU 아키텍처, 전략 시뮬레이션으로 대체하고 칼슘/D3/K2 및 폴리페놀 두뇌 식품을 공급합니다.',
+        screenBudget: '≤ 60–90분/일 여가 상한선 (무한 스크롤 피드 및 채팅 금지)',
+        sleepCutoff: '취침 60분 전 엄격한 통금; 충전기는 밤새 침실 밖에 보관',
+        mealRule: '최대 골량 형성을 위한 D3 + K2 + 칼슘 + 프리바이오틱 식이섬유; 카페인·에너지 음료 금지'
+      }
+    }
+  }
+};
+
+function getPortalI18n() {
+  const lang = ALLOWED_LANGUAGES.has(currentLanguage) ? currentLanguage : 'en';
+  return PORTAL_I18N[lang] || PORTAL_I18N.en;
+}
+
+function updateDarkModeButtonLabel() {
+  const btn = document.getElementById('btn-toggle-dark-mode');
+  if (!btn) return;
+  const i18n = getPortalI18n();
+  const isDark = currentTheme === 'dark';
+  // The visible label names the action ("Light Mode" while dark is on), so the button must not
+  // also expose aria-pressed: screen readers would announce "Light Mode, pressed" during dark mode.
+  btn.textContent = isDark ? i18n.darkModeBtnOn : i18n.darkModeBtnOff;
+  if (i18n.darkModeToggleTitle) btn.setAttribute('title', i18n.darkModeToggleTitle);
+  if (isDark) {
+    btn.classList.add('active');
+  } else {
+    btn.classList.remove('active');
+  }
+}
+
+function applyPortalTheme(rawTheme, opts) {
+  const options = opts && typeof opts === 'object' ? opts : {};
+  const theme = ALLOWED_THEMES.has(rawTheme) ? rawTheme : 'light';
+  currentTheme = theme;
+
+  if (options.persist !== false) {
+    writePersistedFilter(STORAGE_KEYS.THEME, theme, ALLOWED_THEMES);
+  }
+
+  if (document.documentElement && typeof document.documentElement.setAttribute === 'function') {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  if (document.body && document.body.classList) {
+    if (theme === 'dark') {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }
+
+  updateDarkModeButtonLabel();
+}
+
+function setupDarkModeToggle() {
+  const initialTheme = readPersistedFilter(STORAGE_KEYS.THEME, ALLOWED_THEMES, 'light');
+  applyPortalTheme(initialTheme, { persist: false });
+
+  const btn = document.getElementById('btn-toggle-dark-mode');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyPortalTheme(nextTheme, { persist: true });
+    if (window.trackSafeKidsEvent) {
+      window.trackSafeKidsEvent('toggle_dark_mode', { theme: currentTheme });
+    }
+  });
+}
+
+// BCP 47 tags for <html lang>: the zh dictionary is Simplified Chinese, so tag it zh-Hans
+// (drives Han glyph selection and screen-reader voice choice).
+const HTML_LANG_TAGS = { en: 'en', es: 'es', zh: 'zh-Hans', ja: 'ja', ko: 'ko' };
+
+function setDocumentLanguageTag(lang) {
+  if (document.documentElement && typeof document.documentElement.setAttribute === 'function') {
+    document.documentElement.setAttribute('lang', ALLOWED_LANGUAGES.has(lang) ? HTML_LANG_TAGS[lang] : 'en');
+  }
+}
+
+function applyLanguageSwitcherLabels(i18n) {
+  const switcher = document.getElementById('language-switcher');
+  if (switcher && i18n.languageSwitcherLabel) switcher.setAttribute('aria-label', i18n.languageSwitcherLabel);
+  const selectEl = document.getElementById('language-select');
+  if (selectEl && i18n.languageSelectLabel) selectEl.setAttribute('aria-label', i18n.languageSelectLabel);
+  const pillGroup = document.querySelector('.language-pill-group');
+  if (pillGroup && i18n.languagePillsLabel) pillGroup.setAttribute('aria-label', i18n.languagePillsLabel);
+}
+
+function syncLanguageControls(lang) {
+  const selectEl = document.getElementById('language-select');
+  if (selectEl) {
+    selectEl.value = lang;
+  }
+  const langBtns = document.querySelectorAll('.lang-switch-btn');
+  langBtns.forEach(btn => {
+    const btnLang = btn.getAttribute('data-lang');
+    if (btnLang === lang) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+    } else {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
+    }
+  });
+}
+
+function applyPortalLanguage(rawLang, opts) {
+  const options = opts && typeof opts === 'object' ? opts : {};
+  const lang = ALLOWED_LANGUAGES.has(rawLang) ? rawLang : 'en';
+  currentLanguage = lang;
+
+  if (options.persist !== false) {
+    writePersistedFilter(STORAGE_KEYS.LANGUAGE, lang, ALLOWED_LANGUAGES);
+  }
+
+  setDocumentLanguageTag(lang);
+  syncLanguageControls(lang);
+
+  const i18n = getPortalI18n();
+  applyLanguageSwitcherLabels(i18n);
+
+  // 1. Update Header Action Buttons & Global Age Bar
+  updateDarkModeButtonLabel();
+
+  const infoBtn = document.getElementById('btn-toggle-infographic-mode');
+  if (infoBtn) {
+    infoBtn.textContent = infographicQuickModeActive ? i18n.infographicExitBtn : i18n.infographicEnterBtn;
+  }
+
+  const clinBtn = document.getElementById('btn-toggle-clinical-details');
+  if (clinBtn) {
+    clinBtn.textContent = expandAllClinicalDrawers ? i18n.hideClinicalDetailsBtn : i18n.expandAllScienceBtn;
+  }
+
+  const ageLabelEl = document.querySelector('#global-age-bar .global-age-label');
+  if (ageLabelEl && i18n.globalAgeLabel) {
+    ageLabelEl.textContent = i18n.globalAgeLabel;
+  }
+
+  const globalAgeBtns = document.querySelectorAll('#global-age-bar .global-age-btn');
+  globalAgeBtns.forEach(btn => {
+    const ageKey = btn.getAttribute('data-global-age');
+    if (ageKey && i18n.globalAges && i18n.globalAges[ageKey]) {
+      btn.textContent = i18n.globalAges[ageKey];
+    }
+  });
+
+  // 2. Update Left Sidebar Navigation & Mobile Bottom Bar
+  const sbBrandTitle = document.querySelector('.sidebar-brand-title');
+  if (sbBrandTitle && i18n.sidebarBrandTitle) sbBrandTitle.textContent = i18n.sidebarBrandTitle;
+  const sbBrandSub = document.querySelector('.sidebar-brand-sub');
+  if (sbBrandSub && i18n.sidebarBrandSub) sbBrandSub.textContent = i18n.sidebarBrandSub;
+
+  const sbGroupLabels = document.querySelectorAll('.sidebar-group > .sidebar-group-label');
+  sbGroupLabels.forEach((el, idx) => {
+    if (i18n.sidebarGroups && i18n.sidebarGroups[idx]) {
+      el.textContent = i18n.sidebarGroups[idx];
+    }
+  });
+
+  const sbNavBtns = document.querySelectorAll('.sidebar-nav-btn');
+  sbNavBtns.forEach(btn => {
+    const tabKey = btn.getAttribute('data-tab');
+    const navMeta = i18n.sidebarNav && i18n.sidebarNav[tabKey];
+    if (!navMeta || typeof btn.querySelector !== 'function') return;
+    const tEl = btn.querySelector('.sidebar-nav-title');
+    const cEl = btn.querySelector('.sidebar-nav-caption');
+    const pEl = btn.querySelector('.sidebar-count-pill');
+    if (tEl && navMeta.title) tEl.textContent = navMeta.title;
+    if (cEl && navMeta.caption) cEl.textContent = navMeta.caption;
+    if (pEl && navMeta.pill) pEl.textContent = navMeta.pill;
+  });
+
+  const mobileBtns = document.querySelectorAll('.mobile-pillar-btn');
+  mobileBtns.forEach(btn => {
+    if (typeof btn.querySelector !== 'function') return;
+    const tabKey = btn.getAttribute('data-tab');
+    const txtEl = btn.querySelector('.mobile-pillar-text');
+    if (txtEl && i18n.mobileBar && i18n.mobileBar[tabKey]) {
+      txtEl.textContent = i18n.mobileBar[tabKey];
+    }
+  });
+
+  // 3. Update Hero Heading, Subtitle & Stat Labels
+  const heroH2 = document.querySelector('.hero h2');
+  if (heroH2 && i18n.heroHeading) heroH2.textContent = i18n.heroHeading;
+  const heroP = document.querySelector('.hero .hero-content > p');
+  if (heroP && i18n.heroSubtitle) heroP.textContent = i18n.heroSubtitle;
+
+  const statLabels = document.querySelectorAll('.hero-stats .stat-label');
+  statLabels.forEach((el, idx) => {
+    if (i18n.heroStats && i18n.heroStats[idx]) {
+      el.textContent = i18n.heroStats[idx];
+    }
+  });
+
+  // 4. Update Blueprint Action Buttons & Search Placeholders
+  const btnSync = document.getElementById('btn-sync-age-directories');
+  if (btnSync && i18n.blueprintSyncBtn) btnSync.textContent = i18n.blueprintSyncBtn;
+  const btnCopy = document.getElementById('btn-copy-blueprint');
+  if (btnCopy && i18n.blueprintCopyBtn) btnCopy.textContent = i18n.blueprintCopyBtn;
+  const btnPrint = document.getElementById('btn-print-fridge-sheet');
+  if (btnPrint && i18n.blueprintPrintBtn) btnPrint.textContent = i18n.blueprintPrintBtn;
+
+  if (i18n.searchPlaceholders) {
+    const chInput = document.getElementById('channel-search');
+    if (chInput && i18n.searchPlaceholders.channel) chInput.setAttribute('placeholder', i18n.searchPlaceholders.channel);
+    const gmInput = document.getElementById('game-search');
+    if (gmInput && i18n.searchPlaceholders.game) gmInput.setAttribute('placeholder', i18n.searchPlaceholders.game);
+    const fdInput = document.getElementById('food-search');
+    if (fdInput && i18n.searchPlaceholders.food) fdInput.setAttribute('placeholder', i18n.searchPlaceholders.food);
+    const lsInput = document.getElementById('listen-search');
+    if (lsInput && i18n.searchPlaceholders.listen) lsInput.setAttribute('placeholder', i18n.searchPlaceholders.listen);
+  }
+
+  // 5. Refresh Workspace Context Bar, Daily Blueprint & All 4 Directory Grids
+  switchWorkspaceTab(currentWorkspaceTab, { persist: false });
+  if (typeof updateBlueprintViewRef === 'function') {
+    updateBlueprintViewRef(currentBlueprintAge, false);
+  }
+  renderChannels();
+  renderGames();
+  renderFoods();
+  renderListenItems();
+}
+
+function setupLanguageSwitcher() {
+  const initialLang = readPersistedFilter(STORAGE_KEYS.LANGUAGE, ALLOWED_LANGUAGES, 'en');
+  currentLanguage = initialLang;
+  syncLanguageControls(initialLang);
+  setDocumentLanguageTag(initialLang);
+
+  const selectEl = document.getElementById('language-select');
+  if (selectEl) {
+    selectEl.addEventListener('change', (e) => {
+      const target = e.currentTarget || e.target;
+      const requestedLang = (target && target.value) ? target.value : 'en';
+      applyPortalLanguage(requestedLang, { persist: true });
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('switch_language', { lang: currentLanguage, source: 'select' });
+      }
+    });
+  }
+
+  const langBtns = document.querySelectorAll('.lang-switch-btn');
+  langBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget || e.target;
+      const requestedLang = targetBtn.getAttribute('data-lang') || 'en';
+      applyPortalLanguage(requestedLang, { persist: true });
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('switch_language', { lang: currentLanguage, source: 'pill' });
+      }
+    });
+  });
+}
+
 

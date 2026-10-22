@@ -84,6 +84,46 @@ MUTANTS: tuple[Mutant, ...] = (
         test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r7_food_calculator_buttons_persistence_and_csv_export",
         why="Proves NFI-10 interactive food label auditor button binding is locked.",
     ),
+    Mutant(
+        name="r11_skip_saved_language_on_load",
+        file="public/app.js",
+        original="  if (currentLanguage !== 'en') {\n    applyPortalLanguage(currentLanguage, { persist: false });\n  }",
+        mutated="  if (false) {\n    applyPortalLanguage(currentLanguage, { persist: false });\n  }",
+        test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r11_dark_mode_and_multilingual_i18n_switcher",
+        why="Simulates returning ES/ZH/JA/KO users getting English chrome because the saved language is never applied.",
+    ),
+    Mutant(
+        name="r11_bypass_language_allowlist",
+        file="public/app.js",
+        original="const lang = ALLOWED_LANGUAGES.has(rawLang) ? rawLang : 'en';",
+        mutated="const lang = rawLang || 'en';",
+        test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r11_dark_mode_and_multilingual_i18n_switcher",
+        why="Simulates a tampered <select> value flowing into the language controls unvalidated.",
+    ),
+    Mutant(
+        name="r11_drop_dark_theme_persistence",
+        file="public/app.js",
+        original="applyPortalTheme(nextTheme, { persist: true });",
+        mutated="applyPortalTheme(nextTheme, { persist: false });",
+        test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r11_dark_mode_and_multilingual_i18n_switcher",
+        why="Simulates dark mode silently resetting to light on every reload.",
+    ),
+    Mutant(
+        name="r12_revert_spanish_choking_quarters",
+        file="public/app.js",
+        original="cortar uvas y tomates cherry en cuartos a lo largo",
+        mutated="cortar uvas y tomates cherry a lo largo",
+        test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r12_i18n_dictionary_parity_clinical_safety_and_print_safe_dark_mode",
+        why="Simulates the Spanish choking-hazard rule regressing from quartering to halving grapes.",
+    ),
+    Mutant(
+        name="r12_leak_dark_theme_into_print",
+        file="public/styles.css",
+        original="@media screen {\n:root[data-theme=\"dark\"],\nbody.dark-mode {",
+        mutated="@media all {\n:root[data-theme=\"dark\"],\nbody.dark-mode {",
+        test_target="tests.test_parity.SafeKidsEnriqParityTests.test_r12_i18n_dictionary_parity_clinical_safety_and_print_safe_dark_mode",
+        why="Simulates dark-mode colors leaking into the printed caregiver fridge sheet.",
+    ),
 )
 
 
@@ -99,7 +139,7 @@ def run_test(test_target: str) -> subprocess.CompletedProcess[str]:
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,
-        timeout=20,
+        timeout=30,
     )
 
 
@@ -110,7 +150,7 @@ def main() -> int:
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=90,
     )
     if baseline.returncode != 0:
         print("FAIL: Baseline tests must pass before running mutation gate:\n" + baseline.stderr, file=sys.stderr)

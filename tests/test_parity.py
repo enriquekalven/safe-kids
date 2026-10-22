@@ -14,6 +14,7 @@ Locks regressions R-1 through R-5:
 
 from __future__ import annotations
 
+import collections
 import itertools
 import json
 import math
@@ -21,6 +22,7 @@ import random
 import re
 import subprocess
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
@@ -251,6 +253,13 @@ class MockElement {
     this.value = val;
     (this.listeners['input'] || []).forEach(fn => fn({ currentTarget: this, target: this }));
   }
+  triggerChange(val) {
+    this.value = val;
+    (this.listeners['change'] || []).forEach(fn => fn({ currentTarget: this, target: this }));
+  }
+  querySelector(selector) {
+    return this.querySelectorAll(selector)[0] || null;
+  }
   querySelectorAll(selector) {
     const results = [];
     const matchSel = (el, sel) => {
@@ -471,6 +480,17 @@ while ((tbMatch = tabBtnRegex.exec(html)) !== null) {
   tabSwitchBtns.push(btn);
 }
 
+// Real nav/mobile buttons contain labelled child spans that applyPortalLanguage rewrites
+tabSwitchBtns.forEach(btn => {
+  if (btn.classList.contains('sidebar-nav-btn')) {
+    btn.appendChild(new MockElement('span', '', 'sidebar-nav-title'));
+    btn.appendChild(new MockElement('span', '', 'sidebar-nav-caption'));
+    btn.appendChild(new MockElement('span', '', 'sidebar-count-pill'));
+  } else if (btn.classList.contains('mobile-pillar-btn')) {
+    btn.appendChild(new MockElement('span', '', 'mobile-pillar-text'));
+  }
+});
+
 registerEl(new MockElement('span', 'workspace-context-title', 'workspace-context-title'));
 registerEl(new MockElement('span', 'workspace-context-badge', 'tag-badge'));
 registerEl(new MockElement('span', 'workspace-pager-indicator', 'workspace-pager-indicator'));
@@ -485,6 +505,39 @@ registerEl(new MockElement('div', 'infographic-lightbox-title', 'infographic-lig
 registerEl(new MockElement('a', 'infographic-lightbox-download', 'btn btn-primary btn-sm', { href: 'images/infographic-nourish-staples.jpg', download: 'SafeKids-Infographic.jpg' }));
 registerEl(new MockElement('button', 'infographic-lightbox-close', 'btn btn-outline btn-sm'));
 registerEl(new MockElement('div', 'infographic-lightbox-backdrop', 'infographic-lightbox-backdrop'));
+
+// Dark Mode Toggle & Multilingual Switcher (EN, ES, ZH, JA, KO)
+registerEl(new MockElement('button', 'btn-toggle-dark-mode', 'btn btn-outline btn-sm', { title: 'Toggle Dark / Light Mode' }));
+registerEl(new MockElement('div', 'language-switcher', 'language-switcher', { 'aria-label': 'Language Switcher' }));
+registerEl(new MockElement('select', 'language-select', 'language-select', { 'aria-label': 'Select Language' }));
+const langSwitchBtns = [];
+const langBtnRegex = /<button\s+([^>]*data-lang="([^"]+)"[^>]*)>/g;
+let lbMatch;
+while ((lbMatch = langBtnRegex.exec(html)) !== null) {
+  const fullAttrs = lbMatch[1];
+  const langKey = lbMatch[2];
+  const clsMatch = fullAttrs.match(/class="([^"]+)"/);
+  const btn = new MockElement('button', '', clsMatch ? clsMatch[1] : 'lang-switch-btn', { 'data-lang': langKey });
+  langSwitchBtns.push(btn);
+}
+
+// Static chrome that applyPortalLanguage rewrites via document.querySelector / querySelectorAll
+const languagePillGroupEl = new MockElement('div', '', 'language-pill-group', { 'aria-label': 'Quick Language Buttons' });
+const heroHeadingEl = new MockElement('h2');
+const heroSubtitleEl = new MockElement('p');
+const sidebarBrandTitleEl = new MockElement('div', '', 'sidebar-brand-title');
+const sidebarBrandSubEl = new MockElement('div', '', 'sidebar-brand-sub');
+const globalAgeLabelEl = new MockElement('span', '', 'global-age-label');
+const sidebarGroupLabelEls = [0, 1, 2].map(() => new MockElement('div', '', 'sidebar-group-label'));
+const heroStatLabelEls = [0, 1, 2, 3, 4, 5].map(() => new MockElement('div', '', 'stat-label'));
+const singleSelectorMap = {
+  '.language-pill-group': languagePillGroupEl,
+  '.hero h2': heroHeadingEl,
+  '.hero .hero-content > p': heroSubtitleEl,
+  '.sidebar-brand-title': sidebarBrandTitleEl,
+  '.sidebar-brand-sub': sidebarBrandSubEl,
+  '#global-age-bar .global-age-label': globalAgeLabelEl,
+};
 
 const zoomTriggerBtns = [
   new MockElement('button', '', 'infographic-zoom-trigger', {
@@ -519,6 +572,7 @@ const queryAllGrids = (sel) => {
 const documentMock = {
   addEventListener: (evt, fn) => { if (evt === 'DOMContentLoaded') domReadyCallbacks.push(fn); },
   getElementById: (id) => elementsById[id] || null,
+  querySelector: (sel) => singleSelectorMap[sel] || null,
   querySelectorAll: (sel) => {
     if (sel === '#channel-filters .filter-btn') return channelFilterBtns;
     if (sel === '#game-age-filters .filter-btn') return gameAgeFilterBtns;
@@ -536,6 +590,9 @@ const documentMock = {
     if (sel === '.mobile-pillar-btn') return tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn'));
     if (sel === '.infographic-zoom-trigger') return zoomTriggerBtns;
     if (sel === '.infographic-jump-btn') return [];
+    if (sel === '.lang-switch-btn') return langSwitchBtns;
+    if (sel === '.sidebar-group > .sidebar-group-label') return sidebarGroupLabelEls;
+    if (sel === '.hero-stats .stat-label') return heroStatLabelEls;
     if (sel === '[data-tab]') return tabSwitchBtns;
     if (sel === 'a[href^="#"]') return [];
     if (sel === '.copy-btn') return [];
@@ -545,6 +602,7 @@ const documentMock = {
   createElementNS: (ns, tag) => new MockElement(tag),
   createTextNode: (txt) => ({ textContent: String(txt) }),
   createDocumentFragment: () => ({ isFragment: true, children: [], appendChild(c) { this.children.push(c); } }),
+  documentElement: new MockElement('html', '', '', { lang: 'en', 'data-theme': 'light' }),
   body: new MockElement('body')
 };
 
@@ -587,6 +645,7 @@ globalThis.__exports = {
   sanitizeCsvCell: typeof sanitizeCsvCell === 'function' ? sanitizeCsvCell : null,
   computeDailyBlueprint: typeof computeDailyBlueprint === 'function' ? computeDailyBlueprint : null,
   getGameStoppingProfile: typeof getGameStoppingProfile === 'function' ? getGameStoppingProfile : null,
+  portalI18n: typeof PORTAL_I18N !== 'undefined' ? PORTAL_I18N : null,
 };`, sandbox);
 
 domReadyCallbacks.forEach(fn => fn());
@@ -725,6 +784,38 @@ if (payload.clickMobilePillarTab) {
   if (target) target.click();
 }
 
+if (payload.clickToggleDarkMode) {
+  const count = typeof payload.clickToggleDarkMode === 'number' ? payload.clickToggleDarkMode : 1;
+  for (let i = 0; i < count; i++) {
+    if (elementsById['btn-toggle-dark-mode']) elementsById['btn-toggle-dark-mode'].click();
+  }
+}
+
+if (payload.selectLanguage) {
+  if (elementsById['language-select']) elementsById['language-select'].triggerChange(payload.selectLanguage);
+}
+
+if (payload.clickLanguagePill) {
+  const targetPill = langSwitchBtns.find(b => b.getAttribute('data-lang') === payload.clickLanguagePill);
+  if (targetPill) targetPill.click();
+}
+
+if (Array.isArray(payload.languageSequence)) {
+  for (const langKey of payload.languageSequence) {
+    const pill = langSwitchBtns.find(b => b.getAttribute('data-lang') === langKey);
+    if (pill) pill.click();
+  }
+}
+
+const pluralSamples = {};
+if (payload.exportI18n && sandbox.__exports.portalI18n) {
+  for (const [langKey, dict] of Object.entries(sandbox.__exports.portalI18n)) {
+    pluralSamples[langKey] = [1, 2].map(n => [
+      dict.formatChannelsCount(n), dict.formatGamesCount(n), dict.formatFoodsCount(n), dict.formatListenCount(n)
+    ]);
+  }
+}
+
 if (payload.triggerExports) {
   if (elementsById['btn-export-csv']) elementsById['btn-export-csv'].click();
   if (elementsById['btn-export-json']) elementsById['btn-export-json'].click();
@@ -845,6 +936,28 @@ const out = {
   lightboxImgSrc: elementsById['infographic-lightbox-img'].getAttribute('src'),
   lightboxDownloadHref: elementsById['infographic-lightbox-download'].getAttribute('href'),
   activeMobilePillarTabs: tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn') && b.classList.contains('active')).map(b => b.getAttribute('data-tab')),
+  htmlTheme: documentMock.documentElement.getAttribute('data-theme'),
+  htmlLang: documentMock.documentElement.getAttribute('lang'),
+  darkModeBody: documentMock.body.classList.contains('dark-mode'),
+  darkModeBtnText: elementsById['btn-toggle-dark-mode'].textContent,
+  darkModeBtnAriaPressed: elementsById['btn-toggle-dark-mode'].getAttribute('aria-pressed'),
+  languageSelectValue: elementsById['language-select'].value,
+  darkModeBtnTitle: elementsById['btn-toggle-dark-mode'].getAttribute('title'),
+  languageSelectAriaLabel: elementsById['language-select'].getAttribute('aria-label'),
+  languageSwitcherAriaLabel: elementsById['language-switcher'].getAttribute('aria-label'),
+  languagePillsAriaLabel: languagePillGroupEl.getAttribute('aria-label'),
+  heroHeadingText: heroHeadingEl.textContent,
+  heroSubtitleText: heroSubtitleEl.textContent,
+  sidebarBrandTitleText: sidebarBrandTitleEl.textContent,
+  globalAgeLabelText: globalAgeLabelEl.textContent,
+  sidebarGroupLabelTexts: sidebarGroupLabelEls.map(e => e.textContent),
+  heroStatLabelTexts: heroStatLabelEls.map(e => e.textContent),
+  sidebarNavTitles: Object.fromEntries(tabSwitchBtns.filter(b => b.classList.contains('sidebar-nav-btn')).map(b => [b.getAttribute('data-tab'), (b.querySelector('.sidebar-nav-title') || { textContent: '' }).textContent])),
+  mobileBarTexts: Object.fromEntries(tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn')).map(b => [b.getAttribute('data-tab'), (b.querySelector('.mobile-pillar-text') || { textContent: '' }).textContent])),
+  channelSearchPlaceholder: elementsById['channel-search'].getAttribute('placeholder'),
+  portalI18n: payload.exportI18n ? JSON.parse(JSON.stringify(sandbox.__exports.portalI18n, (key, value) => (typeof value === 'function' ? '[fn]' : value))) : null,
+  pluralSamples,
+  activeLangPills: langSwitchBtns.filter(b => b.classList.contains('active')).map(b => b.getAttribute('data-lang')),
   evalResults,
   evalFoodResults,
   csvSanitizeResults
@@ -859,14 +972,152 @@ def run_node_harness(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         ["node", "-e", NODE_HARNESS_SCRIPT, str(INDEX_HTML), str(APP_JS), json.dumps(payload or {})],
         capture_output=True,
         text=True,
-        check=True,
-        timeout=10,
+        timeout=20,
     )
+    if proc.returncode != 0:
+        raise AssertionError(f"Node harness failed (exit {proc.returncode}) for payload {payload!r}:\n{proc.stderr[-2000:]}")
     return json.loads(proc.stdout)
 
 
+_VOID_TAGS = frozenset({"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"})
+
+
+class _HtmlNode:
+    def __init__(self, tag: str, attrs: dict[str, str], parent: "_HtmlNode | None") -> None:
+        self.tag = tag
+        self.attrs = attrs
+        self.parent = parent
+        self.children: list[Any] = []
+
+    @property
+    def classes(self) -> set[str]:
+        return set(self.attrs.get("class", "").split())
+
+
+class _HtmlTreeBuilder(HTMLParser):
+    """Minimal DOM builder so tests can read the shipped static chrome exactly as browsers do."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.root = _HtmlNode("#root", {}, None)
+        self.cur = self.root
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        node = _HtmlNode(tag, {k: (v or "") for k, v in attrs}, self.cur)
+        self.cur.children.append(node)
+        if tag not in _VOID_TAGS:
+            self.cur = node
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.cur.children.append(_HtmlNode(tag, {k: (v or "") for k, v in attrs}, self.cur))
+
+    def handle_endtag(self, tag: str) -> None:
+        node: _HtmlNode | None = self.cur
+        while node is not None and node.tag != tag:
+            node = node.parent
+        if node is not None and node.parent is not None:
+            self.cur = node.parent
+
+    def handle_data(self, data: str) -> None:
+        self.cur.children.append(data)
+
+
+def _html_walk(node: _HtmlNode):
+    for child in node.children:
+        if isinstance(child, _HtmlNode):
+            yield child
+            yield from _html_walk(child)
+
+
+def _html_text(node: _HtmlNode) -> str:
+    parts: list[str] = []
+
+    def collect(n: _HtmlNode) -> None:
+        for child in n.children:
+            if isinstance(child, str):
+                parts.append(child)
+            else:
+                collect(child)
+
+    collect(node)
+    return " ".join("".join(parts).split())
+
+
+def extract_static_chrome(html_text: str) -> dict[str, Any]:
+    """English text of every element that applyPortalLanguage rewrites, read from the shipped index.html."""
+    builder = _HtmlTreeBuilder()
+    builder.feed(html_text)
+    builder.close()
+    nodes = list(_html_walk(builder.root))
+    by_id = {n.attrs["id"]: n for n in nodes if "id" in n.attrs}
+
+    def with_class(cls: str, scope: _HtmlNode | None = None) -> list[_HtmlNode]:
+        pool = nodes if scope is None else list(_html_walk(scope))
+        return [n for n in pool if cls in n.classes]
+
+    hero = with_class("hero")[0]
+    hero_content = with_class("hero-content", hero)[0]
+    chrome: dict[str, Any] = {
+        "searchPlaceholders": {k: by_id[f"{k}-search"].attrs["placeholder"] for k in ("channel", "game", "food", "listen")},
+        "mobileBar": {b.attrs["data-tab"]: _html_text(with_class("mobile-pillar-text", b)[0]) for b in with_class("mobile-pillar-btn")},
+        "heroHeading": _html_text(next(n for n in _html_walk(hero) if n.tag == "h2")),
+        "heroSubtitle": _html_text(next(c for c in hero_content.children if isinstance(c, _HtmlNode) and c.tag == "p")),
+        "heroStats": [_html_text(n) for n in with_class("stat-label", with_class("hero-stats")[0])],
+        "sidebarBrandTitle": _html_text(with_class("sidebar-brand-title")[0]),
+        "sidebarBrandSub": _html_text(with_class("sidebar-brand-sub")[0]),
+        "sidebarGroups": [_html_text(n) for n in with_class("sidebar-group-label") if n.parent is not None and "sidebar-group" in n.parent.classes],
+        "globalAgeLabel": _html_text(with_class("global-age-label", by_id["global-age-bar"])[0]),
+        "globalAges": {b.attrs["data-global-age"]: _html_text(b) for b in with_class("global-age-btn", by_id["global-age-bar"])},
+        "blueprintSyncBtn": _html_text(by_id["btn-sync-age-directories"]),
+        "blueprintCopyBtn": _html_text(by_id["btn-copy-blueprint"]),
+        "blueprintPrintBtn": _html_text(by_id["btn-print-fridge-sheet"]),
+        "darkModeBtnOff": _html_text(by_id["btn-toggle-dark-mode"]),
+        "darkModeToggleTitle": by_id["btn-toggle-dark-mode"].attrs["title"],
+        "infographicEnterBtn": _html_text(by_id["btn-toggle-infographic-mode"]),
+        "expandAllScienceBtn": _html_text(by_id["btn-toggle-clinical-details"]),
+        "headerViewFullGuideBtn": _html_text(by_id["btn-header-view-all"]),
+        "languageSwitcherLabel": by_id["language-switcher"].attrs["aria-label"],
+        "languageSelectLabel": by_id["language-select"].attrs["aria-label"],
+        "languagePillsLabel": with_class("language-pill-group")[0].attrs["aria-label"],
+        "sidebarNav": {},
+    }
+    for btn in with_class("sidebar-nav-btn"):
+        parts = {}
+        for name, cls in (("title", "sidebar-nav-title"), ("caption", "sidebar-nav-caption"), ("pill", "sidebar-count-pill")):
+            found = with_class(cls, btn)
+            if found:
+                parts[name] = _html_text(found[0])
+        chrome["sidebarNav"][btn.attrs["data-tab"]] = parts
+    return chrome
+
+
+def dark_rules_outside_screen_media(css_text: str) -> tuple[int, list[str]]:
+    """Count dark-theme rules and list any that are not nested inside an @media screen block."""
+    css = re.sub(r"/\*.*?\*/", "", css_text, flags=re.S)
+    stack: list[str] = []
+    start = 0
+    dark_rules = 0
+    leaks: list[str] = []
+    for idx, ch in enumerate(css):
+        if ch == "{":
+            prelude = " ".join(css[start:idx].split())
+            if 'data-theme="dark"' in prelude or "body.dark-mode" in prelude:
+                dark_rules += 1
+                if not any(p.startswith("@media screen") for p in stack):
+                    leaks.append(prelude[:90])
+            stack.append(prelude)
+            start = idx + 1
+        elif ch == "}":
+            if stack:
+                stack.pop()
+            start = idx + 1
+        elif ch == ";":
+            start = idx + 1
+    return dark_rules, leaks
+
+
 class SafeKidsEnriqParityTests(unittest.TestCase):
-    """Comprehensive verification suite locking R-1 through R-9."""
+    """Comprehensive verification suite locking R-1 through R-12."""
 
     def test_network_guard_blocks_external_connections(self) -> None:
         with self.assertRaises(ExternalNetworkBlockedError):
@@ -1511,6 +1762,245 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         res_closed = run_node_harness({"clickZoomTrigger": True, "clickCloseLightbox": True})
         self.assertFalse(res_closed["lightboxOpen"])
         self.assertEqual(res_closed["lightboxAriaHidden"], "true")
+
+    # -----------------------------------------------------------------------
+    # R-11: Dark Mode Toggle & Multilingual i18n Switcher (EN, ES, ZH, JA, KO)
+    # -----------------------------------------------------------------------
+    def test_r11_dark_mode_and_multilingual_i18n_switcher(self) -> None:
+        """Dark mode toggle and language switcher (en, es, zh, ja, ko) must update DOM, translate chrome, and persist safely."""
+        html_text = INDEX_HTML.read_text(encoding="utf-8")
+        css_text = STYLES_CSS.read_text(encoding="utf-8")
+
+        self.assertIn('id="btn-toggle-dark-mode"', html_text)
+        self.assertIn('id="language-switcher"', html_text)
+        self.assertIn('id="language-select"', html_text)
+        for lang_code in ("en", "es", "zh", "ja", "ko"):
+            self.assertIn(f'data-lang="{lang_code}"', html_text)
+            self.assertIn(f'value="{lang_code}"', html_text)
+
+        self.assertIn(':root[data-theme="dark"]', css_text)
+        self.assertIn("body.dark-mode", css_text)
+        self.assertIn(".language-switcher", css_text)
+
+        # Default state: light theme + English ('en')
+        res_default = run_node_harness()
+        self.assertEqual(res_default["htmlTheme"], "light")
+        self.assertEqual(res_default["htmlLang"], "en")
+        self.assertFalse(res_default["darkModeBody"])
+        self.assertIsNone(res_default["darkModeBtnAriaPressed"], "Dark toggle names its action, so it must not expose aria-pressed")
+        self.assertEqual(res_default["darkModeBtnTitle"], "Toggle Dark / Light Mode")
+        self.assertIn("Dark Mode", res_default["darkModeBtnText"])
+        self.assertEqual(res_default["languageSelectValue"], "en")
+        self.assertEqual(res_default["activeLangPills"], ["en"])
+
+        # Clicking Dark Mode toggle switches to dark theme, updates button label, and persists safekids_theme='dark'
+        res_dark = run_node_harness({"clickToggleDarkMode": 1})
+        self.assertEqual(res_dark["htmlTheme"], "dark")
+        self.assertTrue(res_dark["darkModeBody"])
+        self.assertIsNone(res_dark["darkModeBtnAriaPressed"])
+        self.assertIn("Light Mode", res_dark["darkModeBtnText"])
+        self.assertEqual(res_dark["storageAfter"].get("safekids_theme"), "dark")
+
+        # Clicking Dark Mode toggle twice returns cleanly to light theme
+        res_light_again = run_node_harness({"clickToggleDarkMode": 2})
+        self.assertEqual(res_light_again["htmlTheme"], "light")
+        self.assertFalse(res_light_again["darkModeBody"])
+        self.assertEqual(res_light_again["storageAfter"].get("safekids_theme"), "light")
+
+        # Test all 4 non-English languages (Spanish, Chinese, Japanese, Korean) via dropdown and pill buttons
+        expected_i18n = {
+            "es": {
+                "title_substr": "Resumen, Plan Diario por Edad",
+                "badge_substr": "28 canales",
+                "bp_substr": "Pequeños (2–3 Años)",
+                "dark_btn_substr": "Modo Oscuro",
+            },
+            "zh": {
+                "title_substr": "总览、分龄每日作息计划",
+                "badge_substr": "28 个频道",
+                "bp_substr": "幼儿期（2–3岁）",
+                "dark_btn_substr": "深色模式",
+            },
+            "ja": {
+                "title_substr": "概要・年齢別デイリープラン",
+                "badge_substr": "28 チャンネル",
+                "bp_substr": "幼児前期（2–3歳）",
+                "dark_btn_substr": "ダークモード",
+            },
+            "ko": {
+                "title_substr": "개요, 연령별 일일 플랜",
+                "badge_substr": "28개 채널",
+                "bp_substr": "유아기 (2–3세)",
+                "dark_btn_substr": "다크 모드",
+            },
+        }
+
+        expected_html_lang = {"es": "es", "zh": "zh-Hans", "ja": "ja", "ko": "ko"}
+        for lang_code, expectations in expected_i18n.items():
+            res_lang = run_node_harness({"clickLanguagePill": lang_code, "exportI18n": True})
+            dicts = res_lang["portalI18n"]
+            d = dicts[lang_code]
+            self.assertEqual(res_lang["htmlLang"], expected_html_lang[lang_code])
+            # Every querySelector-driven surface receives this language's dictionary value
+            self.assertEqual(res_lang["heroHeadingText"], d["heroHeading"])
+            self.assertNotEqual(res_lang["heroHeadingText"], dicts["en"]["heroHeading"])
+            self.assertEqual(res_lang["heroSubtitleText"], d["heroSubtitle"])
+            self.assertEqual(res_lang["sidebarBrandTitleText"], d["sidebarBrandTitle"])
+            self.assertEqual(res_lang["globalAgeLabelText"], d["globalAgeLabel"])
+            self.assertEqual(res_lang["sidebarGroupLabelTexts"], d["sidebarGroups"])
+            self.assertEqual(res_lang["heroStatLabelTexts"], d["heroStats"])
+            self.assertEqual(res_lang["sidebarNavTitles"]["overview"], d["sidebarNav"]["overview"]["title"])
+            self.assertEqual(res_lang["mobileBarTexts"]["nutrition"], d["mobileBar"]["nutrition"])
+            self.assertEqual(res_lang["channelSearchPlaceholder"], d["searchPlaceholders"]["channel"])
+            self.assertEqual(res_lang["languageSelectAriaLabel"], d["languageSelectLabel"])
+            self.assertEqual(res_lang["languageSwitcherAriaLabel"], d["languageSwitcherLabel"])
+            self.assertEqual(res_lang["languagePillsAriaLabel"], d["languagePillsLabel"])
+            self.assertEqual(res_lang["darkModeBtnTitle"], d["darkModeToggleTitle"])
+            self.assertEqual(res_lang["languageSelectValue"], lang_code)
+            self.assertEqual(res_lang["activeLangPills"], [lang_code])
+            self.assertEqual(res_lang["storageAfter"].get("safekids_language"), lang_code)
+            self.assertIn(expectations["title_substr"], res_lang["workspaceContextTitle"])
+            self.assertIn(expectations["badge_substr"], res_lang["channelBadgeText"])
+            self.assertIn(expectations["bp_substr"], res_lang["bpStageHeadline"])
+            self.assertIn(expectations["dark_btn_substr"], res_lang["darkModeBtnText"])
+
+        # Selecting via <select id="language-select"> also switches language and syncs pills
+        res_select_ja = run_node_harness({"selectLanguage": "ja", "clickToggleDarkMode": 1})
+        self.assertEqual(res_select_ja["htmlLang"], "ja")
+        self.assertEqual(res_select_ja["htmlTheme"], "dark")
+        self.assertEqual(res_select_ja["activeLangPills"], ["ja"])
+        self.assertIn("ライトモード", res_select_ja["darkModeBtnText"])
+
+        # Corrupted localStorage values for safekids_theme and safekids_language fall back safely to 'light' and 'en'
+        res_corrupt = run_node_harness(
+            {
+                "initialStorage": {
+                    "safekids_theme": "<script>evil()</script>",
+                    "safekids_language": "fr-invalid-lang",
+                }
+            }
+        )
+        self.assertEqual(res_corrupt["htmlTheme"], "light")
+        self.assertEqual(res_corrupt["htmlLang"], "en")
+        self.assertFalse(res_corrupt["darkModeBody"])
+        self.assertEqual(res_corrupt["activeLangPills"], ["en"])
+
+        # Round trip KO -> EN restores the English dictionary everywhere (R-12 proves en == shipped HTML)
+        res_round = run_node_harness({"languageSequence": ["ko", "en"], "exportI18n": True})
+        en = res_round["portalI18n"]["en"]
+        self.assertEqual(res_round["htmlLang"], "en")
+        self.assertEqual(res_round["heroHeadingText"], en["heroHeading"])
+        self.assertEqual(res_round["mobileBarTexts"], {tab: en["mobileBar"][tab] for tab in res_round["mobileBarTexts"]})
+        self.assertEqual(res_round["channelSearchPlaceholder"], en["searchPlaceholders"]["channel"])
+        self.assertEqual(res_round["languageSelectAriaLabel"], en["languageSelectLabel"])
+        self.assertIn("Dark Mode", res_round["darkModeBtnText"])
+        self.assertEqual(res_round["storageAfter"].get("safekids_language"), "en")
+
+        # A returning user with saved KO + dark gets Korean chrome and dark theme on first render
+        res_reload = run_node_harness({"initialStorage": {"safekids_language": "ko", "safekids_theme": "dark"}, "exportI18n": True})
+        self.assertEqual(res_reload["htmlLang"], "ko")
+        self.assertEqual(res_reload["htmlTheme"], "dark")
+        self.assertTrue(res_reload["darkModeBody"])
+        self.assertEqual(res_reload["activeLangPills"], ["ko"])
+        self.assertEqual(res_reload["heroHeadingText"], res_reload["portalI18n"]["ko"]["heroHeading"])
+        self.assertIn("개요, 연령별 일일 플랜", res_reload["workspaceContextTitle"])
+        self.assertIn("라이트 모드", res_reload["darkModeBtnText"])
+
+        # A tampered <select> value never reaches <html lang>, the controls, or storage
+        res_bad = run_node_harness({"selectLanguage": "<img src=x onerror=alert(1)>"})
+        self.assertEqual(res_bad["htmlLang"], "en")
+        self.assertEqual(res_bad["languageSelectValue"], "en")
+        self.assertEqual(res_bad["activeLangPills"], ["en"])
+        self.assertEqual(res_bad["storageAfter"].get("safekids_language"), "en")
+
+    # -----------------------------------------------------------------------
+    # R-12: i18n Dictionary Parity, Clinical-Safety Fidelity & Print-Safe Dark Mode
+    # -----------------------------------------------------------------------
+    def test_r12_i18n_dictionary_parity_clinical_safety_and_print_safe_dark_mode(self) -> None:
+        """Translations keep every key, number and safety instruction; en matches shipped HTML; dark mode never prints."""
+        res = run_node_harness({"exportI18n": True})
+        i18n = res["portalI18n"]
+        self.assertEqual(sorted(i18n), ["en", "es", "ja", "ko", "zh"])
+
+        def shape(node: Any) -> Any:
+            if isinstance(node, dict):
+                return {k: shape(v) for k, v in node.items()}
+            if isinstance(node, list):
+                return [shape(v) for v in node]
+            return "fn" if node == "[fn]" else type(node).__name__
+
+        en = i18n["en"]
+        for lang in ("es", "zh", "ja", "ko"):
+            self.assertEqual(shape(i18n[lang]), shape(en), f"{lang} keys/types/array lengths diverge from en")
+
+        # Every number in an English fridge-sheet rule (minutes, hours, months, dye numbers) survives translation
+        def digits(text: str) -> collections.Counter:
+            return collections.Counter(re.findall(r"\d+", text))
+
+        for stage, en_stage in en["blueprintStages"].items():
+            for lang in ("es", "zh", "ja", "ko"):
+                local = i18n[lang]["blueprintStages"][stage]
+                self.assertEqual(local["directoryFilterAge"], en_stage["directoryFilterAge"], f"{lang}.{stage} filter slug was translated")
+                for field in ("screenBudget", "sleepCutoff", "mealRule"):
+                    missing = digits(en_stage[field]) - digits(local[field])
+                    self.assertFalse(missing, f"{lang}.{stage}.{field} dropped {dict(missing)}: {local[field]!r}")
+
+        stages = {lang: i18n[lang]["blueprintStages"] for lang in i18n}
+        # Choking hazard: grapes/cherry tomatoes must be QUARTERED lengthwise, not merely halved
+        for lang, token in {"en": "quarter", "es": "en cuartos", "zh": "四瓣", "ja": "4等分", "ko": "4등분"}.items():
+            self.assertIn(token, stages[lang]["toddler"]["mealRule"], f"{lang} toddler choking rule lost 'quarter'")
+        # Preteens: zero chat, not only 'no chat with strangers'
+        for lang, token in {"es": "chat", "zh": "聊天", "ja": "チャット", "ko": "채팅"}.items():
+            self.assertIn(token, stages[lang]["preteen"]["screenBudget"])
+        self.assertNotIn("陌生人", stages["zh"]["preteen"]["screenBudget"])
+        self.assertNotIn("見知らぬ人", stages["ja"]["preteen"]["screenBudget"])
+        # US Yellow 5 (tartrazine, E102) is labelled Yellow No. 4 in Japan/Korea; their 'Yellow No. 5' is Sunset Yellow
+        self.assertIn("黄色4号", stages["ja"]["preschool"]["mealRule"])
+        self.assertNotIn("黄色5号", stages["ja"]["preschool"]["mealRule"])
+        self.assertIn("황색 4호", stages["ko"]["preschool"]["mealRule"])
+        self.assertNotIn("황색 5호", stages["ko"]["preschool"]["mealRule"])
+        for lang in ("es", "zh"):
+            self.assertIn("E102", stages[lang]["preschool"]["mealRule"])
+
+        # Singular/plural count badges (search can narrow a directory to exactly one result)
+        plurals = res["pluralSamples"]
+        self.assertEqual(plurals["en"][0], ["1 channel", "1 game", "1 whole food or swap", "1 audio or book pick"])
+        self.assertEqual(plurals["en"][1][0], "2 channels")
+        self.assertEqual(plurals["es"][0], ["1 canal", "1 juego", "1 alimento o cambio", "1 audio o libro"])
+        self.assertEqual(plurals["es"][1][0], "2 canales")
+
+        # en dictionary == shipped English HTML, so switching to any language and back is lossless
+        chrome = extract_static_chrome(INDEX_HTML.read_text(encoding="utf-8"))
+        for key, html_value in chrome.items():
+            if key == "sidebarNav":
+                for tab, parts in html_value.items():
+                    for part, text in parts.items():
+                        self.assertEqual(en["sidebarNav"][tab][part], text, f"en.sidebarNav.{tab}.{part} drifted from index.html")
+            elif isinstance(html_value, dict):
+                for sub, text in html_value.items():
+                    self.assertEqual(en[key][sub], text, f"en.{key}.{sub} drifted from index.html")
+            else:
+                self.assertEqual(en[key], html_value, f"en.{key} drifted from index.html")
+
+        # Dark theme is screen-only: the printed caregiver fridge sheet always uses the light palette
+        dark_rules, leaks = dark_rules_outside_screen_media(STYLES_CSS.read_text(encoding="utf-8"))
+        self.assertGreater(dark_rules, 50)
+        self.assertEqual(leaks, [], "Dark-theme rules must live inside @media screen")
+        css_text = STYLES_CSS.read_text(encoding="utf-8")
+        print_block = css_text[css_text.index("@media print"):]
+        self.assertIn(".mobile-pillar-bar", print_block[: print_block.index("display: none")])
+
+        html_text = INDEX_HTML.read_text(encoding="utf-8")
+        head = html_text[: html_text.index("<body>")]
+        self.assertIn("localStorage.getItem('safekids_theme') === 'dark'", head, "saved dark theme must apply before first paint")
+        self.assertNotIn('id="btn-toggle-dark-mode" aria-pressed', html_text)
+        for lang_tag in ("en", "es", "zh-Hans", "ja", "ko"):
+            self.assertIn(f'lang="{lang_tag}"', html_text)
+        self.assertRegex(
+            css_text,
+            r"@media\s*\(max-width:\s*768px\)\s*\{\s*\.header\s*\{\s*position:\s*static;",
+            "Phone viewports (<=768px) must unpin .header so multi-row controls do not consume sticky viewport height",
+        )
 
 
 if __name__ == "__main__":

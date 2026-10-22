@@ -6,6 +6,19 @@
   <title>SafeKids Portal | Parent-Curated Media Hub & Decision Guide</title>
   <meta name="description" content="Research-backed parent portal summarizing parent recommendations, YouTube Kids regulations, low-stimulus channel directory by age, open-source parental tools comparison, and technical lockdown guides.">
   <link rel="stylesheet" href="styles.css">
+  <!-- Apply a saved dark theme before first paint (no light flash); only the allow-listed value 'dark' is honored. -->
+  <!-- TODO(security): if a strict Content-Security-Policy is added to firebase.json, allow this inline script and the gtag snippets below via sha256 hashes. -->
+  <script>
+    (function () {
+      try {
+        if (window.localStorage.getItem('safekids_theme') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (storageError) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 
   <!-- Google tag (gtag.js) - Google Analytics 4 (Privacy-Preserved for SafeKids) -->
   <script>
@@ -67,6 +80,26 @@
 
       <div class="header-workspace-actions">
         <span class="header-mode-pill" id="header-active-pill">Focused Workspace • 7 Pillars</span>
+        <div id="language-switcher" class="language-switcher" role="group" aria-label="Language Switcher">
+          <span class="language-switcher-icon" aria-hidden="true">🌐</span>
+          <select id="language-select" class="language-select" aria-label="Select Language">
+            <option value="en" lang="en">English (EN)</option>
+            <option value="es" lang="es">Español (ES)</option>
+            <option value="zh" lang="zh-Hans">简体中文 (ZH)</option>
+            <option value="ja" lang="ja">日本語 (JA)</option>
+            <option value="ko" lang="ko">한국어 (KO)</option>
+          </select>
+          <div class="language-pill-group" role="group" aria-label="Quick Language Buttons">
+            <button type="button" class="lang-switch-btn active" data-lang="en" lang="en" aria-pressed="true" title="English">EN</button>
+            <button type="button" class="lang-switch-btn" data-lang="es" lang="es" aria-pressed="false" title="Español (Spanish)">ES</button>
+            <button type="button" class="lang-switch-btn" data-lang="zh" lang="zh-Hans" aria-pressed="false" title="简体中文 (Simplified Chinese)">中文</button>
+            <button type="button" class="lang-switch-btn" data-lang="ja" lang="ja" aria-pressed="false" title="日本語 (Japanese)">日本語</button>
+            <button type="button" class="lang-switch-btn" data-lang="ko" lang="ko" aria-pressed="false" title="한국어 (Korean)">한국어</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-dark-mode" title="Toggle Dark / Light Mode">
+          🌙 Dark Mode
+        </button>
         <button type="button" class="btn btn-primary btn-sm" id="btn-toggle-infographic-mode" aria-pressed="false" title="Switch to 2-Minute Parent Infographic Mode (shows only visual infographic posters and screenshot cheat-sheets per pillar)">
           📸 2-Min Infographic View
         </button>
@@ -2620,7 +2653,7 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
     </div>
   </div>
 
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
 
