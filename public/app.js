@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFoodCalculator();
   setupCopyButtons();
   setupInfographicExperience();
+  setupExpertScriptFilters();
+  setupExpertCopyButtons();
   if (currentLanguage !== 'en') {
     applyPortalLanguage(currentLanguage, { persist: false });
   }
@@ -2760,11 +2762,11 @@ const ALLOWED_GAME_DOMAINS = new Set(['all', 'logic', 'spatial', 'coding', 'sand
 const ALLOWED_GAME_STOPPING_FILTERS = new Set(['all', 'discrete-levels', 'calm-toybox', 'deep-sandbox', 'co-play']);
 const ALLOWED_FOOD_DOMAINS = new Set(['all', 'brain-dha', 'iron-focus', 'steady-glucose', 'bone-growth', 'gut-immune', 'lunchbox-swaps']);
 const ALLOWED_LISTEN_DOMAINS = new Set(['all', 'stem-podcast', 'story-podcast', 'audiobook-card', 'phonics-decodable', 'living-book', 'hardware-player']);
-const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown', 'all']);
+const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown', 'expert', 'all']);
 const ALLOWED_BLUEPRINT_AGES = new Set(['under-2', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
 const ALLOWED_THEMES = new Set(['light', 'dark']);
 const ALLOWED_LANGUAGES = new Set(['en', 'es', 'zh', 'ja', 'ko']);
-const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown'];
+const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown', 'expert'];
 
 const STORAGE_KEYS = {
   CHANNEL_AGE: 'safekids_channel_age_filter',
@@ -4934,52 +4936,131 @@ function setupFoodCalculator() {
   updateFoodCalculatorView();
 }
 
+// ==================== EXPERT LENS: DR. BECKY SCRIPT FILTER ====================
+const ALLOWED_EXPERT_TOPICS = new Set(['all', 'confidence', 'frustration', 'big-feelings', 'repair']);
+
+function setupExpertScriptFilters() {
+  const filterBtns = document.querySelectorAll('#expert-topic-filters .filter-btn');
+  const scriptCards = document.querySelectorAll('#expert-script-grid .expert-script-card');
+  const statusEl = document.getElementById('expert-filter-status');
+  if (!filterBtns || !filterBtns.length) return;
+
+  const applyTopic = (rawTopic) => {
+    const topic = ALLOWED_EXPERT_TOPICS.has(rawTopic) ? rawTopic : 'all';
+    let shown = 0;
+    scriptCards.forEach(card => {
+      const match = topic === 'all' || card.getAttribute('data-expert-topic') === topic;
+      card.classList.toggle('expert-card-hidden', !match);
+      if (match) shown += 1;
+    });
+    filterBtns.forEach(btn => {
+      const isActive = btn.getAttribute('data-expert-topic') === topic;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+    if (statusEl) {
+      statusEl.textContent = topic === 'all'
+        ? `Showing all ${shown} scripts.`
+        : `Showing ${shown} of ${scriptCards.length} scripts.`;
+    }
+    return topic;
+  };
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget || e.target;
+      const applied = applyTopic(target.getAttribute('data-expert-topic') || 'all');
+      const grid = document.getElementById('expert-script-grid');
+      if (applied !== 'all' && grid && typeof grid.scrollIntoView === 'function') {
+        const reduceMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        grid.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      }
+      if (window.trackSafeKidsEvent) {
+        window.trackSafeKidsEvent('filter_expert_scripts', { topic: applied });
+      }
+    });
+  });
+}
+
+function setupExpertCopyButtons() {
+  const copyBtns = document.querySelectorAll('#expert-script-grid .expert-copy-btn');
+  copyBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = typeof btn.closest === 'function' ? btn.closest('.expert-script-card') : null;
+      const phraseEl = card ? card.querySelector('.expert-try-text') : null;
+      if (!phraseEl) return;
+      const phrase = (phraseEl.textContent || '').trim();
+      const label = 'Copy phrase';
+      const flash = (msg) => {
+        btn.textContent = msg;
+        setTimeout(() => { btn.textContent = label; }, 2000);
+      };
+      safeCopyText(
+        phrase,
+        () => {
+          flash('Copied ✓');
+          if (window.trackSafeKidsEvent) {
+            window.trackSafeKidsEvent('copy_expert_phrase', { topic: card.getAttribute('data-expert-topic') || 'unknown' });
+          }
+        },
+        () => flash('Select the text to copy')
+      );
+    });
+  });
+}
+
 // ==================== LEFT-PANEL WORKSPACE TAB NAVIGATION & DEEP-LINK ROUTING ====================
 const WORKSPACE_TAB_METADATA = {
   overview: {
-    kicker: 'Tab 1 of 7 • Start Here',
+    kicker: 'Tab 1 of 8 • Start Here',
     title: 'Overview & Top 9 Parent Recommendations + Pillar 4 Audio',
     sub: 'Calm daily age rhythm, printable 4-pillar fridge sheet, and core family guidelines.',
     shortLabel: 'Daily Plan & Overview'
   },
   science: {
-    kicker: 'Tab 2 of 7 • Clinical Evidence & Rubrics',
+    kicker: 'Tab 2 of 8 • Clinical Evidence & Rubrics',
     title: 'Clinical Science, Dual 10-Point Auditors (SEM-10 & NFI-10) & 30 Citations',
     sub: 'Peer-reviewed neuroimaging, developmental psychology, pediatric nutrition RCTs, and interactive 60-second calculators.',
     shortLabel: 'Science & Rubrics (30)'
   },
   channels: {
-    kicker: 'Tab 3 of 7 • Pillar 1 (Watch)',
+    kicker: 'Tab 3 of 8 • Pillar 1 (Watch)',
     title: 'Parent-Approved Low-Stimulus Channel Directory (28 Channels)',
     sub: 'Curated calm video channels scored on the SEM-10 rubric with 1-click JSON/CSV whitelist export.',
     shortLabel: 'Watch · Channels (28)'
   },
   games: {
-    kicker: 'Tab 4 of 7 • Pillar 2 (Play)',
+    kicker: 'Tab 4 of 8 • Pillar 2 (Play)',
     title: 'Educator-Approved Cognitive Games & Apps Directory (33 Games)',
     sub: 'Constructivist sandboxes, spatial puzzles, and Montessori apps with zero ads and zero loot boxes.',
     shortLabel: 'Play · Games (33)'
   },
   nutrition: {
-    kicker: 'Tab 5 of 7 • Pillar 3 (Nourish)',
+    kicker: 'Tab 5 of 8 • Pillar 3 (Nourish)',
     title: 'Pediatrician- & Dietitian-Vetted Whole Foods & Lunchbox Swaps (32 Swaps)',
     sub: 'Concrete NOVA-1 whole-food upgrades replacing ultra-processed kid snacks, pouches, and synthetic dyes.',
     shortLabel: 'Nourish · Foods (32)'
   },
   listen: {
-    kicker: 'Tab 6 of 7 • Pillar 4 (Listen & Read)',
+    kicker: 'Tab 6 of 8 • Pillar 4 (Listen & Read)',
     title: 'Listen & Read: Screen-Free Audio, Podcasts & Living Books Directory (26 Picks)',
     sub: 'Curated STEM & story podcasts, Yoto/Tonie audio cards, synthetic phonics decodables, and dialogic living books.',
     shortLabel: 'Listen & Read (26)'
   },
   lockdown: {
-    kicker: 'Tab 7 of 7 • Technical Defense',
+    kicker: 'Tab 7 of 8 • Technical Defense',
     title: 'Open-Source Parental Tools & Step-by-Step Device/DNS Lockdown Guides',
     sub: '13 open-source parental control architectures plus Steps A–E for BrainRotGuard, KidTube, Family Link, Guided Access, and NextDNS.',
     shortLabel: 'Device & DNS Lockdown'
   },
+  expert: {
+    kicker: 'Tab 8 of 8 • Expert Lens (Dr. Becky Kennedy)',
+    title: 'Learn From an Expert: Dr. Becky Kennedy on Raising Confident Kids',
+    sub: '5 core Good Inside ideas, 9 "say this instead" scripts, a 7-day practice plan, and 10 verified free videos.',
+    shortLabel: 'Expert · Dr. Becky (10)'
+  },
   all: {
-    kicker: 'Full Handbook Mode • All 7 Tabs Visible',
+    kicker: 'Full Handbook Mode • All 8 Tabs Visible',
     title: 'Complete SafeKids Parent Portal Reference (All Sections)',
     sub: 'Showing all 10 recommendations, 30+ clinical studies, 28 channels, 33 games, 32 whole-food swaps, 26 audio/book picks, and 5 lockdown guides.',
     shortLabel: 'Full Guide (All Sections)'
@@ -5005,6 +5086,10 @@ const HASH_TO_TAB_MAP = {
   '#listen-directory': 'listen',
   '#lockdown': 'lockdown',
   '#solutions': 'lockdown',
+  '#expert': 'expert',
+  '#expert-dr-becky': 'expert',
+  '#expert-scripts': 'expert',
+  '#expert-video-library': 'expert',
   '#all': 'all'
 };
 
@@ -5118,7 +5203,7 @@ function switchWorkspaceTab(rawTab, opts) {
       nextBtn.setAttribute('data-target-tab', 'channels');
     }
     if (indicatorEl) {
-      indicatorEl.textContent = (i18n && i18n.fullHandbookModeLabel) || 'Full Handbook Mode • All 7 Tabs Visible';
+      indicatorEl.textContent = (i18n && i18n.fullHandbookModeLabel) || 'Full Handbook Mode • All 8 Tabs Visible';
     }
   }
 
@@ -5737,7 +5822,7 @@ const PORTAL_I18N = {
     formatPagerIndicator: (cur, total, label) => `Viewing Tab ${cur} of ${total} • ${label}`,
     backToOverviewBtn: '\u2190 Back to Daily Plan & Overview',
     jumpToChannelsBtn: 'Jump to Watch · Channels (28) \u2192',
-    fullHandbookModeLabel: 'Full Handbook Mode • All 7 Tabs Visible',
+    fullHandbookModeLabel: 'Full Handbook Mode • All 8 Tabs Visible',
     globalAgeLabel: "👶 Child's Age:",
     globalAges: {
       'all': 'All Ages',
@@ -5750,7 +5835,7 @@ const PORTAL_I18N = {
     },
     sidebarBrandTitle: 'Watch • Play • Nourish • Listen',
     sidebarBrandSub: 'Pick an age above or jump to any focused directory below.',
-    sidebarGroups: ['1. Start Here', '2. Curated Daily Directories', '3. Tools & Clinical Science'],
+    sidebarGroups: ['1. Start Here', '2. Curated Daily Directories', '3. Tools & Clinical Science', '4. Learn From an Expert'],
     sidebarNav: {
       overview: { title: 'Daily Plan & 10 Rules', caption: 'Fridge sheet & 4-pillar hub', pill: 'Start' },
       channels: { title: 'Watch: Safe Channels', caption: 'Low-stimulus video whitelist', pill: '28' },
@@ -5759,6 +5844,7 @@ const PORTAL_I18N = {
       listen: { title: 'Listen & Read: Audio', caption: 'Podcasts, Yoto & living books', pill: '26' },
       science: { title: 'Science & Self-Auditors', caption: 'SEM-10, NFI-10 & 30 studies', pill: '30 Cited' },
       lockdown: { title: 'Lockdown Guides', caption: 'FOSS apps, OS & DNS shields', pill: '13 Tools' },
+      expert: { title: 'Dr. Becky: Confident Kids', caption: 'What to say scripts & videos', pill: '10 Videos' },
       all: { title: 'View Full Guide / Print All', caption: 'Show all sections on one page', pill: 'All' }
     },
     mobileBar: {
@@ -5767,7 +5853,8 @@ const PORTAL_I18N = {
       games: 'Play',
       nutrition: 'Food',
       listen: 'Audio',
-      lockdown: 'Shield'
+      lockdown: 'Shield',
+      expert: 'Expert'
     },
     heroHeading: 'Calm, Evidence-Backed Media, Play, Whole-Food & Audio Hub for Parents',
     heroSubtitle: "Pick your child's age to get an instant daily rhythm, or browse 119 curated low-stimulus shows, constructivist games, whole-food lunchbox swaps, and screen-free podcasts & living books—with 1-click expandable clinical science.",
@@ -5832,7 +5919,7 @@ const PORTAL_I18N = {
     formatPagerIndicator: (cur, total, label) => `Pestaña ${cur} de ${total} • ${label}`,
     backToOverviewBtn: '\u2190 Volver al Plan Diario y Resumen',
     jumpToChannelsBtn: 'Ir a Ver · Canales (28) \u2192',
-    fullHandbookModeLabel: 'Modo Manual Completo • Las 7 Pestañas Visibles',
+    fullHandbookModeLabel: 'Modo Manual Completo • Las 8 Pestañas Visibles',
     globalAgeLabel: '👶 Edad del Niño:',
     globalAges: {
       'all': 'Todas las Edades',
@@ -5845,7 +5932,7 @@ const PORTAL_I18N = {
     },
     sidebarBrandTitle: 'Ver • Jugar • Nutrir • Escuchar',
     sidebarBrandSub: 'Elige una edad arriba o salta a cualquier directorio especializado abajo.',
-    sidebarGroups: ['1. Empieza Aquí', '2. Directorios Diarios Curados', '3. Herramientas y Ciencia Clínica'],
+    sidebarGroups: ['1. Empieza Aquí', '2. Directorios Diarios Curados', '3. Herramientas y Ciencia Clínica', '4. Aprende de una Experta'],
     sidebarNav: {
       overview: { title: 'Plan Diario y 10 Reglas', caption: 'Hoja de refrigerador y 4 pilares', pill: 'Inicio' },
       channels: { title: 'Ver: Canales Seguros', caption: 'Lista blanca de baja estimulación', pill: '28' },
@@ -5854,6 +5941,7 @@ const PORTAL_I18N = {
       listen: { title: 'Escuchar y Leer: Audio', caption: 'Pódcasts, Yoto y libros vivos', pill: '26' },
       science: { title: 'Ciencia y Auditores', caption: 'SEM-10, NFI-10 y 30 estudios', pill: '30 Citas' },
       lockdown: { title: 'Guías de Bloqueo', caption: 'Apps libres, SO y escudos DNS', pill: '13 Herr.' },
+      expert: { title: 'Dra. Becky: Niños Seguros', caption: 'Qué decir: guiones y videos', pill: '10 Videos' },
       all: { title: 'Ver Guía Completa / Imprimir', caption: 'Mostrar todas las secciones juntas', pill: 'Todo' }
     },
     mobileBar: {
@@ -5862,7 +5950,8 @@ const PORTAL_I18N = {
       games: 'Jugar',
       nutrition: 'Nutrir',
       listen: 'Audio',
-      lockdown: 'Escudo'
+      lockdown: 'Escudo',
+      expert: 'Experta'
     },
     heroHeading: 'Centro Calmo con Evidencia Científica de Medios, Juego, Nutrición y Audio para Padres',
     heroSubtitle: 'Selecciona la edad de tu hijo para obtener una rutina diaria al instante o explora 119 recursos seleccionados: programas de baja estimulación, juegos constructivistas, cambios de lonchera con alimentos integrales y pódcasts y libros sin pantalla.',
@@ -5903,49 +5992,55 @@ const PORTAL_I18N = {
     emptyListenSub: 'Intenta seleccionar todos los formatos o limpiar la búsqueda.',
     tabs: {
       overview: {
-        kicker: 'Pestaña 1 de 7 • Empieza Aquí',
+        kicker: 'Pestaña 1 de 8 • Empieza Aquí',
         title: 'Resumen, Plan Diario por Edad y 10 Reglas Familiares Clave',
         sub: 'Rutina diaria calma, hoja imprimible de 4 pilares para el refrigerador y guía esencial para padres.',
         shortLabel: 'Plan Diario y Resumen'
       },
       science: {
-        kicker: 'Pestaña 2 de 7 • Evidencia Clínica y Rúbricas',
+        kicker: 'Pestaña 2 de 8 • Evidencia Clínica y Rúbricas',
         title: 'Ciencia Clínica, Auditores Dobles de 10 Puntos (SEM-10 y NFI-10) y 30 Citas',
         sub: 'Neuroimagen revisada por pares, psicología del desarrollo, nutrición pediátrica y calculadoras de 60 segundos.',
         shortLabel: 'Ciencia y Rúbricas (30)'
       },
       channels: {
-        kicker: 'Pestaña 3 de 7 • Pilar 1 (Ver)',
+        kicker: 'Pestaña 3 de 8 • Pilar 1 (Ver)',
         title: 'Directorio de Canales de Baja Estimulación Aprobados por Padres (28 Canales)',
         sub: 'Canales de video calmos evaluados con la rúbrica SEM-10 y exportación de lista blanca en JSON/CSV.',
         shortLabel: 'Ver · Canales (28)'
       },
       games: {
-        kicker: 'Pestaña 4 de 7 • Pilar 2 (Jugar)',
+        kicker: 'Pestaña 4 de 8 • Pilar 2 (Jugar)',
         title: 'Directorio de Juegos Cognitivos y Apps Aprobados por Educadores (33 Juegos)',
         sub: 'Mundos constructivistas, acertijos espaciales y apps Montessori con cero anuncios y cero cajas de botín.',
         shortLabel: 'Jugar · Juegos (33)'
       },
       nutrition: {
-        kicker: 'Pestaña 5 de 7 • Pilar 3 (Nutrir)',
+        kicker: 'Pestaña 5 de 8 • Pilar 3 (Nutrir)',
         title: 'Alimentos Integrales y Cambios de Lonchera Avalados por Pediatras (32 Cambios)',
         sub: 'Alternativas reales NOVA-1 que reemplazan snacks ultraprocesados, bolsas exprimibles y colorantes sintéticos.',
         shortLabel: 'Nutrir · Alimentos (32)'
       },
       listen: {
-        kicker: 'Pestaña 6 de 7 • Pilar 4 (Escuchar y Leer)',
+        kicker: 'Pestaña 6 de 8 • Pilar 4 (Escuchar y Leer)',
         title: 'Escuchar y Leer: Directorio de Audio Sin Pantalla, Pódcasts y Libros Vivos (26 Selecciones)',
         sub: 'Pódcasts de ciencia y cuentos, tarjetas Yoto/Tonie, libros fonéticos decodificables y lectura dialógica.',
         shortLabel: 'Escuchar y Leer (26)'
       },
       lockdown: {
-        kicker: 'Pestaña 7 de 7 • Defensa Técnica',
+        kicker: 'Pestaña 7 de 8 • Defensa Técnica',
         title: 'Herramientas Abiertas de Control Parental y Guías Paso a Paso de Bloqueo DNS',
         sub: '13 arquitecturas de código abierto más los Pasos A–E para BrainRotGuard, KidTube, Family Link, Acceso Guiado y NextDNS.',
         shortLabel: 'Bloqueo de Dispositivos y DNS'
       },
+      expert: {
+        kicker: 'Pestaña 8 de 8 • Mirada Experta (Dra. Becky Kennedy)',
+        title: 'Aprende de una Experta: la Dra. Becky Kennedy sobre Criar Niños Seguros de Sí Mismos',
+        sub: '5 ideas clave de Good Inside, 9 guiones de "di esto en su lugar", un plan de práctica de 7 días y 10 videos gratuitos verificados.',
+        shortLabel: 'Experta · Dra. Becky (10)'
+      },
       all: {
-        kicker: 'Modo Manual Completo • Las 7 Pestañas Visibles',
+        kicker: 'Modo Manual Completo • Las 8 Pestañas Visibles',
         title: 'Referencia Completa del Portal para Padres SafeKids (Todas las Secciones)',
         sub: 'Mostrando las 10 recomendaciones, 30+ estudios clínicos, 28 canales, 33 juegos, 32 alimentos, 26 audios/libros y 5 guías.',
         shortLabel: 'Guía Completa (Todo)'
@@ -6031,7 +6126,7 @@ const PORTAL_I18N = {
     formatPagerIndicator: (cur, total, label) => `正在浏览第 ${cur} / ${total} 页 • ${label}`,
     backToOverviewBtn: '\u2190 返回每日计划与总览',
     jumpToChannelsBtn: '前往 观看 · 低刺激频道 (28) \u2192',
-    fullHandbookModeLabel: '完整手册模式 • 全部 7 个分栏已展开',
+    fullHandbookModeLabel: '完整手册模式 • 全部 8 个分栏已展开',
     globalAgeLabel: '👶 孩子年龄：',
     globalAges: {
       'all': '全部年龄',
@@ -6044,7 +6139,7 @@ const PORTAL_I18N = {
     },
     sidebarBrandTitle: '观看 • 益智 • 营养 • 倾听',
     sidebarBrandSub: '在上方选择孩子年龄，或点击下方任一临床严选目录。',
-    sidebarGroups: ['1. 从这里开始', '2. 每日严选四大目录', '3. 自测工具与临床科学'],
+    sidebarGroups: ['1. 从这里开始', '2. 每日严选四大目录', '3. 自测工具与临床科学', '4. 向专家学习'],
     sidebarNav: {
       overview: { title: '每日计划与10大原则', caption: '冰箱速查表与四大支柱中心', pill: '首页' },
       channels: { title: '观看：低刺激安全频道', caption: '温和慢节奏视频白名单', pill: '28' },
@@ -6053,6 +6148,7 @@ const PORTAL_I18N = {
       listen: { title: '倾听与阅读：无屏音频', caption: '科普播客、音频卡与绘本', pill: '26' },
       science: { title: '临床科学与自测计算器', caption: 'SEM-10、NFI-10与30项研究', pill: '30篇文献' },
       lockdown: { title: '设备与DNS锁定指南', caption: '开源工具、系统限制与DNS防护', pill: '13项工具' },
+      expert: { title: 'Becky 博士：自信的孩子', caption: '该怎么说：话术与视频', pill: '10 个视频' },
       all: { title: '查看完整指南 / 打印全部', caption: '在同一页面展开所有章节', pill: '全部' }
     },
     mobileBar: {
@@ -6061,7 +6157,8 @@ const PORTAL_I18N = {
       games: '益智',
       nutrition: '营养',
       listen: '倾听',
-      lockdown: '防护'
+      lockdown: '防护',
+      expert: '专家'
     },
     heroHeading: '循证温和的儿童媒体、益智游戏、天然脑营养与无屏音频家长门户',
     heroSubtitle: '选择孩子的年龄即可生成专属24小时健康作息，或浏览119项严选低刺激节目、建构主义益智游戏、NOVA-1原型食物便当替换方案及无屏播客与绘本。',
@@ -6102,49 +6199,55 @@ const PORTAL_I18N = {
     emptyListenSub: '请尝试选择“全部音频与图书”或清除搜索条件。',
     tabs: {
       overview: {
-        kicker: '第 1 / 7 页 • 从这里开始',
+        kicker: '第 1 / 8 页 • 从这里开始',
         title: '总览、分龄每日作息计划与 10 大核心家庭准则',
         sub: '温和的日常作息节奏、可打印的四维支柱冰箱速查表以及核心家庭指导框架。',
         shortLabel: '每日计划与总览'
       },
       science: {
-        kicker: '第 2 / 7 页 • 临床证据与量表',
+        kicker: '第 2 / 8 页 • 临床证据与量表',
         title: '临床科学、双10分制评估器（SEM-10 与 NFI-10）及 30 篇权威文献',
         sub: '同行评审神经影像学、发展心理学、儿科营养随机对照试验及60秒交互式自测工具。',
         shortLabel: '科学与量表 (30)'
       },
       channels: {
-        kicker: '第 3 / 7 页 • 第一支柱（观看）',
+        kicker: '第 3 / 8 页 • 第一支柱（观看）',
         title: '家长严选低刺激视频频道目录（28 个频道）',
         sub: '基于 SEM-10 量表评分的温和视频频道，支持一键导出 JSON/CSV 白名单。',
         shortLabel: '观看 · 频道 (28)'
       },
       games: {
-        kicker: '第 4 / 7 页 • 第二支柱（益智）',
+        kicker: '第 4 / 8 页 • 第二支柱（益智）',
         title: '教育家严选认知游戏与应用目录（33 款游戏）',
         sub: '建构主义沙盒、空间几何解谜与蒙氏应用，零广告、零开箱抽奖机制。',
         shortLabel: '益智 · 游戏 (33)'
       },
       nutrition: {
-        kicker: '第 5 / 7 页 • 第三支柱（营养）',
+        kicker: '第 5 / 8 页 • 第三支柱（营养）',
         title: '儿科医生与营养师严选天然食物及便当替换方案（32 项替换）',
         sub: '用 NOVA-1 完整细胞基质食物替换超加工儿童零食、果泥吸吸袋与人工合成色素。',
         shortLabel: '营养 · 食物 (32)'
       },
       listen: {
-        kicker: '第 6 / 7 页 • 第四支柱（倾听与阅读）',
+        kicker: '第 6 / 8 页 • 第四支柱（倾听与阅读）',
         title: '倾听与阅读：无屏音频、科普播客与经典绘本目录（26 项精选）',
         sub: '严选 STEM 科普与故事播客、Yoto/Tonie 实体音频卡、自然拼读读物与对话式阅读绘本。',
         shortLabel: '倾听与阅读 (26)'
       },
       lockdown: {
-        kicker: '第 7 / 7 页 • 技术防护体系',
+        kicker: '第 7 / 8 页 • 技术防护体系',
         title: '开源家长控制工具与分步设备 / DNS 锁定指南',
         sub: '13 项开源家长控制架构，以及 BrainRotGuard、KidTube、Family Link、引导式访问与 NextDNS 设置指南。',
         shortLabel: '设备与 DNS 防护'
       },
+      expert: {
+        kicker: '第 8 / 8 页 • 专家视角（Becky Kennedy 博士）',
+        title: '向专家学习：Becky Kennedy 博士谈如何培养自信的孩子',
+        sub: '5 个 Good Inside 核心理念、9 条“换个说法”话术、7 天练习计划，以及 10 个经核实的免费视频。',
+        shortLabel: '专家 · Becky 博士 (10)'
+      },
       all: {
-        kicker: '完整手册模式 • 全部 7 个分栏可见',
+        kicker: '完整手册模式 • 全部 8 个分栏可见',
         title: 'SafeKids 家长门户完整参考手册（全部章节）',
         sub: '展示全部 10 项建议、30+ 项临床研究、28 个频道、33 款游戏、32 项食物替换、26 项音频绘本与 5 份锁定指南。',
         shortLabel: '完整指南（全部章节）'
@@ -6230,7 +6333,7 @@ const PORTAL_I18N = {
     formatPagerIndicator: (cur, total, label) => `タブ ${cur} / ${total} を表示中 • ${label}`,
     backToOverviewBtn: '\u2190 1日のプランと概要へ戻る',
     jumpToChannelsBtn: '観る · 低刺激チャンネル (28) へ移動 \u2192',
-    fullHandbookModeLabel: 'フルハンドブックモード • 全 7 タブ表示中',
+    fullHandbookModeLabel: 'フルハンドブックモード • 全 8 タブ表示中',
     globalAgeLabel: '👶 お子様の年齢：',
     globalAges: {
       'all': '全年齢',
@@ -6243,7 +6346,7 @@ const PORTAL_I18N = {
     },
     sidebarBrandTitle: '観る • 遊ぶ • 食べる • 聴く',
     sidebarBrandSub: '上で年齢を選択するか、下の各専門ディレクトリへ移動してください。',
-    sidebarGroups: ['1. はじめに', '2. 厳選デイリーディレクトリ', '3. 評価ツールと臨床科学'],
+    sidebarGroups: ['1. はじめに', '2. 厳選デイリーディレクトリ', '3. 評価ツールと臨床科学', '4. 専門家から学ぶ'],
     sidebarNav: {
       overview: { title: '1日のプランと10のルール', caption: '冷蔵庫シート＆4つの柱', pill: '開始' },
       channels: { title: '観る：安全な低刺激番組', caption: '低刺激動画ホワイトリスト', pill: '28' },
@@ -6252,6 +6355,7 @@ const PORTAL_I18N = {
       listen: { title: '聴く・読む：音声と絵本', caption: 'ポッドキャスト・Yoto・絵本', pill: '26' },
       science: { title: '臨床科学と自己診断ツール', caption: 'SEM-10・NFI-10・30の研究', pill: '30文献' },
       lockdown: { title: '端末・DNSロック手順', caption: 'オープンソース＆DNS防御', pill: '13ツール' },
+      expert: { title: 'ベッキー博士：自信のある子', caption: '声かけフレーズと動画', pill: '動画10本' },
       all: { title: '全ガイド表示 / 印刷モード', caption: '全セクションを1ページに表示', pill: 'すべて' }
     },
     mobileBar: {
@@ -6260,7 +6364,8 @@ const PORTAL_I18N = {
       games: '遊ぶ',
       nutrition: '食べる',
       listen: '聴く',
-      lockdown: '防御'
+      lockdown: '防御',
+      expert: '専門家'
     },
     heroHeading: '科学的根拠に基づく低刺激メディア・知育ゲーム・自然食・音声読書ポータル',
     heroSubtitle: 'お子様の年齢を選んで1日の理想的なリズムを作成したり、厳選された119の低刺激番組・構築主義ゲーム・NOVA-1自然食ランチ代替案・画面なしの音声＆絵本を探索できます。',
@@ -6301,49 +6406,55 @@ const PORTAL_I18N = {
     emptyListenSub: 'フォーマットフィルターや検索キーワードをクリアしてお試しください。',
     tabs: {
       overview: {
-        kicker: 'タブ 1 / 7 • はじめに',
+        kicker: 'タブ 1 / 8 • はじめに',
         title: '概要・年齢別デイリープラン＆家庭のための10大ルール',
         sub: '落ち着いた1日の生活リズム、印刷できる冷蔵庫用4柱シート、家庭向け基本ガイドライン。',
         shortLabel: 'デイリープランと概要'
       },
       science: {
-        kicker: 'タブ 2 / 7 • 臨床エビデンスと評価基準',
+        kicker: 'タブ 2 / 8 • 臨床エビデンスと評価基準',
         title: '臨床科学・10点満点デュアル評価ツール（SEM-10 & NFI-10）・30の引用研究',
         sub: '査読付き脳画像研究、発達心理学、小児栄養学RCT、および60秒で判定できる対話型計算機。',
         shortLabel: '科学と評価基準 (30)'
       },
       channels: {
-        kicker: 'タブ 3 / 7 • 第1の柱（観る）',
+        kicker: 'タブ 3 / 8 • 第1の柱（観る）',
         title: '保護者承認・低刺激動画チャンネルディレクトリ（全28チャンネル）',
         sub: 'SEM-10基準で採点された穏やかな動画チャンネルと、ワンクリックJSON/CSVホワイトリスト出力。',
         shortLabel: '観る · チャンネル (28)'
       },
       games: {
-        kicker: 'タブ 4 / 7 • 第2の柱（遊ぶ）',
+        kicker: 'タブ 4 / 8 • 第2の柱（遊ぶ）',
         title: '教育者推奨・知育ゲーム＆アプリディレクトリ（全33ゲーム）',
         sub: '広告ゼロ・ガチャ課金ゼロの構築主義サンドボックス、空間パズル、モンテッソーリ知育アプリ。',
         shortLabel: '遊ぶ · ゲーム (33)'
       },
       nutrition: {
-        kicker: 'タブ 5 / 7 • 第3の柱（食べる）',
+        kicker: 'タブ 5 / 8 • 第3の柱（食べる）',
         title: '小児科医・管理栄養士監修の自然食品＆お弁当スワップ（全32種）',
         sub: '超加工スナックやパウチ飲料、合成着色料を置き換えるNOVA-1ホールフード代替ガイド。',
         shortLabel: '食べる · 自然食 (32)'
       },
       listen: {
-        kicker: 'タブ 6 / 7 • 第4の柱（聴く・読む）',
+        kicker: 'タブ 6 / 8 • 第4の柱（聴く・読む）',
         title: '聴く・読む：スクリーンフリー音声・ポッドキャスト＆絵本ディレクトリ（全26選）',
         sub: '科学＆物語ポッドキャスト、Yoto/Tonieオーディオカード、フォニックス読本、対話型読み聞かせ名作本。',
         shortLabel: '聴く・読む (26)'
       },
       lockdown: {
-        kicker: 'タブ 7 / 7 • 技術的ディフェンス',
+        kicker: 'タブ 7 / 8 • 技術的ディフェンス',
         title: 'オープンソース保護者管理ツール＆端末 / DNSロックダウン手順',
         sub: '13のオープンソース管理ツールと、BrainRotGuard・KidTube・ファミリー リンク・アクセスガイド・NextDNS設定手順。',
         shortLabel: '端末＆DNSロック設定'
       },
+      expert: {
+        kicker: 'タブ 8 / 8 • 専門家の視点（ベッキー・ケネディ博士）',
+        title: '専門家から学ぶ：ベッキー・ケネディ博士が教える自信のある子の育て方',
+        sub: 'Good Inside の5つの基本理念、9つの「こう言い換えよう」フレーズ、7日間の練習プラン、確認済みの無料動画10本。',
+        shortLabel: '専門家 · ベッキー博士 (10)'
+      },
       all: {
-        kicker: 'フルハンドブックモード • 全7タブを表示中',
+        kicker: 'フルハンドブックモード • 全8タブを表示中',
         title: 'SafeKids 保護者ポータル完全リファレンス（全セクション表示）',
         sub: '10の推奨事項、30以上の臨床研究、28チャンネル、33ゲーム、32の食品スワップ、26の音声・書籍、5つのロック手順を表示。',
         shortLabel: '全ガイド（全セクション）'
@@ -6429,7 +6540,7 @@ const PORTAL_I18N = {
     formatPagerIndicator: (cur, total, label) => `탭 ${cur} / ${total} 보는 중 • ${label}`,
     backToOverviewBtn: '\u2190 일일 플랜 및 개요로 돌아가기',
     jumpToChannelsBtn: '시청 · 저자극 채널 (28)로 이동 \u2192',
-    fullHandbookModeLabel: '전체 핸드북 모드 • 7개 탭 모두 표시됨',
+    fullHandbookModeLabel: '전체 핸드북 모드 • 8개 탭 모두 표시됨',
     globalAgeLabel: '👶 자녀 연령:',
     globalAges: {
       'all': '전체 연령',
@@ -6442,7 +6553,7 @@ const PORTAL_I18N = {
     },
     sidebarBrandTitle: '시청 • 놀이 • 영양 • 청취',
     sidebarBrandSub: '위에서 자녀 연령을 선택하거나 아래의 전문 디렉토리로 바로 이동하세요.',
-    sidebarGroups: ['1. 시작하기', '2. 일일 엄선 4대 디렉토리', '3. 자가 진단 도구 및 임상 과학'],
+    sidebarGroups: ['1. 시작하기', '2. 일일 엄선 4대 디렉토리', '3. 자가 진단 도구 및 임상 과학', '4. 전문가에게 배우기'],
     sidebarNav: {
       overview: { title: '일일 플랜 및 10대 원칙', caption: '냉장고 시트 & 4대 핵심 허브', pill: '시작' },
       channels: { title: '시청: 안전한 저자극 채널', caption: '저자극 영상 화이트리스트', pill: '28' },
@@ -6451,6 +6562,7 @@ const PORTAL_I18N = {
       listen: { title: '청취 및 독서: 오디오북', caption: '팟캐스트, Yoto & 살아있는 책', pill: '26' },
       science: { title: '임상 과학 및 자가 판독기', caption: 'SEM-10, NFI-10 & 30편 논문', pill: '30편 인용' },
       lockdown: { title: '기기 및 DNS 차단 가이드', caption: '오픈소스 앱, OS & DNS 방어', pill: '13개 도구' },
+      expert: { title: '베키 박사: 자신감 있는 아이', caption: '말하기 스크립트 & 영상', pill: '영상 10개' },
       all: { title: '전체 가이드 보기 / 인쇄', caption: '모든 섹션을 한 페이지에 표시', pill: '전체' }
     },
     mobileBar: {
@@ -6459,7 +6571,8 @@ const PORTAL_I18N = {
       games: '놀이',
       nutrition: '영양',
       listen: '청취',
-      lockdown: '차단'
+      lockdown: '차단',
+      expert: '전문가'
     },
     heroHeading: '과학적 근거 기반의 저자극 미디어, 창의 놀이, 자연식 두뇌 영양 및 오디오 부모 포털',
     heroSubtitle: '자녀의 연령을 선택해 맞춤형 일일 리듬을 확인하거나, 엄선된 119개의 저자극 프로그램, 구성주의 게임, NOVA-1 자연식 도시락 대체식, 스크린 없는 팟캐스트와 그림책을 살펴보세요.',
@@ -6500,49 +6613,55 @@ const PORTAL_I18N = {
     emptyListenSub: '포맷 필터나 검색어를 지우고 다시 시도해 보세요.',
     tabs: {
       overview: {
-        kicker: '탭 1 / 7 • 시작하기',
+        kicker: '탭 1 / 8 • 시작하기',
         title: '개요, 연령별 일일 플랜 및 부모를 위한 10대 핵심 원칙',
         sub: '차분한 일일 연령별 리듬, 인쇄 가능한 4대 영역 냉장고 시트 및 핵심 가족 가이드라인.',
         shortLabel: '일일 플랜 및 개요'
       },
       science: {
-        kicker: '탭 2 / 7 • 임상 근거 및 루브릭',
+        kicker: '탭 2 / 8 • 임상 근거 및 루브릭',
         title: '임상 과학, 듀얼 10점 판독기(SEM-10 & NFI-10) 및 30편의 학술 인용',
         sub: '동료 심사 뇌영상 연구, 발달심리학, 소아영양학 무작위 대조시험 및 60초 대화형 계산기.',
         shortLabel: '과학 및 루브릭 (30)'
       },
       channels: {
-        kicker: '탭 3 / 7 • 영역 1 (시청)',
+        kicker: '탭 3 / 8 • 영역 1 (시청)',
         title: '부모 승인 저자극 영상 채널 디렉토리 (28개 채널)',
         sub: 'SEM-10 기준으로 평가된 차분한 영상 채널 및 원클릭 JSON/CSV 화이트리스트 내보내기.',
         shortLabel: '시청 · 채널 (28)'
       },
       games: {
-        kicker: '탭 4 / 7 • 영역 2 (놀이)',
+        kicker: '탭 4 / 8 • 영역 2 (놀이)',
         title: '교육자 승인 인지 발달 게임 및 앱 디렉토리 (33개 게임)',
         sub: '광고 제로, 확률형 아이템 제로의 구성주의 샌드박스, 공간 퍼즐 및 몬테소리 앱.',
         shortLabel: '놀이 · 게임 (33)'
       },
       nutrition: {
-        kicker: '탭 5 / 7 • 영역 3 (영양)',
+        kicker: '탭 5 / 8 • 영역 3 (영양)',
         title: '소아과 전문의 및 영양사 검증 자연식품 & 도시락 대체안 (32개 대체안)',
         sub: '초가공 어린이 간식, 파우치 음료, 합성 착색료를 대체하는 NOVA-1 자연식품 업그레이드.',
         shortLabel: '영양 · 식품 (32)'
       },
       listen: {
-        kicker: '탭 6 / 7 • 영역 4 (청취 및 독서)',
+        kicker: '탭 6 / 8 • 영역 4 (청취 및 독서)',
         title: '청취 및 독서: 스크린 없는 오디오, 팟캐스트 & 살아있는 책 디렉토리 (26선)',
         sub: '엄선된 STEM 및 동화 팟캐스트, Yoto/Tonie 오디오 카드, 파닉스 리더스 및 대화형 그림책.',
         shortLabel: '청취 및 독서 (26)'
       },
       lockdown: {
-        kicker: '탭 7 / 7 • 기술적 방어',
+        kicker: '탭 7 / 8 • 기술적 방어',
         title: '오픈소스 자녀 보호 도구 및 단계별 기기 / DNS 차단 가이드',
         sub: '13개의 오픈소스 자녀 보호 아키텍처와 BrainRotGuard, KidTube, 패밀리 링크, 사용법 유도, NextDNS 설정 가이드.',
         shortLabel: '기기 및 DNS 차단'
       },
+      expert: {
+        kicker: '탭 8 / 8 • 전문가 관점 (베키 케네디 박사)',
+        title: '전문가에게 배우기: 베키 케네디 박사의 자신감 있는 아이 키우기',
+        sub: 'Good Inside 핵심 아이디어 5가지, "이렇게 바꿔 말하기" 스크립트 9개, 7일 연습 계획, 검증된 무료 영상 10개.',
+        shortLabel: '전문가 · 베키 박사 (10)'
+      },
       all: {
-        kicker: '전체 핸드북 모드 • 7개 탭 모두 표시',
+        kicker: '전체 핸드북 모드 • 8개 탭 모두 표시',
         title: 'SafeKids 부모 포털 전체 레퍼런스 (모든 섹션)',
         sub: '10대 권장사항, 30+ 임상 연구, 28개 채널, 33개 게임, 32개 식품 대체안, 26개 오디오/도서 및 5개 차단 가이드 표시.',
         shortLabel: '전체 가이드 (모든 섹션)'
