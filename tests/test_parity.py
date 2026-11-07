@@ -528,7 +528,7 @@ const heroSubtitleEl = new MockElement('p');
 const sidebarBrandTitleEl = new MockElement('div', '', 'sidebar-brand-title');
 const sidebarBrandSubEl = new MockElement('div', '', 'sidebar-brand-sub');
 const globalAgeLabelEl = new MockElement('span', '', 'global-age-label');
-const sidebarGroupLabelEls = [0, 1, 2].map(() => new MockElement('div', '', 'sidebar-group-label'));
+const sidebarGroupLabelEls = [0, 1, 2, 3].map(() => new MockElement('div', '', 'sidebar-group-label'));
 const heroStatLabelEls = [0, 1, 2, 3, 4, 5].map(() => new MockElement('div', '', 'stat-label'));
 const singleSelectorMap = {
   '.language-pill-group': languagePillGroupEl,
@@ -1511,35 +1511,48 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             self.assertGreater(img_path.stat().st_size, 10_000, f"Image file unexpectedly tiny: {rel_src}")
 
     def test_workspace_left_panel_tabs_and_persistence(self) -> None:
-        """Left-panel app-shell workspace must isolate 7 categorized tabs, support 'all' mode, and persist safely."""
+        """Left-panel app-shell workspace must isolate 8 categorized tabs, support 'all' mode, and persist safely."""
         # Default initial load shows only 'overview' panels (hero + recommendations = 2 sections)
         res_default = run_node_harness()
-        self.assertEqual(res_default["allTabPanelsCount"], 10)
+        self.assertEqual(res_default["allTabPanelsCount"], 11)
         self.assertEqual(res_default["visibleTabPanels"], ["overview", "overview"])
         self.assertIn("Overview & Top 9 Parent Recommendations", res_default["workspaceContextTitle"])
-        self.assertIn("Viewing Tab 1 of 7", res_default["workspacePagerIndicator"])
+        self.assertIn("Viewing Tab 1 of 8", res_default["workspacePagerIndicator"])
 
         # Clicking 'nutrition' tab shows only the Wholesome Food section and persists to localStorage
         res_nutrition = run_node_harness({"clickWorkspaceTab": "nutrition"})
         self.assertEqual(res_nutrition["visibleTabPanels"], ["nutrition"])
         self.assertEqual(res_nutrition["storageAfter"].get("safekids_active_tab"), "nutrition")
         self.assertIn("Whole Foods & Lunchbox Swaps", res_nutrition["workspaceContextTitle"])
-        self.assertIn("Viewing Tab 5 of 7", res_nutrition["workspacePagerIndicator"])
+        self.assertIn("Viewing Tab 5 of 8", res_nutrition["workspacePagerIndicator"])
 
         # Clicking 'listen' tab shows only the Listen & Read section and persists to localStorage
         res_listen = run_node_harness({"clickWorkspaceTab": "listen"})
         self.assertEqual(res_listen["visibleTabPanels"], ["listen"])
         self.assertEqual(res_listen["storageAfter"].get("safekids_active_tab"), "listen")
         self.assertIn("Listen & Read", res_listen["workspaceContextTitle"])
-        self.assertIn("Viewing Tab 6 of 7", res_listen["workspacePagerIndicator"])
+        self.assertIn("Viewing Tab 6 of 8", res_listen["workspacePagerIndicator"])
 
-        # Clicking 'all' shows all 10 sections for full-page reading/printing
+        # Clicking 'expert' tab shows only the Dr. Becky Kennedy expert lens and persists to localStorage
+        res_expert = run_node_harness({"clickWorkspaceTab": "expert"})
+        self.assertEqual(res_expert["visibleTabPanels"], ["expert"])
+        self.assertEqual(res_expert["storageAfter"].get("safekids_active_tab"), "expert")
+        self.assertIn("Dr. Becky Kennedy", res_expert["workspaceContextTitle"])
+        self.assertIn("Viewing Tab 8 of 8", res_expert["workspacePagerIndicator"])
+
+        # Mobile bottom bar stays capped (bottom-nav-limit); phones reach the expert tab via the Overview entry card
+        html_text = INDEX_HTML.read_text(encoding="utf-8")
+        self.assertNotIn('class="mobile-pillar-btn" data-tab="expert"', html_text)
+        self.assertIn('<a href="#expert-dr-becky" class="expert-entry-card"', html_text)
+        self.assertIn("'#expert-dr-becky': 'expert'", APP_JS.read_text(encoding="utf-8"))
+
+        # Clicking 'all' shows all 11 sections for full-page reading/printing
         res_all = run_node_harness({"clickWorkspaceTab": "all"})
-        self.assertEqual(len(res_all["visibleTabPanels"]), 10)
+        self.assertEqual(len(res_all["visibleTabPanels"]), 11)
         self.assertEqual(res_all["storageAfter"].get("safekids_active_tab"), "all")
         self.assertIn("Complete SafeKids Parent Portal Reference", res_all["workspaceContextTitle"])
 
-        # Next/Prev pager buttons step cleanly through the 7 ordered tabs
+        # Next/Prev pager buttons step cleanly through the 8 ordered tabs
         res_pager = run_node_harness({"clickNextTabCount": 2})
         self.assertEqual(res_pager["visibleTabPanels"], ["channels"])
         self.assertEqual(res_pager["storageAfter"].get("safekids_active_tab"), "channels")
@@ -1762,6 +1775,75 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         res_closed = run_node_harness({"clickZoomTrigger": True, "clickCloseLightbox": True})
         self.assertFalse(res_closed["lightboxOpen"])
         self.assertEqual(res_closed["lightboxAriaHidden"], "true")
+
+    # -----------------------------------------------------------------------
+    # R-13: Expert Lens (Dr. Becky Kennedy / Good Inside) content integrity
+    # -----------------------------------------------------------------------
+    def test_r13_expert_lens_dr_becky_verified_links_and_honest_attribution(self) -> None:
+        """Expert tab ships 10 unique verified YouTube links, 9 filterable scripts, safe links, and a paraphrase disclaimer."""
+        html_text = INDEX_HTML.read_text(encoding="utf-8")
+        start = html_text.index('<section id="expert-dr-becky"')
+        section = html_text[start: html_text.index("</section>", start)]
+        self.assertIn('data-tab-panel="expert"', section)
+
+        verified_video_ids = {
+            "67-D1uostqs", "LXnNf2U9v-8", "y_rLbbIqum0", "Zi9s0drG2II", "TXjOEXfeVZA",
+            "68HObPiH05Y", "WQNM5EyDtKE", "syMuyOUQRJI", "7fiazouNjA0", "U2_h2CD-qHA",
+        }
+        library = section[section.index('id="expert-video-library"'):]
+        library_ids = re.findall(r'class="card expert-video-card"[^>]*href="https://www\.youtube\.com/watch\?v=([A-Za-z0-9_-]{11})"', library)
+        self.assertEqual(len(library_ids), 10)
+        self.assertEqual(set(library_ids), verified_video_ids)
+        # Every YouTube link anywhere in the section points at an allow-listed, verified video or official channel
+        all_ids = set(re.findall(r'youtube\.com/watch\?v=([A-Za-z0-9_-]{11})', section))
+        self.assertTrue(all_ids <= verified_video_ids, f"unverified video ids: {all_ids - verified_video_ids}")
+
+        # 9 script cards, each with Instead/Try swaps, a rationale, and a related-video source link
+        cards = re.findall(r'<article class="card expert-script-card" data-expert-topic="([a-z-]+)">(.*?)</article>', section, re.S)
+        self.assertEqual(len(cards), 9)
+        topic_counts = collections.Counter(topic for topic, _ in cards)
+        self.assertEqual(dict(topic_counts), {"confidence": 4, "frustration": 2, "big-feelings": 2, "repair": 1})
+        for topic, body in cards:
+            self.assertIn("expert-swap-instead", body)
+            self.assertIn("expert-swap-try", body)
+            self.assertIn("expert-script-why", body)
+            self.assertIn('class="expert-script-source"', body)
+        # Filter pill labels advertise the real per-topic counts
+        for topic, n in topic_counts.items():
+            self.assertRegex(section, rf'data-expert-topic="{topic}" aria-pressed="false">.*?\({n}\)</span></button>')
+        self.assertIn('Show all (9)</span>', section)
+
+        # Friendlier UX: every script has a copyable Try phrase and a collapsible rationale; emoji are hidden from screen readers
+        self.assertEqual(section.count('class="expert-try-text"'), 9)
+        self.assertEqual(section.count('expert-copy-btn'), 9)
+        self.assertEqual(section.count('<details class="expert-why">'), 9)
+        self.assertNotIn('class="expert-principle-icon">', section)
+        self.assertIn("function setupExpertCopyButtons()", APP_JS.read_text(encoding="utf-8"))
+        css_text = STYLES_CSS.read_text(encoding="utf-8")
+        expert_css = css_text[css_text.index("Expert Lens: Dr. Becky Kennedy"):]
+        self.assertIn("min-height: 44px", expert_css)
+        self.assertIn(":focus-visible", expert_css)
+        self.assertIn("prefers-reduced-motion: reduce", expert_css)
+
+        # External links open safely in a new tab
+        for tag in re.findall(r'<a [^>]*target="_blank"[^>]*>', section):
+            self.assertIn('rel="noopener noreferrer"', tag)
+        # No embeds/trackers load until the parent clicks
+        self.assertNotIn("<iframe", section)
+        self.assertNotIn("ytimg.com", section)
+
+        # Radical honesty: scripts are labelled as paraphrases, not quotes, and no affiliation is implied
+        self.assertIn("paraphrases", section)
+        self.assertIn("not affiliated with or endorsed by", section)
+
+        # Script filter exists, is allow-listed, and never uses unsafe DOM sinks
+        js_text = APP_JS.read_text(encoding="utf-8")
+        fn_start = js_text.index("function setupExpertScriptFilters()")
+        fn_body = js_text[fn_start: js_text.index("\n}\n", fn_start)]
+        self.assertIn("ALLOWED_EXPERT_TOPICS.has(rawTopic)", fn_body)
+        self.assertNotIn("innerHTML", fn_body)
+        self.assertIn("setupExpertScriptFilters();", js_text)
+        self.assertIn("'expert'", js_text[js_text.index("const ORDERED_WORKSPACE_TABS"):][:200])
 
     # -----------------------------------------------------------------------
     # R-11: Dark Mode Toggle & Multilingual i18n Switcher (EN, ES, ZH, JA, KO)

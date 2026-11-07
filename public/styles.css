@@ -3326,4 +3326,358 @@ body.dark-mode .food-synergy-box {
 /* ==================== END DARK MODE THEME (screen-only) ==================== */
 
 
+/* ==================== Expert Lens: Dr. Becky Kennedy (Good Inside) ==================== */
+/* UX pass per ui-ux-pro-max: 44px touch targets, visible focus, >=12.5px labels,
+   70ch line length, Try-dominant swaps with non-color cues, reduced motion. */
+.expert-count-badge {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+}
 
+.expert-header > p,
+.expert-disclaimer,
+.expert-block-sub {
+  max-width: 70ch;
+}
+
+.expert-lede {
+  font-size: 1.15rem !important;
+  line-height: 1.5;
+  color: var(--text-main) !important;
+  font-weight: 600;
+}
+
+.expert-about {
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.expert-disclaimer {
+  margin-top: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--warning);
+  background: var(--warning-light);
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.expert-block {
+  margin-top: 2.25rem;
+}
+
+.expert-block-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 0.4rem;
+}
+
+.expert-block-sub {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 0.9rem;
+}
+
+/* --- "What's happening right now?" picker (big, thumb-friendly) --- */
+.expert-topic-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.expert-topic-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 56px;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: 0.98rem;
+  text-align: left;
+  color: var(--text-main);
+  background: var(--bg-card);
+}
+
+.expert-topic-btn.active,
+.expert-topic-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+.expert-topic-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.expert-filter-status {
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+/* --- Script cards --- */
+.expert-script-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.expert-card-hidden {
+  display: none !important;
+}
+
+.expert-script-moment {
+  font-weight: 800;
+  color: var(--text-main);
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.expert-swap {
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
+  line-height: 1.5;
+}
+
+.expert-swap-instead {
+  background: var(--bg-alt);
+  border: 1px dashed var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.expert-swap-try {
+  background: var(--success-light);
+  border: 2px solid var(--success);
+  color: var(--text-main);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.expert-swap-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.expert-swap-try .expert-swap-label {
+  color: var(--success);
+}
+
+.expert-copy-btn {
+  align-self: flex-start;
+  min-height: 44px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.expert-why summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--primary);
+}
+
+.expert-why p,
+.expert-principle-card p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-top: 0.25rem;
+}
+
+.expert-script-source {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.expert-script-source:hover {
+  text-decoration: underline;
+}
+
+/* --- Principles, practice plan, videos, channels --- */
+.expert-principle-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.expert-practice-list {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 70ch;
+  padding-left: 1.4rem;
+  color: var(--text-main);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.expert-video-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+.expert-video-card:hover {
+  border-color: var(--primary);
+}
+
+.expert-video-tag {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.expert-video-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.expert-video-title::before {
+  content: "\25B6\00A0";
+  color: var(--danger);
+}
+
+.expert-video-channel {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.expert-channel-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.expert-channel-links .btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- Overview entry card --- */
+.expert-entry-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  padding: 1rem 1.25rem;
+  min-height: 72px;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  background: var(--primary-light);
+  color: var(--text-main);
+  text-decoration: none;
+}
+
+.expert-entry-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.expert-entry-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.expert-entry-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.expert-entry-kicker {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.expert-entry-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.expert-entry-sub {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.expert-entry-cta {
+  font-weight: 800;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+/* --- Visible keyboard focus on every control in the tab --- */
+.expert-topic-btn:focus-visible,
+.expert-copy-btn:focus-visible,
+.expert-why summary:focus-visible,
+.expert-script-source:focus-visible,
+.expert-video-card:focus-visible,
+.expert-channel-links .btn:focus-visible,
+.expert-entry-card:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .expert-topic-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .expert-swap-try {
+    font-size: 1.08rem;
+  }
+
+  .expert-entry-cta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expert-script-card,
+  .expert-video-card,
+  .expert-principle-card,
+  .expert-topic-btn,
+  .expert-entry-card {
+    transition: none !important;
+  }
+}
+
+@media print {
+  .expert-topic-filters,
+  .expert-filter-status,
+  .expert-copy-btn,
+  .expert-entry-card {
+    display: none !important;
+  }
+
+  .expert-card-hidden {
+    display: flex !important;
+  }
+}

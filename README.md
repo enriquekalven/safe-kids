@@ -229,6 +229,17 @@ Setup walk-throughs covering:
 * **Option D: Device Hardening for Safe Gaming** (iOS Guided Access triple-click screen region lockdown, Android App Pinning, and hard-disabling in-app purchases at the OS store level).
 * **Option E: Network & DNS-Level Shield** (NextDNS / AdGuard Home Encrypted DNS profile setup, YouTube Restricted Mode DNS enforcement, and SmartTube living room TV lockdown).
 
+### 12. Expert Lens: Dr. Becky Kennedy (Good Inside) — What to Say to Raise Confident Kids
+A dedicated 8th workspace tab (`expert`, deep links `#expert-dr-becky`, `#expert-scripts`, `#expert-video-library`) that turns the clinical psychologist's free public teaching into a parent learning path:
+* **Quick-help picker first:** a "What's happening right now?" row of 4 large (56px) moment buttons jumps straight to the matching scripts; each script has a 1-tap **Copy phrase** button and a collapsible *Why this works*. On phones the tab is reached from an **Overview entry card** so the bottom bar stays at 6 items.
+* **5 Big Ideas:** Kids Are Good Inside, Two Things Are True, Sturdy Leadership, Confidence = Self-Trust, and Repair.
+* **9 "Say This Instead" Scripts** across 4 filterable moments (Confidence, Limits & Frustration, Big Feelings, Repair), each with an *Instead of* / *Try* swap, a short rationale, and a related-video link.
+* **7-Day Practice Plan:** one small language swap per day.
+* **10-Video Library:** every YouTube link was checked against YouTube oEmbed (title + channel) on 2026-11-07, and is locked by `R-13` in [`tests/test_parity.py`](tests/test_parity.py). Links open on YouTube; nothing is embedded, so no trackers load until a parent clicks.
+* **Official Channels:** YouTube `@goodinside`, Facebook `drbeckyatgoodinside`, Instagram `@drbeckyatgoodinside`, the TED talk page, and goodinside.com.
+
+> SafeKids is not affiliated with or endorsed by Dr. Becky Kennedy or Good Inside. Scripts are SafeKids paraphrases of publicly taught ideas, not verbatim quotes. The tab's body copy is English-only; its navigation chrome is translated into es / zh / ja / ko.
+
 ---
 
 ## 📁 Repository Directory Structure
