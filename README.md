@@ -20,7 +20,8 @@ It addresses automated recommendation algorithms (hyper-stimulation, "brain rot"
 5. **Calm Tech & Progressive Disclosure UX**: A global header **"My Child's Age" Selector Bar** (`#global-age-bar`) that filters all 4 directories + the Printable Caregiver Fridge Sheet simultaneously, plus **3-Second Glance** compact cards with 1-click expandable clinical drawers (`#btn-toggle-clinical-details`).
 6. **Dual 10-Point Audit Rubrics (SEM-10 & NFI-10) & Interactive Self-Audit Calculators**: Objective, peer-reviewed 1–10 scoring rubrics and interactive 60-second calculators for both Screen Media (`#sem-calculator`) and Food/Snack Labels (`#food-calculator`).
 7. **Primary Academic Bibliography (30 Studies & Statutes)**: Peer-reviewed clinical neuroimaging studies, pediatric nutrition RCTs (AAP, NIH, Lancet, ESPGHAN, OEHHA), longitudinal cohorts, and global regulatory frameworks (FTC COPPA 2025, EU DSA Art. 28, UK Online Safety Act).
-8. **Open-source parental control alternatives, DNS/Router shields, and hardware lockdown blueprints.**
+8. **11-Language Atlas of Wonder Parity & Google Cloud Chirp 3 HD Read Aloud**: Full portal navigation, Daily Age Blueprint rules, and Dr. Becky Expert Lens scripts across **11 languages** (`en` English, `es` Español, `zh-Hans` 中文, `yue-Hant-HK` 粵語 Cantonese, `ja` 日本語, `ko` 한국어, `pt` Português, `fr` Français, `it` Italiano, `de` Deutsch, `ar` العربية with automatic `dir="rtl"` layout), paired with **165 pre-rendered Google Cloud Chirp 3 HD (`Aoede` Studio) MP3s** in `public/audio/<lang>/` plus an optional localhost live Chirp 3 HD proxy (`server.py`) supporting all 8 Studio personas (`Aoede`, `Kore`, `Leda`, `Zephyr`, `Puck`, `Charon`, `Fenrir`, `Orus`).
+9. **Open-source parental control alternatives, DNS/Router shields, and hardware lockdown blueprints.**
 
 ---
 
@@ -230,15 +231,15 @@ Setup walk-throughs covering:
 * **Option E: Network & DNS-Level Shield** (NextDNS / AdGuard Home Encrypted DNS profile setup, YouTube Restricted Mode DNS enforcement, and SmartTube living room TV lockdown).
 
 ### 12. Expert Lens: Dr. Becky Kennedy (Good Inside) — What to Say to Raise Confident Kids
-A dedicated 8th workspace tab (`expert`, deep links `#expert-dr-becky`, `#expert-scripts`, `#expert-video-library`) that turns the clinical psychologist's free public teaching into a parent learning path:
-* **Quick-help picker first:** a "What's happening right now?" row of 4 large (56px) moment buttons jumps straight to the matching scripts; each script has a 1-tap **Copy phrase** button and a collapsible *Why this works*. On phones the tab is reached from an **Overview entry card** so the bottom bar stays at 6 items.
-* **5 Big Ideas:** Kids Are Good Inside, Two Things Are True, Sturdy Leadership, Confidence = Self-Trust, and Repair.
-* **9 "Say This Instead" Scripts** across 4 filterable moments (Confidence, Limits & Frustration, Big Feelings, Repair), each with an *Instead of* / *Try* swap, a short rationale, and a related-video link.
+A dedicated 8th workspace tab (`expert`, deep links `#expert-dr-becky`, `#expert-scripts`, `#expert-video-library`) that turns the clinical psychologist's free public teaching into a multilingual parent learning path with Google Cloud Chirp 3 HD Read Aloud:
+* **Quick-help picker & Read Aloud:** a "What's happening right now?" row of 4 large (56px) moment buttons jumps straight to the matching scripts; each script has a **🔊 Listen** button (Google Cloud **Chirp 3 HD** matched to the active portal language across all 11 Atlas of Wonder languages, plus an 8-voice persona selector when running `make preview-tts`) alongside a 1-tap **Copy phrase** button and a collapsible *Why this works*. On phones the tab is reached from an **Overview entry card** so the bottom bar stays at 6 items.
+* **5 Big Ideas:** Kids Are Good Inside, Two Things Are True, Sturdy Leadership, Confidence = Self-Trust, and Repair — translated across all 11 languages (`en`, `es`, `zh-Hans`, `yue-Hant-HK`, `ja`, `ko`, `pt`, `fr`, `it`, `de`, `ar` with RTL layout).
+* **9 "Say This Instead" Scripts** across 4 filterable moments (Confidence, Limits & Frustration, Big Feelings, Repair), each with an *Instead of* / *Try* swap, rationale, related-video link, and pre-rendered Chirp 3 HD (`Aoede` Studio) MP3 audio (`public/audio/<lang>/script_1..9.mp3`).
 * **7-Day Practice Plan:** one small language swap per day.
 * **10-Video Library:** every YouTube link was checked against YouTube oEmbed (title + channel) on 2026-11-07, and is locked by `R-13` in [`tests/test_parity.py`](tests/test_parity.py). Links open on YouTube; nothing is embedded, so no trackers load until a parent clicks.
 * **Official Channels:** YouTube `@goodinside`, Facebook `drbeckyatgoodinside`, Instagram `@drbeckyatgoodinside`, the TED talk page, and goodinside.com.
 
-> SafeKids is not affiliated with or endorsed by Dr. Becky Kennedy or Good Inside. Scripts are SafeKids paraphrases of publicly taught ideas, not verbatim quotes. The tab's body copy is English-only; its navigation chrome is translated into es / zh / ja / ko.
+> SafeKids is not affiliated with or endorsed by Dr. Becky Kennedy or Good Inside. Scripts are SafeKids paraphrases of publicly taught ideas, not verbatim quotes. The 9 scripts, 5 principles, and navigation chrome are translated across all 11 languages (`ASM-006`); the 7-day table and YouTube video titles remain English.
 
 ---
 
@@ -246,34 +247,36 @@ A dedicated 8th workspace tab (`expert`, deep links `#expert-dr-becky`, `#expert
 
 ```text
 safe-kids-portal/
-├── firebase.json       # Configured with site: "safe-kids", CSP headers, and hosting.ignore rules
+├── firebase.json       # Configured with site: "safe-kids", CSP headers, MP3 caching, and hosting.ignore rules
 ├── .firebaserc         # Configured with project: "project-maui"
-├── Makefile            # Verification & localhost-bound preview targets (make verify, make preview)
+├── Makefile            # Verification & localhost-bound preview targets (make verify, make preview, make preview-tts)
+├── server.py           # Optional localhost-only (127.0.0.1) preview + live Google Cloud Chirp 3 HD /api/tts proxy
 ├── README.md           # Master project documentation, SEM-10 & NFI-10 rubrics, & 30-study bibliography
 ├── STATE.md            # Truthful delivery status, Correction log, and open risks by role
 ├── assumptions.json    # Explicitly labeled unverified domain assumptions (verified: false)
 ├── public/
-│   ├── index.html      # Responsive Single Page Application (Rubrics, Calculators, Watch, Play, Nourish, Listen)
-│   ├── styles.css      # WCAG AA compliant CSS design system with Calm Tech progressive disclosure drawers
-│   ├── app.js          # Canonical SEM-10 & NFI-10 oracles, XSS-safe DOM, & OWASP-safe exporter
-│   └── images/         # 11 Web-optimized editorial illustrations (10 Recommendations + UPF Swap Guide)
+│   ├── index.html      # Responsive Single Page Application (11 Atlas of Wonder languages + RTL + Expert Lens)
+│   ├── styles.css      # WCAG AA compliant CSS design system with Calm Tech drawers, Dark Mode & [dir="rtl"]
+│   ├── app.js          # Canonical SEM-10 & NFI-10 oracles, 11-lang i18n, Chirp 3 HD Read Aloud & OWASP CSV exporter
+│   ├── audio/          # 165 pre-rendered Google Cloud Chirp 3 HD (Aoede Studio) MP3s across 11 languages
+│   └── images/         # 17 Web-optimized editorial illustrations & pillar infographic posters
 ├── docs/
 │   ├── PLAN.md         # Veteran SME grill, Why These Pieces, and What Moves vs. Stays Behind
-│   ├── REVIEW_CHECKLIST.md # 8 Fixed Review Axes & Regression Ledger (R-1..R-9)
-│   ├── TESTING.md      # Offline test inventory, parity matrix, and 7-mutant harness documentation
+│   ├── REVIEW_CHECKLIST.md # Fixed Review Axes & Regression Ledger (R-1..R-14)
+│   ├── TESTING.md      # Offline test inventory, parity matrix, and mutant harness documentation
 │   ├── DEMO_SCRIPT.md  # 3-minute smoking-gun walkthrough script
 │   └── adr/
 │       └── 0001-sem10-deterministic-rubric-and-no-fakes.md
 ├── tests/
 │   ├── network_guard.py      # Socket-level outbound network blocker (Law 6)
-│   ├── test_parity.py        # Dual 243-grid + 400-fuzz Python/JS parity, DOM calculators, CSV & persistence tests
-│   ├── test_no_real_names.py # SHA-256 customer/PII digest gate + negative verifiers (Law 5, Law 10)
+│   ├── test_parity.py        # Dual 243-grid + 400-fuzz Python/JS parity, DOM calculators, 11-lang & Chirp tests
+│   ├── test_no_real_names.py # SHA-256 customer/PII digest gate + 165 MP3 header verifiers (Law 5, Law 10)
 │   └── test_docs_integrity.py# Markdown link/fence/heading & AST test-reference verifier (Law 4, Law 12)
 └── tools/
     ├── ci/
     │   └── forbid_fabrication.py # Static AST/regex gate banning sleep, random, innerHTML, and bare catch
     └── sim/
-        └── mutation_check.py     # 7-mutant fault-injection harness requiring 100% kills (Law 5)
+        └── mutation_check.py     # 12-mutant fault-injection harness requiring 100% kills (Law 5)
 ```
 
 ---
@@ -288,6 +291,8 @@ make verify
 ### 2. Local Preview (Bound to `127.0.0.1:8080`)
 ```bash
 make preview
+# Or with live Google Cloud Chirp 3 HD synthesis across all 8 voice personas:
+make preview-tts
 ```
 Then visit `http://127.0.0.1:8080` in your web browser.
 

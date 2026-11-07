@@ -19,7 +19,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 SKIP_DIRS = frozenset(
-    {".git", ".firebase", "node_modules", "__pycache__", ".pytest_cache", ".ruff_cache", ".venv", "venv"}
+    {".git", ".firebase", ".tts_cache", "node_modules", "__pycache__", ".pytest_cache", ".ruff_cache", ".venv", "venv"}
 )
 SKIP_FILES = frozenset(
     {
@@ -65,6 +65,8 @@ def scan_repository(root: Path = REPO_ROOT) -> list[str]:
         if any(part in SKIP_DIRS for part in path.parts):
             continue
         if not path.is_file() or path.name in SKIP_FILES:
+            continue
+        if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".gif", ".ico", ".mp3", ".wav", ".ogg", ".woff", ".woff2"}:
             continue
         data = path.read_bytes()
         if b"\x00" in data[:4096]:

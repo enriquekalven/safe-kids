@@ -2612,8 +2612,8 @@ body.infographic-quick-mode #recommendations .blueprint-card ~ * {
   line-height: 1;
 }
 
-/* Quick pills duplicate the <select>; hide them before they crowd the header. */
-@media (max-width: 1366px) {
+/* Quick pills duplicate the <select>; hide them before 11 language pills crowd the header. */
+@media (max-width: 1680px) {
   .language-pill-group {
     display: none;
   }
@@ -3322,6 +3322,26 @@ body.dark-mode .food-synergy-box {
 :root[data-theme="dark"] [style*="color: #475569"] {
   color: #cbd5e1 !important;
 }
+
+:root[data-theme="dark"] .chirp-voice-bar,
+body.dark-mode .chirp-voice-bar {
+  background: var(--bg-alt);
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+
+:root[data-theme="dark"] .chirp-persona-select,
+body.dark-mode .chirp-persona-select {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .chirp-persona-select option,
+body.dark-mode .chirp-persona-select option {
+  background: #0f172a;
+  color: #f1f5f9;
+}
 }
 /* ==================== END DARK MODE THEME (screen-only) ==================== */
 
@@ -3475,11 +3495,57 @@ body.dark-mode .food-synergy-box {
   color: var(--success);
 }
 
-.expert-copy-btn {
-  align-self: flex-start;
+.expert-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.expert-listen-btn,
+.expert-copy-btn,
+.chirp-read-btn {
   min-height: 44px;
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+.expert-listen-btn.is-speaking,
+.chirp-read-btn.is-speaking {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #ffffff;
+}
+
+.chirp-voice-bar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.85rem;
+  margin-bottom: 0.9rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.chirp-voice-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.chirp-persona-select {
+  min-height: 36px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
 }
 
 .expert-why summary {
@@ -3635,7 +3701,10 @@ body.dark-mode .food-synergy-box {
 
 /* --- Visible keyboard focus on every control in the tab --- */
 .expert-topic-btn:focus-visible,
+.expert-listen-btn:focus-visible,
 .expert-copy-btn:focus-visible,
+.chirp-read-btn:focus-visible,
+.chirp-persona-select:focus-visible,
 .expert-why summary:focus-visible,
 .expert-script-source:focus-visible,
 .expert-video-card:focus-visible,
@@ -3664,15 +3733,61 @@ body.dark-mode .food-synergy-box {
   .expert-video-card,
   .expert-principle-card,
   .expert-topic-btn,
+  .expert-listen-btn,
+  .chirp-read-btn,
   .expert-entry-card {
     transition: none !important;
   }
 }
 
+/* ==================== RTL Layout Support (Arabic / dir="rtl") ==================== */
+[dir="rtl"] body {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .language-pill-group {
+  border-left: none;
+  padding-left: 0;
+  border-right: 1px solid var(--border-color);
+  padding-right: 0.35rem;
+}
+
+[dir="rtl"] .expert-disclaimer {
+  border-left: none;
+  border-right: 4px solid var(--warning);
+}
+
+[dir="rtl"] .flashcard-green,
+[dir="rtl"] .flashcard-teal,
+[dir="rtl"] .flashcard-amber,
+[dir="rtl"] .flashcard-blue,
+[dir="rtl"] .flashcard-danger,
+[dir="rtl"] .flashcard-rose {
+  border-left-width: 1.5px;
+  border-left-color: #e2e8f0;
+  border-right: 5px solid var(--primary);
+}
+
+[dir="rtl"] .expert-topic-btn,
+[dir="rtl"] .sidebar-nav-btn {
+  text-align: right;
+}
+
+[dir="rtl"] .expert-practice-list,
+[dir="rtl"] .fridge-list {
+  padding-left: 0;
+  padding-right: 1.4rem;
+}
+
 @media print {
   .expert-topic-filters,
   .expert-filter-status,
+  .chirp-voice-bar,
+  .expert-card-actions,
+  .expert-listen-btn,
   .expert-copy-btn,
+  .chirp-read-btn,
   .expert-entry-card {
     display: none !important;
   }

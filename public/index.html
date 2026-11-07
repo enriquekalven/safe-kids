@@ -86,15 +86,27 @@
             <option value="en" lang="en">English (EN)</option>
             <option value="es" lang="es">Español (ES)</option>
             <option value="zh" lang="zh-Hans">简体中文 (ZH)</option>
+            <option value="yue" lang="yue-Hant-HK">粵語 (YUE)</option>
             <option value="ja" lang="ja">日本語 (JA)</option>
             <option value="ko" lang="ko">한국어 (KO)</option>
+            <option value="pt" lang="pt">Português (PT)</option>
+            <option value="fr" lang="fr">Français (FR)</option>
+            <option value="it" lang="it">Italiano (IT)</option>
+            <option value="de" lang="de">Deutsch (DE)</option>
+            <option value="ar" lang="ar">العربية (AR)</option>
           </select>
           <div class="language-pill-group" role="group" aria-label="Quick Language Buttons">
             <button type="button" class="lang-switch-btn active" data-lang="en" lang="en" aria-pressed="true" title="English">EN</button>
             <button type="button" class="lang-switch-btn" data-lang="es" lang="es" aria-pressed="false" title="Español (Spanish)">ES</button>
             <button type="button" class="lang-switch-btn" data-lang="zh" lang="zh-Hans" aria-pressed="false" title="简体中文 (Simplified Chinese)">中文</button>
+            <button type="button" class="lang-switch-btn" data-lang="yue" lang="yue-Hant-HK" aria-pressed="false" title="粵語 (Cantonese)">粵語</button>
             <button type="button" class="lang-switch-btn" data-lang="ja" lang="ja" aria-pressed="false" title="日本語 (Japanese)">日本語</button>
             <button type="button" class="lang-switch-btn" data-lang="ko" lang="ko" aria-pressed="false" title="한국어 (Korean)">한국어</button>
+            <button type="button" class="lang-switch-btn" data-lang="pt" lang="pt" aria-pressed="false" title="Português (Portuguese)">PT</button>
+            <button type="button" class="lang-switch-btn" data-lang="fr" lang="fr" aria-pressed="false" title="Français (French)">FR</button>
+            <button type="button" class="lang-switch-btn" data-lang="it" lang="it" aria-pressed="false" title="Italiano (Italian)">IT</button>
+            <button type="button" class="lang-switch-btn" data-lang="de" lang="de" aria-pressed="false" title="Deutsch (German)">DE</button>
+            <button type="button" class="lang-switch-btn" data-lang="ar" lang="ar" aria-pressed="false" title="العربية (Arabic)">العربية</button>
           </div>
         </div>
         <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-dark-mode" title="Toggle Dark / Light Mode">
@@ -397,9 +409,9 @@
         <span class="expert-entry-body">
           <span class="expert-entry-kicker">New • Learn From an Expert</span>
           <span class="expert-entry-title">What to say to raise confident kids</span>
-          <span class="expert-entry-sub">9 calm phrases for everyday hard moments, from Dr. Becky Kennedy's free videos.</span>
+          <span class="expert-entry-sub">9 calm phrases for everyday hard moments, with Chirp 3 HD read-aloud and Dr. Becky Kennedy's free videos.</span>
         </span>
-        <span class="expert-entry-cta">Open <span aria-hidden="true">&rarr;</span></span>
+        <span class="expert-entry-cta">Open &rarr;</span>
       </a>
       <!-- NEW: 60-SECOND MOBILE-FRIENDLY ALL-PILLAR PARENT INFOGRAPHIC DECK (SWIPE / SCREENSHOT / SAVE TO PHONE) -->
       <div id="parent-infographic-hub" class="pillar-infographic-card" style="margin-bottom: 1.75rem;">
@@ -538,6 +550,9 @@
           <div class="blueprint-actions">
             <button type="button" id="btn-sync-age-directories" class="btn btn-primary btn-sm">
               🔗 Sync All 4 Directories to This Age
+            </button>
+            <button type="button" id="btn-read-blueprint" class="btn btn-outline btn-sm chirp-read-btn" aria-pressed="false">
+              🔊 Read Fridge Plan
             </button>
             <button type="button" id="btn-copy-blueprint" class="btn btn-outline btn-sm">
               📋 Copy Caregiver Plan
@@ -2575,20 +2590,33 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
     <section id="expert-dr-becky" class="section-block tab-hidden" data-tab-panel="expert">
       <div class="section-header expert-header">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-          <h3><span aria-hidden="true">🧠</span> What to Say to Raise Confident Kids</h3>
+          <h3><span aria-hidden="true">🧠</span> <span id="expert-heading-text">What to Say to Raise Confident Kids</span></h3>
           <span id="expert-video-count-badge" class="tag-badge expert-count-badge">10 verified videos</span>
         </div>
-        <p class="expert-lede">Hard moments are normal. Here is what to say when they happen — calm, short phrases you can use today.</p>
-        <p class="expert-about">Ideas from <strong>Dr. Becky Kennedy</strong>, clinical psychologist, founder of <strong>Good Inside</strong>, author of <i>Good Inside: A Guide to Becoming the Parent You Want to Be</i> (2022), and host of the <i>Good Inside with Dr. Becky</i> podcast — drawn from her free public YouTube, TED, and Facebook teaching.</p>
-        <div class="expert-disclaimer" role="note">
-          <strong>Independent study guide.</strong> SafeKids is not affiliated with or endorsed by Dr. Becky Kennedy or Good Inside. Scripts below are <strong>SafeKids paraphrases</strong> of ideas she teaches publicly, not verbatim quotes — each one links to a related video so you can hear the idea in her own words. Every video link was checked against YouTube on 2026-11-07.
+        <p class="expert-lede" id="expert-lede-text">Hard moments are normal. Here is what to say when they happen — calm, short phrases you can use today.</p>
+        <p class="expert-about" id="expert-about-text">Ideas from Dr. Becky Kennedy, clinical psychologist, founder of Good Inside, author of Good Inside (2022), and host of the Good Inside with Dr. Becky podcast — drawn from her free public YouTube, TED, and Facebook teaching.</p>
+        <div class="expert-disclaimer" id="expert-disclaimer-text" role="note">
+          Independent study guide. SafeKids is not affiliated with or endorsed by Dr. Becky Kennedy or Good Inside. Scripts below are SafeKids paraphrases of ideas she teaches publicly, not verbatim quotes — each one links to a related video so you can hear the idea in her own words. Every video link was checked against YouTube on 2026-11-07.
         </div>
       </div>
 
       <!-- 1. Quick Help Picker + Script Library -->
       <div class="expert-block" id="expert-scripts">
-        <h4 class="expert-block-title">What's happening right now?</h4>
-        <p class="expert-block-sub">Tap a moment to see what to say. Read the green line out loud once so it feels natural later.</p>
+        <h4 class="expert-block-title" id="expert-picker-title">What's happening right now?</h4>
+        <p class="expert-block-sub" id="expert-picker-sub">Tap a moment to see what to say, or tap Read Aloud to hear the phrase in Google Cloud Chirp 3 HD.</p>
+        <div class="chirp-voice-bar" id="chirp-voice-bar" role="group" aria-label="Chirp 3 HD Read Aloud Voice">
+          <label for="chirp-persona-select" class="chirp-voice-label" id="chirp-voice-label">🎙️ Chirp 3 HD Voice:</label>
+          <select id="chirp-persona-select" class="chirp-persona-select">
+            <option value="Aoede">Aoede (Warm Studio • Default)</option>
+            <option value="Kore">Kore (Calm &amp; Clear)</option>
+            <option value="Leda">Leda (Gentle Storyteller)</option>
+            <option value="Zephyr">Zephyr (Bright &amp; Encouraging)</option>
+            <option value="Puck">Puck (Expressive)</option>
+            <option value="Charon">Charon (Steady Baritone)</option>
+            <option value="Fenrir">Fenrir (Deep &amp; Grounded)</option>
+            <option value="Orus">Orus (Authoritative)</option>
+          </select>
+        </div>
         <div id="expert-topic-filters" class="expert-topic-filters" role="group" aria-label="Choose a moment">
           <button type="button" class="filter-btn expert-topic-btn" data-expert-topic="confidence" aria-pressed="false"><span class="expert-topic-icon" aria-hidden="true">🌱</span><span class="expert-topic-label">Building confidence (4)</span></button>
           <button type="button" class="filter-btn expert-topic-btn" data-expert-topic="frustration" aria-pressed="false"><span class="expert-topic-icon" aria-hidden="true">🧭</span><span class="expert-topic-label">Holding a limit (2)</span></button>
@@ -2600,82 +2628,109 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
 
         <div class="grid-2 expert-script-grid" id="expert-script-grid">
           <article class="card expert-script-card" data-expert-topic="confidence">
-            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> Your child shows you a drawing or project</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"Good job! You're such a great artist!"</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"Tell me about it. How did you decide where to start?"</span></div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> <span class="expert-moment-text">Your child shows you a drawing or project</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"Good job! You're such a great artist!"</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"Tell me about it. How did you decide where to start?"</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_1" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">A curious question points your child inward, so their confidence rests on their own thinking instead of on your approval.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=67-D1uostqs" target="_blank" rel="noopener noreferrer">▶ Watch: How to Raise a Confident Kid (Good Inside)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="confidence">
-            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> "She's so much better at this than me."</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"No way, you're the best one there!"</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"It stings when someone is better at something you care about. I've felt that too. And you're still you, and you're okay."</span></div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> <span class="expert-moment-text">"She's so much better at this than me."</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"No way, you're the best one there!"</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"It stings when someone is better at something you care about. I've felt that too. And you're still you, and you're okay."</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_2" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">Arguing with the feeling teaches kids their inner experience is wrong. Naming it shows them they can feel envy and still be okay being themselves.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=y_rLbbIqum0" target="_blank" rel="noopener noreferrer">▶ Watch: What Kids Actually Need to Feel Confident (Jay Shetty Podcast)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="confidence">
-            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> Stuck on homework or a puzzle and wants to quit</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"Here, let me just do it for you."</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"This is really hard. I'm right here. What's one small thing you could try next?"</span> (Then pause and let them lead.)</div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> <span class="expert-moment-text">Stuck on homework or a puzzle and wants to quit</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"Here, let me just do it for you."</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"This is really hard. I'm right here. What's one small thing you could try next?"</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_3" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">Rescuing removes the struggle that builds confidence. Staying close without fixing gives your child a track record of getting through hard things.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=Zi9s0drG2II" target="_blank" rel="noopener noreferrer">▶ Watch: How to Build Confidence in Your Kids (Huberman Lab Clips)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="confidence">
-            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> Your tween or teen is nervous before a tryout or test</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"Don't worry, you'll be great!"</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"Of course you're nervous — this matters to you. Nervous and ready can both be true."</span></div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🌱</span> <span class="expert-moment-text">Your tween or teen is nervous before a tryout or test</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"Don't worry, you'll be great!"</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"Of course you're nervous — this matters to you. Nervous and ready can both be true."</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_4" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">Reassurance can make nerves feel like a problem. Two-things-are-true language tells them the feeling is normal and does not mean they can't do it.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=LXnNf2U9v-8" target="_blank" rel="noopener noreferrer">▶ Watch: How to Build Your Teen's Confidence (Good Inside)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="frustration">
-            <div class="expert-script-moment"><span aria-hidden="true">🧭</span> Screen time is over and a meltdown starts</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"Stop crying, it's just a show!"</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"You wish you could keep watching. It's so hard to stop. And screens are done for today. You can be upset — I'm right here."</span></div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🧭</span> <span class="expert-moment-text">Screen time is over and a meltdown starts</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"Stop crying, it's just a show!"</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"You wish you could keep watching. It's so hard to stop. And screens are done for today. You can be upset — I'm right here."</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_5" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">The limit holds and the feeling is allowed. Kids build frustration tolerance by being disappointed next to a calm adult, not by being talked out of it.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=TXjOEXfeVZA" target="_blank" rel="noopener noreferrer">▶ Watch: Stop Trying to Make Your Kids Happy (Good Inside)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="frustration">
-            <div class="expert-script-moment"><span aria-hidden="true">🧭</span> Whining or begging after you've said "no"</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"Fine, just one more — but stop whining."</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"The answer is still no. It's okay to be mad about it. I can handle your big feelings."</span></div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🧭</span> <span class="expert-moment-text">Whining or begging after you've said "no"</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"Fine, just one more — but stop whining."</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"The answer is still no. It's okay to be mad about it. I can handle your big feelings."</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_6" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">Caving teaches that big reactions change limits. A sturdy, warm "no" shows your child the boundary is safe and their feelings are not too much for you.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=68HObPiH05Y" target="_blank" rel="noopener noreferrer">▶ Watch: Good Inside Parenting Is Not Gentle Parenting (Good Inside)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="big-feelings">
-            <div class="expert-script-moment"><span aria-hidden="true">🌋</span> Your child hits a sibling</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"We don't hit! Go to your room!"</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"I won't let you hit. I'm going to move you so everyone is safe. You're a good kid having a really hard time."</span></div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🌋</span> <span class="expert-moment-text">Your child hits a sibling</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"We don't hit! Go to your room!"</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"I won't let you hit. I'm going to move you so everyone is safe. You're a good kid having a really hard time."</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_7" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">You stop the behavior with your actions, not threats, and keep the message that your child is good — which makes it easier to talk about what happened once everyone is calm.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=7fiazouNjA0" target="_blank" rel="noopener noreferrer">▶ Watch: What Can I Do to Stop My Kid's Aggressive Behavior? (Good Inside)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="big-feelings">
-            <div class="expert-script-moment"><span aria-hidden="true">🌋</span> A "deeply feeling kid" explodes over something small</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>"You're totally overreacting."</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span>Fewer words, more calm: <span class="expert-try-text">"That felt really big. I'm here."</span> Talk it through later, once their body has settled.</div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🌋</span> <span class="expert-moment-text">A "deeply feeling kid" explodes over something small</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">"You're totally overreacting."</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"That felt really big. I'm here."</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_8" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">Intense kids often feel more overwhelmed by lots of talking during a storm. Your steady presence first, problem-solving later.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=WQNM5EyDtKE" target="_blank" rel="noopener noreferrer">▶ Watch: Deeply Feeling Kids Need a Different Approach (Good Inside)</a>
           </article>
 
           <article class="card expert-script-card" data-expert-topic="repair">
-            <div class="expert-script-moment"><span aria-hidden="true">🔧</span> You yelled and regret it</div>
-            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> Instead of</span>Pretending it didn't happen, or "I yelled because you didn't listen."</div>
-            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> Try saying</span><span class="expert-try-text">"I've been thinking about earlier. I'm sorry I yelled. That wasn't your fault — it's mine to work on. I love you."</span></div>
-            <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            <div class="expert-script-moment"><span aria-hidden="true">🔧</span> <span class="expert-moment-text">You yelled and regret it</span></div>
+            <div class="expert-swap expert-swap-instead"><span class="expert-swap-label"><span aria-hidden="true">✕</span> <span class="expert-instead-label">Instead of</span></span><span class="expert-instead-text">Pretending it didn't happen, or "I yelled because you didn't listen."</span></div>
+            <div class="expert-swap expert-swap-try"><span class="expert-swap-label"><span aria-hidden="true">✓</span> <span class="expert-try-label">Try saying</span></span><span class="expert-try-text">"I've been thinking about earlier. I'm sorry I yelled. That wasn't your fault — it's mine to work on. I love you."</span></div>
+            <div class="expert-card-actions">
+              <button type="button" class="btn btn-primary btn-sm expert-listen-btn" data-audio-key="script_9" aria-pressed="false">🔊 Read Aloud</button>
+              <button type="button" class="btn btn-outline btn-sm expert-copy-btn">Copy phrase</button>
+            </div>
             <details class="expert-why"><summary>Why this works</summary><p class="expert-script-why">Owning your part without blaming your child protects their sense of being good and shows them how to repair their own mistakes.</p></details>
             <a class="expert-script-source" href="https://www.youtube.com/watch?v=U2_h2CD-qHA" target="_blank" rel="noopener noreferrer">▶ Watch: The Single Most Important Parenting Strategy (TED, on Good Inside)</a>
           </article>
@@ -2684,7 +2739,7 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
 
       <!-- 2. Core Ideas -->
       <div class="expert-block">
-        <h4 class="expert-block-title">The 5 big ideas behind the scripts</h4>
+        <h4 class="expert-block-title" id="expert-principles-title">The 5 big ideas behind the scripts</h4>
         <div class="grid-3 expert-principles-grid">
           <div class="card expert-principle-card">
             <div class="expert-principle-icon" aria-hidden="true">💛</div>
@@ -2694,7 +2749,7 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
           <div class="card expert-principle-card">
             <div class="expert-principle-icon" aria-hidden="true">⚖️</div>
             <div class="card-title">Two Things Are True</div>
-            <p>You can hold a firm boundary <em>and</em> validate the feeling about it: "You really want more time, <em>and</em> screens are done for today."</p>
+            <p>You can hold a firm boundary and validate the feeling about it: "You really want more time, and screens are done for today."</p>
           </div>
           <div class="card expert-principle-card">
             <div class="expert-principle-icon" aria-hidden="true">🧭</div>
@@ -2704,7 +2759,7 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
           <div class="card expert-principle-card">
             <div class="expert-principle-icon" aria-hidden="true">🌱</div>
             <div class="card-title">Confidence = Self-Trust</div>
-            <p>Confidence is not "feeling good" or hearing "good job." It grows when kids look inward ("What do <em>I</em> think?") and build a track record of getting through hard things.</p>
+            <p>Confidence is not "feeling good" or hearing "good job." It grows when kids look inward ("What do I think?") and build a track record of getting through hard things.</p>
           </div>
           <div class="card expert-principle-card">
             <div class="expert-principle-icon" aria-hidden="true">🔧</div>
@@ -2716,8 +2771,8 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
 
       <!-- 3. 7-Day Practice Plan -->
       <div class="expert-block">
-        <h4 class="expert-block-title">Try it for a week: one small swap a day</h4>
-        <p class="expert-block-sub">A SafeKids practice plan built from the ideas above. Small, repeated swaps work better than a big overhaul.</p>
+        <h4 class="expert-block-title" id="expert-practice-title">Try it for a week: one small swap a day</h4>
+        <p class="expert-block-sub" id="expert-practice-sub">A SafeKids practice plan built from the ideas above. Small, repeated swaps work better than a big overhaul.</p>
         <ol class="expert-practice-list">
           <li><strong>Day 1 — Swap one "good job."</strong> Replace it with a curious question: "How did you figure that out?"</li>
           <li><strong>Day 2 — Name it, don't fix it.</strong> When your child is upset, describe the feeling once before offering any solution.</li>
@@ -2731,8 +2786,8 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
 
       <!-- 4. Verified Video Library -->
       <div class="expert-block" id="expert-video-library">
-        <h4 class="expert-block-title">Watch and learn: 10 free videos</h4>
-        <p class="expert-block-sub">Links open on YouTube in a new tab. Nothing is embedded, so no YouTube trackers load until you choose to watch.</p>
+        <h4 class="expert-block-title" id="expert-videos-title">Watch and learn: 10 free videos</h4>
+        <p class="expert-block-sub" id="expert-videos-sub">Links open on YouTube in a new tab. Nothing is embedded, so no YouTube trackers load until you choose to watch.</p>
         <div class="grid-3 expert-video-grid">
           <a class="card expert-video-card" data-expert-topic="confidence" href="https://www.youtube.com/watch?v=67-D1uostqs" target="_blank" rel="noopener noreferrer">
             <span class="expert-video-tag">Confidence</span>
@@ -2789,8 +2844,8 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
 
       <!-- 5. Official Channels -->
       <div class="expert-block">
-        <h4 class="expert-block-title">Follow Dr. Becky's official channels</h4>
-        <p class="expert-block-sub">Her short daily tips are posted across these accounts. Facebook and Instagram may ask you to sign in to watch.</p>
+        <h4 class="expert-block-title" id="expert-channels-title">Follow Dr. Becky's official channels</h4>
+        <p class="expert-block-sub" id="expert-channels-sub">Her short daily tips are posted across these accounts. Facebook and Instagram may ask you to sign in to watch.</p>
         <div class="expert-channel-links">
           <a class="btn btn-outline btn-sm" href="https://www.youtube.com/@goodinside" target="_blank" rel="noopener noreferrer">YouTube: @goodinside</a>
           <a class="btn btn-outline btn-sm" href="https://www.facebook.com/drbeckyatgoodinside" target="_blank" rel="noopener noreferrer">Facebook: drbeckyatgoodinside</a>
@@ -2912,7 +2967,7 @@ www.youtube-nocookie.com CNAME  restrict.youtube.com</pre>
     </div>
   </div>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
 

@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupInfographicExperience();
   setupExpertScriptFilters();
   setupExpertCopyButtons();
+  setupChirpReadAloud();
   if (currentLanguage !== 'en') {
     applyPortalLanguage(currentLanguage, { persist: false });
   }
@@ -2765,7 +2766,8 @@ const ALLOWED_LISTEN_DOMAINS = new Set(['all', 'stem-podcast', 'story-podcast', 
 const ALLOWED_WORKSPACE_TABS = new Set(['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown', 'expert', 'all']);
 const ALLOWED_BLUEPRINT_AGES = new Set(['under-2', 'toddler', 'preschool', 'early-elementary', 'middle-elementary', 'preteen']);
 const ALLOWED_THEMES = new Set(['light', 'dark']);
-const ALLOWED_LANGUAGES = new Set(['en', 'es', 'zh', 'ja', 'ko']);
+const ALLOWED_LANGUAGES = new Set(['en', 'es', 'zh', 'yue', 'ja', 'ko', 'pt', 'fr', 'it', 'de', 'ar']);
+const ALLOWED_CHIRP_PERSONAS = new Set(['Aoede', 'Kore', 'Leda', 'Zephyr', 'Puck', 'Charon', 'Fenrir', 'Orus']);
 const ORDERED_WORKSPACE_TABS = ['overview', 'science', 'channels', 'games', 'nutrition', 'listen', 'lockdown', 'expert'];
 
 const STORAGE_KEYS = {
@@ -2780,7 +2782,8 @@ const STORAGE_KEYS = {
   ACTIVE_TAB: 'safekids_active_tab',
   BLUEPRINT_AGE: 'safekids_blueprint_age',
   THEME: 'safekids_theme',
-  LANGUAGE: 'safekids_language'
+  LANGUAGE: 'safekids_language',
+  CHIRP_PERSONA: 'safekids_chirp_persona'
 };
 
 function clampSemDimension(val) {
@@ -3281,6 +3284,10 @@ let currentListenSearch = '';
 let currentBlueprintAge = 'toddler';
 let currentTheme = 'light';
 let currentLanguage = 'en';
+let currentChirpPersona = 'Aoede';
+let currentExpertTopic = 'all';
+let refreshExpertFilterStatusRef = null;
+let lastChirpAudioSrc = '';
 
 function syncFilterButtons(selector, activeValue) {
   const buttons = document.querySelectorAll(selector);
@@ -3305,6 +3312,7 @@ function restorePersistedDirectoryFilters() {
   currentBlueprintAge = readPersistedFilter(STORAGE_KEYS.BLUEPRINT_AGE, ALLOWED_BLUEPRINT_AGES, 'toddler');
   currentTheme = readPersistedFilter(STORAGE_KEYS.THEME, ALLOWED_THEMES, 'light');
   currentLanguage = readPersistedFilter(STORAGE_KEYS.LANGUAGE, ALLOWED_LANGUAGES, 'en');
+  currentChirpPersona = readPersistedFilter(STORAGE_KEYS.CHIRP_PERSONA, ALLOWED_CHIRP_PERSONAS, 'Aoede');
 
   syncFilterButtons('#channel-filters .filter-btn', currentChannelFilter);
   syncFilterButtons('#game-age-filters .filter-btn', currentGameAgeFilter);
@@ -4939,6 +4947,17 @@ function setupFoodCalculator() {
 // ==================== EXPERT LENS: DR. BECKY SCRIPT FILTER ====================
 const ALLOWED_EXPERT_TOPICS = new Set(['all', 'confidence', 'frustration', 'big-feelings', 'repair']);
 
+function formatExpertStatusText(topic, shown, total) {
+  const i18n = typeof getPortalI18n === 'function' ? getPortalI18n() : null;
+  const exp = i18n && i18n.expertTab ? i18n.expertTab : null;
+  if (topic === 'all') {
+    const tpl = (exp && exp.statusAll) || 'Showing all {n} scripts.';
+    return tpl.replace('{n}', String(shown));
+  }
+  const tpl = (exp && exp.statusFiltered) || 'Showing {shown} of {total} scripts.';
+  return tpl.replace('{shown}', String(shown)).replace('{total}', String(total));
+}
+
 function setupExpertScriptFilters() {
   const filterBtns = document.querySelectorAll('#expert-topic-filters .filter-btn');
   const scriptCards = document.querySelectorAll('#expert-script-grid .expert-script-card');
@@ -4947,6 +4966,7 @@ function setupExpertScriptFilters() {
 
   const applyTopic = (rawTopic) => {
     const topic = ALLOWED_EXPERT_TOPICS.has(rawTopic) ? rawTopic : 'all';
+    currentExpertTopic = topic;
     let shown = 0;
     scriptCards.forEach(card => {
       const match = topic === 'all' || card.getAttribute('data-expert-topic') === topic;
@@ -4959,12 +4979,12 @@ function setupExpertScriptFilters() {
       btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
     if (statusEl) {
-      statusEl.textContent = topic === 'all'
-        ? `Showing all ${shown} scripts.`
-        : `Showing ${shown} of ${scriptCards.length} scripts.`;
+      statusEl.textContent = formatExpertStatusText(topic, shown, scriptCards.length);
     }
     return topic;
   };
+
+  refreshExpertFilterStatusRef = () => applyTopic(currentExpertTopic);
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -4990,23 +5010,360 @@ function setupExpertCopyButtons() {
       const phraseEl = card ? card.querySelector('.expert-try-text') : null;
       if (!phraseEl) return;
       const phrase = (phraseEl.textContent || '').trim();
-      const label = 'Copy phrase';
+      const getCopyLabel = () => {
+        const exp = getPortalI18n().expertTab;
+        return (exp && exp.copyBtn) || 'Copy phrase';
+      };
+      const getCopiedLabel = () => {
+        const exp = getPortalI18n().expertTab;
+        return (exp && exp.copiedBtn) || 'Copied ✓';
+      };
       const flash = (msg) => {
         btn.textContent = msg;
-        setTimeout(() => { btn.textContent = label; }, 2000);
+        setTimeout(() => { btn.textContent = getCopyLabel(); }, 2000);
       };
       safeCopyText(
         phrase,
         () => {
-          flash('Copied ✓');
+          flash(getCopiedLabel());
           if (window.trackSafeKidsEvent) {
             window.trackSafeKidsEvent('copy_expert_phrase', { topic: card.getAttribute('data-expert-topic') || 'unknown' });
           }
         },
-        () => flash('Select the text to copy')
+        () => flash(getCopiedLabel())
       );
     });
   });
+}
+
+// ==================== CHIRP 3 HD READ ALOUD ENGINE (11 LANGUAGES) ====================
+const SPEECH_SYNTH_LANG_MAP = {
+  en: 'en-US',
+  es: 'es-ES',
+  zh: 'zh-CN',
+  yue: 'zh-HK',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  pt: 'pt-BR',
+  fr: 'fr-FR',
+  it: 'it-IT',
+  de: 'de-DE',
+  ar: 'ar-SA'
+};
+
+let activeSpeechState = {
+  audio: null,
+  blobUrl: null,
+  abortCtrl: null,
+  btnEl: null,
+  restoreLabelFn: null
+};
+
+function stopSafeKidsSpeech() {
+  if (activeSpeechState.abortCtrl && typeof activeSpeechState.abortCtrl.abort === 'function') {
+    try { activeSpeechState.abortCtrl.abort(); } catch (err) { /* ignore */ }
+  }
+  if (activeSpeechState.audio) {
+    try {
+      activeSpeechState.audio.pause();
+      activeSpeechState.audio.removeAttribute('src');
+    } catch (err) { /* ignore */ }
+  }
+  if (activeSpeechState.blobUrl && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+    try { URL.revokeObjectURL(activeSpeechState.blobUrl); } catch (err) { /* ignore */ }
+  }
+  if (typeof window !== 'undefined' && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
+    try { window.speechSynthesis.cancel(); } catch (err) { /* ignore */ }
+  }
+  if (activeSpeechState.btnEl) {
+    activeSpeechState.btnEl.classList.remove('is-speaking');
+    activeSpeechState.btnEl.setAttribute('aria-pressed', 'false');
+    if (typeof activeSpeechState.restoreLabelFn === 'function') {
+      activeSpeechState.btnEl.textContent = activeSpeechState.restoreLabelFn();
+    }
+  }
+  activeSpeechState = { audio: null, blobUrl: null, abortCtrl: null, btnEl: null, restoreLabelFn: null };
+}
+
+function stripDecorativeQuotesAndEmoji(raw) {
+  return String(raw || '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF•⇒→←«»„“”"「」『』]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function playBrowserSpeechFallback(cleanText, safeLang, btnEl) {
+  if (typeof window === 'undefined' || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== 'function') {
+    stopSafeKidsSpeech();
+    return;
+  }
+  try {
+    const utter = new window.SpeechSynthesisUtterance(cleanText);
+    const bcp47 = SPEECH_SYNTH_LANG_MAP[safeLang] || 'en-US';
+    utter.lang = bcp47;
+    if (typeof window.speechSynthesis.getVoices === 'function') {
+      const voices = window.speechSynthesis.getVoices() || [];
+      const exact = voices.find(v => v && v.lang && v.lang.toLowerCase() === bcp47.toLowerCase());
+      const prefix = voices.find(v => v && v.lang && v.lang.toLowerCase().startsWith(bcp47.split('-')[0]));
+      if (exact || prefix) utter.voice = exact || prefix;
+    }
+    utter.onend = () => {
+      if (activeSpeechState.btnEl === btnEl) stopSafeKidsSpeech();
+    };
+    utter.onerror = () => {
+      if (activeSpeechState.btnEl === btnEl) stopSafeKidsSpeech();
+    };
+    window.speechSynthesis.speak(utter);
+  } catch (err) {
+    stopSafeKidsSpeech();
+  }
+}
+
+function playAudioUrlWithFallback(srcUrl, isBlob, onFail, btnEl) {
+  if (typeof Audio !== 'function') {
+    onFail();
+    return;
+  }
+  const audio = new Audio(srcUrl);
+  activeSpeechState.audio = audio;
+  if (isBlob) activeSpeechState.blobUrl = srcUrl;
+  let failed = false;
+  const triggerFail = () => {
+    if (failed || activeSpeechState.btnEl !== btnEl) return;
+    failed = true;
+    onFail();
+  };
+  audio.onended = () => {
+    if (activeSpeechState.btnEl === btnEl) stopSafeKidsSpeech();
+  };
+  audio.onerror = triggerFail;
+  try {
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(triggerFail);
+    }
+  } catch (err) {
+    triggerFail();
+  }
+}
+
+function speakSafeKidsItem(rawText, audioKey, btnEl, restoreLabelFn) {
+  if (!btnEl) return;
+  if (activeSpeechState.btnEl === btnEl) {
+    stopSafeKidsSpeech();
+    return;
+  }
+  stopSafeKidsSpeech();
+
+  const cleanText = stripDecorativeQuotesAndEmoji(rawText);
+  if (!cleanText) return;
+
+  const safeLang = ALLOWED_LANGUAGES.has(currentLanguage) ? currentLanguage : 'en';
+  const safePersona = ALLOWED_CHIRP_PERSONAS.has(currentChirpPersona) ? currentChirpPersona : 'Aoede';
+  const safeKey = /^[a-z0-9_-]+$/i.test(String(audioKey || '')) ? String(audioKey) : '';
+  const i18n = getPortalI18n();
+  const stopLabel = (i18n.expertTab && i18n.expertTab.chirpStopBtn) || '⏹ Stop';
+
+  activeSpeechState.btnEl = btnEl;
+  activeSpeechState.restoreLabelFn = restoreLabelFn;
+  btnEl.classList.add('is-speaking');
+  btnEl.setAttribute('aria-pressed', 'true');
+  btnEl.textContent = stopLabel;
+
+  const staticMp3Url = safeKey ? `audio/${safeLang}/${safeKey}.mp3` : '';
+  lastChirpAudioSrc = staticMp3Url;
+
+  if (window.trackSafeKidsEvent) {
+    window.trackSafeKidsEvent('chirp_read_aloud', { lang: safeLang, key: safeKey || 'custom', persona: safePersona });
+  }
+
+  const tryLiveProxyThenStaticOrWebSpeech = () => {
+    if (typeof fetch !== 'function') {
+      if (staticMp3Url && safePersona !== 'Aoede') {
+        playAudioUrlWithFallback(staticMp3Url, false, () => playBrowserSpeechFallback(cleanText, safeLang, btnEl), btnEl);
+      } else {
+        playBrowserSpeechFallback(cleanText, safeLang, btnEl);
+      }
+      return;
+    }
+    const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    activeSpeechState.abortCtrl = ctrl;
+    fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanText, lang: safeLang, persona: safePersona }),
+      signal: ctrl ? ctrl.signal : undefined
+    })
+      .then(resp => {
+        if (!resp || !resp.ok) throw new Error('tts_proxy_unavailable');
+        const ctype = (resp.headers && typeof resp.headers.get === 'function' ? resp.headers.get('Content-Type') : '') || '';
+        if (ctype && !ctype.includes('audio/')) throw new Error('not_audio');
+        return resp.blob();
+      })
+      .then(blob => {
+        if (activeSpeechState.btnEl !== btnEl) return;
+        if (!blob || blob.size < 256 || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+          throw new Error('empty_blob');
+        }
+        const blobUrl = URL.createObjectURL(blob);
+        lastChirpAudioSrc = `/api/tts?lang=${safeLang}&persona=${safePersona}`;
+        playAudioUrlWithFallback(blobUrl, true, () => {
+          if (staticMp3Url && safePersona !== 'Aoede') {
+            playAudioUrlWithFallback(staticMp3Url, false, () => playBrowserSpeechFallback(cleanText, safeLang, btnEl), btnEl);
+          } else {
+            playBrowserSpeechFallback(cleanText, safeLang, btnEl);
+          }
+        }, btnEl);
+      })
+      .catch(() => {
+        if (activeSpeechState.btnEl !== btnEl) return;
+        if (staticMp3Url && safePersona !== 'Aoede') {
+          lastChirpAudioSrc = staticMp3Url;
+          playAudioUrlWithFallback(staticMp3Url, false, () => playBrowserSpeechFallback(cleanText, safeLang, btnEl), btnEl);
+        } else {
+          playBrowserSpeechFallback(cleanText, safeLang, btnEl);
+        }
+      });
+  };
+
+  if (safePersona === 'Aoede' && staticMp3Url) {
+    playAudioUrlWithFallback(staticMp3Url, false, tryLiveProxyThenStaticOrWebSpeech, btnEl);
+  } else {
+    tryLiveProxyThenStaticOrWebSpeech();
+  }
+}
+
+function setupChirpReadAloud() {
+  const personaSelect = document.getElementById('chirp-persona-select');
+  if (personaSelect) {
+    personaSelect.value = ALLOWED_CHIRP_PERSONAS.has(currentChirpPersona) ? currentChirpPersona : 'Aoede';
+    personaSelect.addEventListener('change', (e) => {
+      const target = e.currentTarget || e.target;
+      const val = target && target.value ? target.value : 'Aoede';
+      currentChirpPersona = ALLOWED_CHIRP_PERSONAS.has(val) ? val : 'Aoede';
+      personaSelect.value = currentChirpPersona;
+      writePersistedFilter(STORAGE_KEYS.CHIRP_PERSONA, currentChirpPersona, ALLOWED_CHIRP_PERSONAS);
+      stopSafeKidsSpeech();
+    });
+  }
+
+  const listenBtns = document.querySelectorAll('#expert-script-grid .expert-listen-btn');
+  listenBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = typeof btn.closest === 'function' ? btn.closest('.expert-script-card') : null;
+      const phraseEl = card ? card.querySelector('.expert-try-text') : null;
+      const phrase = phraseEl ? (phraseEl.textContent || '').trim() : '';
+      const audioKey = btn.getAttribute('data-audio-key') || '';
+      speakSafeKidsItem(phrase, audioKey, btn, () => {
+        const exp = getPortalI18n().expertTab;
+        return (exp && exp.chirpListenBtn) || '🔊 Read Aloud';
+      });
+    });
+  });
+
+  const bpReadBtn = document.getElementById('btn-read-blueprint');
+  if (bpReadBtn) {
+    bpReadBtn.addEventListener('click', () => {
+      const bp = computeDailyBlueprint(currentBlueprintAge);
+      const spoken = `${bp.stageHeadline}. ${bp.screenBudget}. ${bp.sleepCutoff}. ${bp.mealRule}`;
+      speakSafeKidsItem(spoken, `blueprint_${bp.ageKey}`, bpReadBtn, () => {
+        const i18n = getPortalI18n();
+        return i18n.blueprintReadBtn || '🔊 Read Fridge Plan';
+      });
+    });
+  }
+}
+
+function applyExpertTabTranslations(i18n) {
+  if (!i18n || !i18n.expertTab) return;
+  const exp = i18n.expertTab;
+
+  const entryCard = document.getElementById('expert-entry-card');
+  if (entryCard && typeof entryCard.querySelector === 'function') {
+    const ek = entryCard.querySelector('.expert-entry-kicker');
+    const et = entryCard.querySelector('.expert-entry-title');
+    const es = entryCard.querySelector('.expert-entry-sub');
+    const ec = entryCard.querySelector('.expert-entry-cta');
+    if (ek && exp.entryKicker) ek.textContent = exp.entryKicker;
+    if (et && exp.entryTitle) et.textContent = exp.entryTitle;
+    if (es && exp.entrySub) es.textContent = exp.entrySub;
+    if (ec && exp.entryCta) ec.textContent = exp.entryCta;
+  }
+
+  const setById = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val) el.textContent = val;
+  };
+
+  setById('expert-heading-text', exp.heading);
+  setById('expert-video-count-badge', exp.badge);
+  setById('expert-lede-text', exp.lede);
+  setById('expert-about-text', exp.about);
+  setById('expert-disclaimer-text', exp.disclaimer);
+  setById('expert-picker-title', exp.pickerTitle);
+  setById('expert-picker-sub', exp.pickerSub);
+  setById('chirp-voice-label', exp.chirpVoiceLabel);
+  setById('expert-principles-title', exp.principlesTitle);
+  setById('expert-practice-title', exp.practiceTitle);
+  setById('expert-practice-sub', exp.practiceSub);
+  setById('expert-videos-title', exp.videosTitle);
+  setById('expert-videos-sub', exp.videosSub);
+  setById('expert-channels-title', exp.channelsTitle);
+  setById('expert-channels-sub', exp.channelsSub);
+
+  if (exp.topics) {
+    const topicBtns = document.querySelectorAll('#expert-topic-filters .expert-topic-btn');
+    topicBtns.forEach(btn => {
+      if (typeof btn.querySelector !== 'function') return;
+      const tKey = btn.getAttribute('data-expert-topic');
+      const lbl = btn.querySelector('.expert-topic-label');
+      if (lbl && tKey && exp.topics[tKey]) {
+        lbl.textContent = exp.topics[tKey];
+      }
+    });
+  }
+
+  const cards = document.querySelectorAll('#expert-script-grid .expert-script-card');
+  if (Array.isArray(exp.scripts)) {
+    cards.forEach((card, idx) => {
+      const sc = exp.scripts[idx];
+      if (!sc || typeof card.querySelector !== 'function') return;
+      const mEl = card.querySelector('.expert-moment-text');
+      const ilEl = card.querySelector('.expert-instead-label');
+      const itEl = card.querySelector('.expert-instead-text');
+      const tlEl = card.querySelector('.expert-try-label');
+      const ttEl = card.querySelector('.expert-try-text');
+      const lBtn = card.querySelector('.expert-listen-btn');
+      const cBtn = card.querySelector('.expert-copy-btn');
+      const wsEl = card.querySelector('.expert-why summary');
+      const wyEl = card.querySelector('.expert-script-why');
+      if (mEl) mEl.textContent = sc.moment;
+      if (ilEl && exp.insteadLabel) ilEl.textContent = exp.insteadLabel;
+      if (itEl) itEl.textContent = sc.instead;
+      if (tlEl && exp.tryLabel) tlEl.textContent = exp.tryLabel;
+      if (ttEl) ttEl.textContent = sc.tryText;
+      if (lBtn && exp.chirpListenBtn) lBtn.textContent = exp.chirpListenBtn;
+      if (cBtn && exp.copyBtn) cBtn.textContent = exp.copyBtn;
+      if (wsEl && exp.whySummary) wsEl.textContent = exp.whySummary;
+      if (wyEl) wyEl.textContent = sc.why;
+    });
+  }
+
+  const pCards = document.querySelectorAll('.expert-principles-grid .expert-principle-card');
+  if (Array.isArray(exp.principles)) {
+    pCards.forEach((pCard, idx) => {
+      const pr = exp.principles[idx];
+      if (!pr || typeof pCard.querySelector !== 'function') return;
+      const tEl = pCard.querySelector('.card-title');
+      const bEl = pCard.querySelector('p');
+      if (tEl) tEl.textContent = pr.title;
+      if (bEl) bEl.textContent = pr.body;
+    });
+  }
+
+  if (typeof refreshExpertFilterStatusRef === 'function') {
+    refreshExpertFilterStatusRef();
+  }
 }
 
 // ==================== LEFT-PANEL WORKSPACE TAB NAVIGATION & DEEP-LINK ROUTING ====================
@@ -5797,7 +6154,7 @@ function setupInfographicExperience() {
   }
 }
 
-// ==================== DARK MODE & 5-LANGUAGE I18N ENGINE (EN / ES / ZH / JA / KO) ====================
+// ==================== DARK MODE & 11-LANGUAGE I18N ENGINE (ATLAS OF WONDER PARITY) ====================
 const PORTAL_I18N = {
   en: {
     langCode: 'en',
@@ -5868,6 +6225,7 @@ const PORTAL_I18N = {
     ],
     blueprintSyncBtn: '🔗 Sync All 4 Directories to This Age',
     blueprintCopyBtn: '📋 Copy Caregiver Plan',
+    blueprintReadBtn: "🔊 Read Fridge Plan",
     blueprintPrintBtn: '🖨️ Print Fridge Quick-Sheet',
     searchPlaceholders: {
       channel: 'Search approved channels by title, research anchor, or topic (e.g. STEM, Nature, Phonics, Mindfulness)...',
@@ -5894,7 +6252,8 @@ const PORTAL_I18N = {
     emptyListenTitle: 'No podcasts, audiobooks, or books match your search criteria.',
     emptyListenSub: "Try selecting 'All Audio & Books' or clearing the format and search filters.",
     tabs: WORKSPACE_TAB_METADATA,
-    blueprintStages: BLUEPRINT_STAGE_RULES
+    blueprintStages: BLUEPRINT_STAGE_RULES,
+    expertTab: {"chirpListenBtn": "🔊 Read Aloud", "chirpStopBtn": "⏹ Stop", "chirpReadPlanBtn": "🔊 Read Fridge Plan", "chirpVoiceLabel": "🎙️ Chirp 3 HD Voice:", "entryKicker": "New • Learn From an Expert", "entryTitle": "What to say to raise confident kids", "entrySub": "9 calm phrases for everyday hard moments, with Chirp 3 HD read-aloud and Dr. Becky Kennedy's free videos.", "entryCta": "Open →", "heading": "What to Say to Raise Confident Kids", "badge": "10 verified videos", "lede": "Hard moments are normal. Here is what to say when they happen — calm, short phrases you can use today.", "about": "Ideas from Dr. Becky Kennedy, clinical psychologist, founder of Good Inside, author of Good Inside (2022), and host of the Good Inside with Dr. Becky podcast — drawn from her free public YouTube, TED, and Facebook teaching.", "disclaimer": "Independent study guide. SafeKids is not affiliated with or endorsed by Dr. Becky Kennedy or Good Inside. Scripts below are SafeKids paraphrases of ideas she teaches publicly, not verbatim quotes — each one links to a related video so you can hear the idea in her own words. Every video link was checked against YouTube on 2026-11-07.", "pickerTitle": "What's happening right now?", "pickerSub": "Tap a moment to see what to say, or tap Read Aloud to hear the phrase in Google Cloud Chirp 3 HD.", "topics": {"confidence": "Building confidence (4)", "frustration": "Holding a limit (2)", "big-feelings": "Big feelings (2)", "repair": "After I lost it (1)", "all": "Show all (9)"}, "statusAll": "Showing all {n} scripts.", "statusFiltered": "Showing {shown} of {total} scripts.", "insteadLabel": "Instead of", "tryLabel": "Try saying", "copyBtn": "Copy phrase", "copiedBtn": "Copied ✓", "whySummary": "Why this works", "principlesTitle": "The 5 big ideas behind the scripts", "practiceTitle": "Try it for a week: one small swap a day", "practiceSub": "A SafeKids practice plan built from the ideas above. Small, repeated swaps work better than a big overhaul.", "videosTitle": "Watch and learn: 10 free videos", "videosSub": "Links open on YouTube in a new tab. Nothing is embedded, so no YouTube trackers load until you choose to watch.", "channelsTitle": "Follow Dr. Becky's official channels", "channelsSub": "Her short daily tips are posted across these accounts. Facebook and Instagram may ask you to sign in to watch.", "scripts": [{"id": "script_1", "moment": "Your child shows you a drawing or project", "instead": "\"Good job! You're such a great artist!\"", "tryText": "\"Tell me about it. How did you decide where to start?\"", "why": "A curious question points your child inward, so their confidence rests on their own thinking instead of on your approval."}, {"id": "script_2", "moment": "\"She's so much better at this than me.\"", "instead": "\"No way, you're the best one there!\"", "tryText": "\"It stings when someone is better at something you care about. I've felt that too. And you're still you, and you're okay.\"", "why": "Arguing with the feeling teaches kids their inner experience is wrong. Naming it shows them they can feel envy and still be okay being themselves."}, {"id": "script_3", "moment": "Stuck on homework or a puzzle and wants to quit", "instead": "\"Here, let me just do it for you.\"", "tryText": "\"This is really hard. I'm right here. What's one small thing you could try next?\"", "why": "Rescuing removes the struggle that builds confidence. Staying close without fixing gives your child a track record of getting through hard things."}, {"id": "script_4", "moment": "Your tween or teen is nervous before a tryout or test", "instead": "\"Don't worry, you'll be great!\"", "tryText": "\"Of course you're nervous — this matters to you. Nervous and ready can both be true.\"", "why": "Reassurance can make nerves feel like a problem. Two-things-are-true language tells them the feeling is normal and does not mean they can't do it."}, {"id": "script_5", "moment": "Screen time is over and a meltdown starts", "instead": "\"Stop crying, it's just a show!\"", "tryText": "\"You wish you could keep watching. It's so hard to stop. And screens are done for today. You can be upset — I'm right here.\"", "why": "The limit holds and the feeling is allowed. Kids build frustration tolerance by being disappointed next to a calm adult, not by being talked out of it."}, {"id": "script_6", "moment": "Whining or begging after you've said \"no\"", "instead": "\"Fine, just one more — but stop whining.\"", "tryText": "\"The answer is still no. It's okay to be mad about it. I can handle your big feelings.\"", "why": "Caving teaches that big reactions change limits. A sturdy, warm \"no\" shows your child the boundary is safe and their feelings are not too much for you."}, {"id": "script_7", "moment": "Your child hits a sibling", "instead": "\"We don't hit! Go to your room!\"", "tryText": "\"I won't let you hit. I'm going to move you so everyone is safe. You're a good kid having a really hard time.\"", "why": "You stop the behavior with your actions, not threats, and keep the message that your child is good — which makes it easier to talk about what happened once everyone is calm."}, {"id": "script_8", "moment": "A \"deeply feeling kid\" explodes over something small", "instead": "\"You're totally overreacting.\"", "tryText": "\"That felt really big. I'm here.\"", "why": "Intense kids often feel more overwhelmed by lots of talking during a storm. Your steady presence first, problem-solving later."}, {"id": "script_9", "moment": "You yelled and regret it", "instead": "Pretending it didn't happen, or \"I yelled because you didn't listen.\"", "tryText": "\"I've been thinking about earlier. I'm sorry I yelled. That wasn't your fault — it's mine to work on. I love you.\"", "why": "Owning your part without blaming your child protects their sense of being good and shows them how to repair their own mistakes."}], "principles": [{"title": "Kids Are Good Inside", "body": "Hard behavior is a signal of a hard time, not proof of a bad kid. Lead with \"you're a good kid having a hard time\" and get curious about what's underneath."}, {"title": "Two Things Are True", "body": "You can hold a firm boundary and validate the feeling about it: \"You really want more time, and screens are done for today.\""}, {"title": "Be a Sturdy Leader", "body": "Your job is not to keep your child happy every minute; it is to stay calm and in charge while they learn they can survive being upset."}, {"title": "Confidence = Self-Trust", "body": "Confidence is not \"feeling good\" or hearing \"good job.\" It grows when kids look inward (\"What do I think?\") and build a track record of getting through hard things."}, {"title": "Repair Beats Perfection", "body": "Every parent yells or snaps sometimes. Coming back, owning your part, and reconnecting teaches kids that relationships survive mistakes — the topic of her TED talk."}]}
   },
   es: {
     langCode: 'es',
@@ -5965,6 +6324,7 @@ const PORTAL_I18N = {
     ],
     blueprintSyncBtn: '🔗 Sincronizar los 4 Directorios a Esta Edad',
     blueprintCopyBtn: '📋 Copiar Plan para Cuidadores',
+    blueprintReadBtn: "🔊 Leer Plan Diario",
     blueprintPrintBtn: '🖨️ Imprimir Hoja de Refrigerador',
     searchPlaceholders: {
       channel: 'Buscar canales (ej., Bluey, naturaleza, matemáticas, fonética)...',
@@ -6101,7 +6461,8 @@ const PORTAL_I18N = {
         sleepCutoff: 'Toque de queda estricto 60 min antes de dormir; cargadores fuera de la habitación',
         mealRule: 'Calcio + D3 + K2 + fibra prebiótica para pico de masa ósea; cero cafeína o bebidas energéticas'
       }
-    }
+    },
+    expertTab: {"chirpListenBtn": "🔊 Escuchar", "chirpStopBtn": "⏹ Detener", "chirpReadPlanBtn": "🔊 Leer Plan Diario", "chirpVoiceLabel": "🎙️ Voz Chirp 3 HD:", "entryKicker": "Nuevo • Aprende de una Experta", "entryTitle": "Qué decir para criar niños seguros de sí mismos", "entrySub": "9 frases calmas para momentos difíciles con voz Chirp 3 HD y videos gratuitos de la Dra. Becky Kennedy.", "entryCta": "Abrir →", "heading": "Qué Decir para Criar Niños Seguros de Sí Mismos", "badge": "10 videos verificados", "lede": "Los momentos difíciles son normales. Aquí tienes qué decir cuando ocurren: frases breves y serenas que puedes usar hoy mismo.", "about": "Ideas de la Dra. Becky Kennedy, psicóloga clínica, fundadora de Good Inside, autora de Good Inside (2022) y anfitriona del pódcast Good Inside with Dr. Becky, basadas en sus enseñanzas públicas gratuitas.", "disclaimer": "Guía de estudio independiente. SafeKids no está afiliado ni respaldado por la Dra. Becky Kennedy ni Good Inside. Los guiones son paráfrasis de SafeKids sobre ideas públicas, no citas textuales, y enlazan al video correspondiente.", "pickerTitle": "¿Qué está pasando ahora mismo?", "pickerSub": "Toca un momento para ver qué decir o pulsa Escuchar para oír la frase con Google Cloud Chirp 3 HD.", "topics": {"confidence": "Construir confianza (4)", "frustration": "Sostener un límite (2)", "big-feelings": "Emociones intensas (2)", "repair": "Después de perder la calma (1)", "all": "Mostrar todo (9)"}, "statusAll": "Mostrando los {n} guiones.", "statusFiltered": "Mostrando {shown} de {total} guiones.", "insteadLabel": "En lugar de", "tryLabel": "Prueba decir", "copyBtn": "Copiar frase", "copiedBtn": "Copiado ✓", "whySummary": "Por qué funciona", "principlesTitle": "Las 5 grandes ideas detrás de estas frases", "practiceTitle": "Pruébalo una semana: un pequeño cambio al día", "practiceSub": "Un plan práctico de SafeKids basado en las ideas anteriores. Los cambios pequeños y constantes funcionan mejor.", "videosTitle": "Mira y aprende: 10 videos gratuitos", "videosSub": "Los enlaces se abren en YouTube en una pestaña nueva sin cargar rastreadores antes de hacer clic.", "channelsTitle": "Sigue los canales oficiales de la Dra. Becky", "channelsSub": "Sus consejos breves diarios se publican en estas cuentas oficiales.", "scripts": [{"id": "script_1", "moment": "Tu hijo te muestra un dibujo o proyecto", "instead": "«¡Buen trabajo! ¡Eres un gran artista!»", "tryText": "«Cuéntame sobre tu dibujo. ¿Cómo decidiste por dónde empezar?»", "why": "Una pregunta curiosa dirige la atención del niño hacia su propio criterio, fortaleciendo la autoconfianza en lugar de depender del aplauso externo."}, {"id": "script_2", "moment": "«Ella es mucho mejor que yo en esto.»", "instead": "«¡De ninguna manera, tú eres el mejor de todos!»", "tryText": "«Duele cuando alguien es mejor en algo que te importa. Yo también he sentido eso. Y sigues siendo tú, y estás bien.»", "why": "Negar lo que siente le enseña a desconfiar de su mundo interior. Nombrarlo le muestra que puede sentir frustración y seguir valiendo tal como es."}, {"id": "script_3", "moment": "Se atasca con la tarea o un rompecabezas y quiere rendirse", "instead": "«Ven, déjame hacerlo por ti.»", "tryText": "«Esto está realmente difícil. Estoy aquí contigo. ¿Qué pequeña cosa podrías intentar ahora?»", "why": "Rescatarlo elimina el esfuerzo que construye confianza. Acompañar sin resolver le da experiencia real superando retos."}, {"id": "script_4", "moment": "Tu preadolescente o adolescente está nervioso antes de una prueba", "instead": "«¡No te preocupes, te saldrá genial!»", "tryText": "«Claro que estás nervioso: esto te importa. Estar nervioso y estar preparado pueden ser verdad al mismo tiempo.»", "why": "Normalizar los nervios demuestra que la incomodidad no significa falta de capacidad."}, {"id": "script_5", "moment": "Se termina el tiempo de pantalla y empieza el llanto", "instead": "«¡Deja de llorar, es solo un programa!»", "tryText": "«Desearías seguir mirando. Es muy difícil parar. Y las pantallas terminaron por hoy. Puedes estar enojado; estoy aquí contigo.»", "why": "El límite se mantiene firme y la emoción se permite. La tolerancia a la frustración crece junto a un adulto tranquilo."}, {"id": "script_6", "moment": "Insiste o se queja después de que dijiste «no»", "instead": "«Está bien, solo uno más, pero deja de quejarte.»", "tryText": "«La respuesta sigue siendo no. Está bien que te enoje. Puedo sostener tus emociones grandes.»", "why": "Un «no» cálido y firme demuestra que el límite es seguro y que sus sentimientos no te desbordan."}, {"id": "script_7", "moment": "Tu hijo golpea a su hermano", "instead": "«¡No se pega! ¡Vete a tu cuarto!»", "tryText": "«No voy a dejar que pegues. Me acerco para que todos estén seguros. Eres un buen niño pasando un momento muy difícil.»", "why": "Detienes la conducta físicamente con calma y proteges su identidad de niño bueno para poder reparar después."}, {"id": "script_8", "moment": "Un niño de emociones intensas explota por algo pequeño", "instead": "«Estás exagerando por completo.»", "tryText": "«Eso se sintió enorme. Estoy aquí contigo.»", "why": "En plena tormenta emocional, muchas palabras abruman más. Primero presencia calmada; las soluciones vienen después."}, {"id": "script_9", "moment": "Gritaste y te arrepientes", "instead": "Fingir que no pasó nada o decir «Grité porque no hiciste caso».", "tryText": "«Estuve pensando en lo de antes. Siento haber gritado. No fue tu culpa; me toca a mí trabajar en mi calma. Te quiero.»", "why": "Asumir tu parte sin culpar al niño protege su seguridad emocional y le modela cómo reparar errores."}], "principles": [{"title": "Los Niños Son Buenos por Dentro", "body": "Una conducta difícil es señal de un momento difícil, no de un niño malo. Empieza con curiosidad por lo que ocurre debajo."}, {"title": "Dos Cosas Son Ciertas", "body": "Puedes sostener un límite firme y validar el sentimiento a la vez: «Quieres más tiempo, y las pantallas terminaron por hoy»."}, {"title": "Sé un Líder Firme y Sereno", "body": "Tu tarea no es evitar que se frustre nunca, sino mantener la calma mientras descubre que puede atravesar el malestar."}, {"title": "Confianza = Autoconfianza", "body": "La verdadera confianza no nace del «¡muy bien!», sino de mirarse hacia adentro y superar dificultades paso a paso."}, {"title": "La Reparación Supera a la Perfección", "body": "Todos perdemos la paciencia alguna vez. Volver, asumir tu parte y reconectar enseña que el vínculo resiste los errores."}]}
   },
   zh: {
     langCode: 'zh',
@@ -6172,6 +6533,7 @@ const PORTAL_I18N = {
     ],
     blueprintSyncBtn: '🔗 将全部4个目录同步至此年龄段',
     blueprintCopyBtn: '📋 复制看护人每日计划',
+    blueprintReadBtn: "🔊 朗读每日计划",
     blueprintPrintBtn: '🖨️ 打印冰箱速查表',
     searchPlaceholders: {
       channel: '搜索频道（例如：Bluey、自然、数学、自然拼读）...',
@@ -6308,7 +6670,8 @@ const PORTAL_I18N = {
         sleepCutoff: '睡前 60 分钟严格宵禁；充电器整夜留在卧室外',
         mealRule: '骨量峰值期补足 D3 + K2 + 钙 + 益生元纤维；严禁咖啡因与能量饮料'
       }
-    }
+    },
+    expertTab: {"chirpListenBtn": "🔊 语音朗读", "chirpStopBtn": "⏹ 停止", "chirpReadPlanBtn": "🔊 朗读每日计划", "chirpVoiceLabel": "🎙️ Chirp 3 HD 音色：", "entryKicker": "新增 • 向专家学习", "entryTitle": "怎么说才能培养自信的孩子", "entrySub": "涵盖9个日常棘手时刻的平和话术，支持 Chirp 3 HD 语音朗读与 Becky 博士公开课视频。", "entryCta": "打开 →", "heading": "怎么说才能培养自信的孩子", "badge": "10 个已核实视频", "lede": "育儿中的崩溃时刻很正常。下面这些简短、平和的话术，今天就能直接用上。", "about": "理念源自临床心理学家、Good Inside 创始人、《Good Inside》（2022）作者 Becky Kennedy 博士的免费公开视频与 TED 演讲。", "disclaimer": "独立学习指南。SafeKids 与 Becky Kennedy 博士或 Good Inside 无关联或背书关系。以下话术为 SafeKids 对其公开理念的归纳改写，并非逐字引用。", "pickerTitle": "此刻正在发生什么？", "pickerSub": "点击场景查看建议说法，或点击“语音朗读”用 Google Cloud Chirp 3 HD 聆听示范语气。", "topics": {"confidence": "建立内在自信 (4)", "frustration": "温和守住界限 (2)", "big-feelings": "应对强烈情绪 (2)", "repair": "发火后的修复 (1)", "all": "显示全部 (9)"}, "statusAll": "当前显示全部 {n} 条话术。", "statusFiltered": "当前显示 {shown} / {total} 条话术。", "insteadLabel": "别急着说", "tryLabel": "试试这样说", "copyBtn": "复制这句话", "copiedBtn": "已复制 ✓", "whySummary": "为什么有效", "principlesTitle": "话术背后的 5 个核心理念", "practiceTitle": "练习一周：每天一个小替换", "practiceSub": "循序渐进的微小改变，比一次性的完美主义更容易坚持。", "videosTitle": "观看学习：10 个免费公开视频", "videosSub": "链接将在新标签页打开 YouTube，点击前不会加载任何第三方追踪脚本。", "channelsTitle": "关注 Becky 博士的官方频道", "channelsSub": "她的每日简短育儿建议发布在以下官方账号。", "scripts": [{"id": "script_1", "moment": "孩子向你展示一幅画或手工作品", "instead": "“太棒了！你真是个小画家！”", "tryText": "“快跟我讲讲这幅画吧。你是怎么想到从这里开始画的？”", "why": "好奇的提问能引导孩子向内看，让自信建立在自己的思考之上，而不是依赖大人的夸奖。"}, {"id": "script_2", "moment": "“她画得比我好多了。”", "instead": "“胡说，你才是最棒的那个！”", "tryText": "“在自己在意的事情上别人做得更好，心里确实会不好受。我也有过这种感觉。但你依然是你，你这样就很好。”", "why": "否定感受会让孩子怀疑自己的直觉；接纳嫉妒与失落，孩子才能学会在落差中依然接纳自己。"}, {"id": "script_3", "moment": "写作业或拼图卡住了，想放弃", "instead": "“来，我直接帮你弄好吧。”", "tryText": "“这道题确实很难。我就在你身边陪着你。接下来有什么小小的一步可以试试看？”", "why": "代劳会剥夺锻炼抗挫力的机会；温和陪伴而不抢着解决，才能帮孩子积累克服困难的底气。"}, {"id": "script_4", "moment": "大孩子在考试或选拔前紧张不安", "instead": "“别担心，你肯定没问题的！”", "tryText": "“你会紧张太正常了，因为这件事对你很重要。既紧张又准备好，这两件事可以同时成立。”", "why": "允许紧张存在，孩子就不会把正常的心跳加速当成“我不行”的信号。"}, {"id": "script_5", "moment": "屏幕时间到了，孩子开始哭闹", "instead": "“别哭了，不就是个动画片吗！”", "tryText": "“你真的很想继续看，要停下来确实很难受。不过今天的屏幕时间结束了。你可以生我的气，我就在这儿陪你。”", "why": "界限坚定不变，同时允许情绪流露。孩子是在情绪稳定的大人身边学会承受失望的。"}, {"id": "script_6", "moment": "你说“不行”之后，孩子不停软磨硬泡", "instead": "“行吧行吧，就最后一次，别再哼唧了。”", "tryText": "“答案依然是不行。你可以为此感到生气，我接得住你的大情绪。”", "why": "温和而坚定的拒绝告诉孩子：规则是安全的，他的情绪也不会把父母压垮。"}, {"id": "script_7", "moment": "孩子动手打了兄弟姐妹", "instead": "“不许打人！回你自己房间去！”", "tryText": "“我不能让你打人。我先把你们分开，保证大家都安全。你是个好孩子，只是现在遇到了很难受的时刻。”", "why": "用平稳的行动制止行为，同时把“坏行为”与“好孩子”分开，等平静后才更容易引导真诚修复。"}, {"id": "script_8", "moment": "高敏感的孩子因为一点小事瞬间爆发", "instead": "“你也太小题大做了吧。”", "tryText": "“刚才那一下让你觉得特别委屈对不对？我在这儿陪你。”", "why": "情绪风暴正盛时，讲大道理只会让神经系统更加过载。先用简短的话稳住安全感，事后再复盘。"}, {"id": "script_9", "moment": "你没忍住吼了孩子，事后很后悔", "instead": "假装没发生过，或说“还不是因为你不听话我才吼你的”。", "tryText": "“我一直在想刚才的事。对不起，我不该冲你大吼。这不是你的错，管好情绪是我自己的功课。我爱你。”", "why": "真诚承担大人的责任而不甩锅给孩子，能修复安全感，也为孩子示范如何面对错误。"}], "principles": [{"title": "孩子内心本善", "body": "棘手的行为意味着孩子正经历困难，而不是孩子变坏了。带着好奇看见行为背后的需求。"}, {"title": "两件事可以同时成立", "body": "你可以坚定守住界限，同时接纳孩子的不情愿：“你很想再玩一会儿，同时今天的时间到了。”"}, {"title": "做情绪稳定的领航员", "body": "父母的职责不是让孩子时刻开心，而是在风浪中稳住船舵，让孩子发现自己能度过不开心。"}, {"title": "自信就是自我信任", "body": "真正的自信不是听大人夸“真棒”，而是学会倾听内心，并在一次次跨过难关中积累底气。"}, {"title": "关系修复胜过完美无瑕", "body": "没有从不发火的父母。事后主动道歉、承担责任并重新连接，能让孩子相信爱经得起失误。"}]}
   },
   ja: {
     langCode: 'ja',
@@ -6379,6 +6742,7 @@ const PORTAL_I18N = {
     ],
     blueprintSyncBtn: '🔗 全4ディレクトリをこの年齢に同期',
     blueprintCopyBtn: '📋 ケアプランをコピー',
+    blueprintReadBtn: "🔊 プランを読み上げ",
     blueprintPrintBtn: '🖨️ 冷蔵庫シートを印刷',
     searchPlaceholders: {
       channel: 'チャンネルを検索（例：Bluey、自然、算数、フォニックス）...',
@@ -6515,7 +6879,8 @@ const PORTAL_I18N = {
         sleepCutoff: '就寝60分前の厳格な門限；充電器は一晩中寝室の外に配置',
         mealRule: '最大骨量のためのD3 + K2 + カルシウム + 食物繊維；カフェイン・エナジードリンク禁止'
       }
-    }
+    },
+    expertTab: {"chirpListenBtn": "🔊 音声で聴く", "chirpStopBtn": "⏹ 停止", "chirpReadPlanBtn": "🔊 プランを読み上げ", "chirpVoiceLabel": "🎙️ Chirp 3 HD 音声：", "entryKicker": "新着 • 専門家から学ぶ", "entryTitle": "自信のある子を育てる親の声かけ", "entrySub": "日常の困った場面で使える9つの穏やかなフレーズ（Chirp 3 HD 音声読み上げ・無料動画付き）。", "entryCta": "開く →", "heading": "自信のある子を育てる親の声かけ", "badge": "確認済み動画 10本", "lede": "子育ての大変な瞬間は誰にでもあります。今日からすぐに使える、短く穏やかな声かけ集です。", "about": "臨床心理士であり Good Inside 創設者・『Good Inside』（2022年）著者のベッキー・ケネディ博士による無料の公開動画・TEDトークをもとに構成しています。", "disclaimer": "独立した学習ガイドです。SafeKids はベッキー・ケネディ博士および Good Inside と提携関係にはありません。以下のフレーズは公開講義の要点を SafeKids が言い換えたもので、逐語引用ではありません。", "pickerTitle": "今、どんな場面ですか？", "pickerSub": "場面をタップして声かけを見るか、「音声で聴く」で Google Cloud Chirp 3 HD の自然な読み上げを聴けます。", "topics": {"confidence": "自信を育てる (4)", "frustration": "境界線を守る (2)", "big-feelings": "大きな感情 (2)", "repair": "怒りすぎた後の修復 (1)", "all": "すべて表示 (9)"}, "statusAll": "全 {n} 件のフレーズを表示中。", "statusFiltered": "{total} 件中 {shown} 件のフレーズを表示中。", "insteadLabel": "こう言う代わりに", "tryLabel": "こう伝えてみよう", "copyBtn": "フレーズをコピー", "copiedBtn": "コピー完了 ✓", "whySummary": "なぜ効果的なのか", "principlesTitle": "声かけを支える5つの基本理念", "practiceTitle": "1週間チャレンジ：1日1つの言い換え", "practiceSub": "一度に全部変えるより、小さな言い換えを繰り返すほうが自然に身につきます。", "videosTitle": "動画で学ぶ：無料公開ビデオ 10本", "videosSub": "リンクは新しいタブで YouTube を開きます。クリックするまでトラッカーは読み込まれません。", "channelsTitle": "ベッキー博士の公式チャンネル", "channelsSub": "毎日の短い子育てヒントは以下の公式アカウントで発信されています。", "scripts": [{"id": "script_1", "moment": "子どもが絵や作品を見せてくれたとき", "instead": "「すごいね！絵の天才だね！」", "tryText": "「この絵について教えて。どこから描こうってどうやって決めたの？」", "why": "好奇心からの質問は子どもの意識を自分の内側へ向け、大人の評価ではなく自分の工夫に自信を持てるようにします。"}, {"id": "script_2", "moment": "「あの子、私よりずっと上手なんだもん」", "instead": "「そんなことないよ、あなたのほうが一番上手だよ！」", "tryText": "「大事なことで誰かのほうが上手だと、胸がチクッとするよね。私もそう感じたことがあるよ。それでもあなたはあなたのままで大丈夫だよ。」", "why": "気持ちを打ち消すと自分の感覚を信じられなくなります。悔しさを認めることで、揺れても自分は大丈夫だと学べます。"}, {"id": "script_3", "moment": "宿題やパズルで行き詰まり、投げ出しそうなとき", "instead": "「貸してごらん、やってあげるから。」", "tryText": "「本当に難しいね。すぐ隣にいるよ。次に試せそうな小さな一歩は何かな？」", "why": "先回りして解決すると自信の種になる試行錯誤を奪ってしまいます。そばで見守ることが「乗り越えた実績」になります。"}, {"id": "script_4", "moment": "テストや選考の前に緊張しているとき", "instead": "「心配しないで、絶対うまくいくよ！」", "tryText": "「ドキドキして当然だよ、それだけ大切に思っているんだもの。緊張していることと準備ができていることは、同時に成り立つよ。」", "why": "緊張を悪者にしないことで、ドキドキしても力を発揮できると安心できます。"}, {"id": "script_5", "moment": "スクリーンタイムが終わり、かんしゃくが始まったとき", "instead": "「泣かないの！たかが動画でしょ！」", "tryText": "「もっと観たかったよね。やめるのは本当につらいね。でも今日の画面はおしまいだよ。怒っても大丈夫、ここにいるからね。」", "why": "ルールは守りつつ感情は否定しません。落ち着いた大人の隣でがっかりする経験が欲求不満耐性を育てます。"}, {"id": "script_6", "moment": "「ダメ」と言ったあともぐずって頼み続けるとき", "instead": "「わかった、あと1回だけよ。そのかわり泣き言はやめて。」", "tryText": "「答えはやっぱりノーだよ。悔しくて怒ってもいいよ。あなたの大きな気持ちはちゃんと受け止められるからね。」", "why": "温かく揺るがない「ノー」は、境界線が安全であり、自分の感情で親が崩れないという安心感を与えます。"}, {"id": "script_7", "moment": "きょうだいを叩いてしまったとき", "instead": "「叩いちゃダメ！自分の部屋に行きなさい！」", "tryText": "「叩くことはさせないよ。みんなが安全でいられるように離れるね。あなたはいい子だけど、今はとても大変な気持ちなんだね。」", "why": "脅しではなく行動で安全を守り、「本来はいい子」という前提を保つことで、落ち着いた後の仲直りが進みやすくなります。"}, {"id": "script_8", "moment": "感受性の強い子が些細なことで大爆発したとき", "instead": "「大げさに騒ぎすぎだよ。」", "tryText": "「すごく大きなことに感じられたんだね。ここにいるよ。」", "why": "感情の嵐の最中に言葉を重ねるとさらにパニックになります。まずは穏やかな存在で安心させ、話し合いは落ち着いてから。"}, {"id": "script_9", "moment": "つい怒鳴ってしまい、後悔しているとき", "instead": "何事もなかったふりをする、または「言うことを聞かないから怒鳴ったのよ」と言う。", "tryText": "「さっきのことを考えていたんだ。怒鳴ってごめんね。あなたのせいじゃないよ、落ち着く練習は私の課題なの。大好きだよ。」", "why": "子どものせいにせず親が自分の責任を引き受けることで、子どもの自己肯定感が守られ、謝り方の手本にもなります。"}], "principles": [{"title": "子どもは本来『中は良い子』", "body": "問題行動は悪い子の証拠ではなく、困っているサインです。行動の奥にある気持ちに目を向けます。"}, {"title": "2つのことが同時に真実", "body": "「もっと遊びたい気持ち」を認めながら、「今日はおしまい」という境界線を同時に守れます。"}, {"title": "頼れる穏やかなリーダーでいる", "body": "親の役目は子どもを常に機嫌よくさせることではなく、嵐の中でも落ち着いて舵を握り続けることです。"}, {"title": "自信とは『自分を信じる力』", "body": "本当の自信は「えらいね」という褒め言葉ではなく、自分の感覚を信じ、困難を乗り越えた経験から育ちます。"}, {"title": "完璧さより『関係の修復』", "body": "誰でも怒りすぎる日はあります。後から謝ってつながり直すことが、揺るがない信頼を育てます。"}]}
   },
   ko: {
     langCode: 'ko',
@@ -6586,6 +6951,7 @@ const PORTAL_I18N = {
     ],
     blueprintSyncBtn: '🔗 4대 디렉토리를 이 연령으로 동기화',
     blueprintCopyBtn: '📋 돌봄 일일 플랜 복사',
+    blueprintReadBtn: "🔊 플랜 읽어주기",
     blueprintPrintBtn: '🖨️ 냉장고 요약 시트 인쇄',
     searchPlaceholders: {
       channel: '채널 검색 (예: Bluey, 자연, 수학, 파닉스)...',
@@ -6722,7 +7088,374 @@ const PORTAL_I18N = {
         sleepCutoff: '취침 60분 전 엄격한 통금; 충전기는 밤새 침실 밖에 보관',
         mealRule: '최대 골량 형성을 위한 D3 + K2 + 칼슘 + 프리바이오틱 식이섬유; 카페인·에너지 음료 금지'
       }
-    }
+    },
+    expertTab: {"chirpListenBtn": "🔊 음성 듣기", "chirpStopBtn": "⏹ 정지", "chirpReadPlanBtn": "🔊 플랜 읽어주기", "chirpVoiceLabel": "🎙️ Chirp 3 HD 음성:", "entryKicker": "신규 • 전문가에게 배우기", "entryTitle": "자신감 있는 아이로 키우는 부모의 말하기", "entrySub": "일상의 힘든 순간에 바로 쓰는 9가지 차분한 문장 — Chirp 3 HD 음성 낭독 및 무료 영상 제공.", "entryCta": "열기 →", "heading": "자신감 있는 아이로 키우는 부모의 말하기", "badge": "검증된 영상 10개", "lede": "육아에서 힘든 순간은 자연스럽습니다. 오늘 바로 써볼 수 있는 짧고 단단한 문장들을 모았습니다.", "about": "임상심리학자이자 Good Inside 창립자, 『Good Inside』(2022) 저자인 베키 케네디 박사의 무료 공개 강연과 TED 강연을 바탕으로 정리했습니다.", "disclaimer": "독립 학습 가이드입니다. SafeKids는 베키 케네디 박사나 Good Inside와 제휴 관계가 아닙니다. 아래 문장은 공개 강연의 핵심을 SafeKids가 재구성한 의역 표현입니다.", "pickerTitle": "지금 어떤 상황인가요?", "pickerSub": "상황을 눌러 표현을 확인하거나 ‘음성 듣기’를 눌러 Google Cloud Chirp 3 HD 목소리로 들어보세요.", "topics": {"confidence": "자신감 키우기 (4)", "frustration": "한계 지켜주기 (2)", "big-feelings": "격한 감정 다루기 (2)", "repair": "화낸 뒤 관계 회복 (1)", "all": "전체 보기 (9)"}, "statusAll": "전체 {n}개 스크립트를 표시 중입니다.", "statusFiltered": "{total}개 중 {shown}개 스크립트를 표시 중입니다.", "insteadLabel": "이런 말 대신", "tryLabel": "이렇게 말해보세요", "copyBtn": "문구 복사", "copiedBtn": "복사됨 ✓", "whySummary": "효과적인 이유", "principlesTitle": "스크립트에 담긴 5가지 핵심 원칙", "practiceTitle": "일주일 실천: 하루에 작은 말 바꾸기 하나", "practiceSub": "한꺼번에 완벽해지기보다 작은 말 습관을 꾸준히 바꾸는 편이 훨씬 오래갑니다.", "videosTitle": "영상으로 배우기: 무료 공개 영상 10편", "videosSub": "클릭하기 전에는 어떠한 유튜브 추적기도 로드되지 않으며 새 탭에서 열립니다.", "channelsTitle": "베키 박사의 공식 채널 팔로우", "channelsSub": "짧은 일일 육아 팁이 올라오는 공식 계정입니다.", "scripts": [{"id": "script_1", "moment": "아이가 그림이나 만든 작품을 보여줄 때", "instead": "“잘했네! 정말 멋진 화가구나!”", "tryText": "“이 그림 이야기 좀 해줄래? 어디부터 그릴지 어떻게 정했어?”", "why": "호기심 어린 질문은 아이가 외부 칭찬 대신 자기 생각과 과정을 돌아보며 내면의 자신감을 쌓게 도와줍니다."}, {"id": "script_2", "moment": "“쟤는 나보다 이걸 훨씬 잘해.”", "instead": "“무슨 소리야, 네가 제일 잘해!”", "tryText": "“내가 좋아하는 걸 다른 친구가 더 잘하면 마음이 쓰리지. 엄마도 그런 적 있어. 그래도 너는 여전히 너고, 지금 그대로 괜찮아.”", "why": "속상한 마음을 부정하면 자기 감정을 불신하게 됩니다. 부러움을 인정해주어야 흔들려도 괜찮다는 자기신뢰가 자랍니다."}, {"id": "script_3", "moment": "숙제나 퍼즐이 막혀서 포기하려 할 때", "instead": "“이리 줘 봐, 내가 해줄게.”", "tryText": "“이게 정말 어렵구나. 내가 바로 옆에 있어. 다음에 해볼 수 있는 아주 작은 시도 하나는 뭘까?”", "why": "대신 해결해주면 자신감을 키우는 과정을 빼앗게 됩니다. 곁을 지키며 스스로 넘어보게 할 때 진짜 회복탄력성이 생깁니다."}, {"id": "script_4", "moment": "시험이나 발표를 앞두고 긴장할 때", "instead": "“걱정 마, 무조건 잘할 거야!”", "tryText": "“떨리는 게 당연하지, 너한테 중요한 일이잖아. 떨리는 마음과 준비된 상태는 동시에 진짜일 수 있어.”", "why": "긴장을 자연스러운 신호로 받아들이면 불안 때문에 위축되지 않습니다."}, {"id": "script_5", "moment": "화면 시청 시간이 끝나자 울고불고할 때", "instead": "“울지 마, 고작 만화잖아!”", "tryText": "“계속 보고 싶었구나. 멈추기가 정말 힘들지. 그래도 오늘 화면 시간은 끝났어. 속상해도 괜찮아, 내가 옆에 있을게.”", "why": "규칙은 단단히 지키되 감정은 허용합니다. 차분한 어른 곁에서 실망을 견뎌보는 경험이 좌절 내성을 키웁니다."}, {"id": "script_6", "moment": "‘안 돼’라고 한 뒤에도 계속 조르고 칭얼거릴 때", "instead": "“알았어, 딱 한 번만 더야. 대신 칭얼거리지 마.”", "tryText": "“대답은 여전히 안 돼야. 화가 나도 괜찮아. 네 큰 감정을 내가 다 받아줄 수 있어.”", "why": "따뜻하지만 흔들리지 않는 거절은 경계가 안전하며 아이의 감정이 부모를 무너뜨리지 않는다는 믿음을 줍니다."}, {"id": "script_7", "moment": "아이가 동생이나 형제를 때렸을 때", "instead": "“때리면 안 되지! 당장 방으로 들어가!”", "tryText": "“때리는 건 허락할 수 없어. 모두가 안전하도록 자리를 옮길게. 너는 좋은 아이인데 지금 무척 힘든 순간을 겪고 있구나.”", "why": "위협 대신 차분한 행동으로 제지하고 ‘좋은 아이’라는 정체성을 지켜주면 진정한 화해로 이어지기 쉽습니다."}, {"id": "script_8", "moment": "감정이 깊은 아이가 사소한 일에 폭발할 때", "instead": "“별일 아닌데 너무 오바하잖아.”", "tryText": "“방금 그 일이 정말 크게 느껴졌구나. 내가 여기 있어.”", "why": "감정 폭풍 한가운데서 긴 설명은 오히려 자극이 됩니다. 먼저 차분한 존재감으로 진정시킨 뒤 대화를 나누세요."}, {"id": "script_9", "moment": "아이에게 소리 지르고 후회될 때", "instead": "아무 일 없던 척하거나 “네가 말을 안 들어서 소리 지른 거야”라고 말하기.", "tryText": "“아까 일을 계속 생각해 봤어. 소리 질러서 미안해. 네 잘못이 아니야. 화를 다스리는 건 내가 연습해야 할 몫이야. 사랑해.”", "why": "아이 탓을 하지 않고 어른의 책임을 인정할 때 아이의 자존감이 지켜지고 사과하는 법도 배우게 됩니다."}], "principles": [{"title": "아이의 내면은 본래 선하다", "body": "문제 행동은 나쁜 아이의 증거가 아니라 힘들다는 신호입니다. 행동 너머의 마음을 궁금해하세요."}, {"title": "두 가지 마음이 동시에 진실이다", "body": "단호한 경계를 지키면서 아쉬운 감정도 인정할 수 있습니다. “더 놀고 싶지, 그리고 이제 잘 시간이야.”"}, {"title": "단단한 리더가 되어주라", "body": "부모의 역할은 아이를 매 순간 기쁘게 만드는 것이 아니라 폭풍 속에서도 침착하게 키를 잡는 것입니다."}, {"title": "자신감은 곧 자기신뢰다", "body": "진짜 자신감은 빈 칭찬이 아니라 내면의 목소리에 귀 기울이고 어려움을 통과해 본 경험에서 나옵니다."}, {"title": "완벽함보다 관계 회복이 중요하다", "body": "실수하지 않는 부모는 없습니다. 돌아가 사과하고 다시 연결될 때 관계는 더 단단해집니다."}]}
+  },
+  yue: {
+    langCode: "yue",
+    langName: "粵語",
+    darkModeBtnOff: "🌙 深色模式",
+    darkModeBtnOn: "☀️ 淺色模式",
+    darkModeToggleTitle: "切換深色 / 淺色模式",
+    languageSwitcherLabel: "語言切換",
+    languageSelectLabel: "選擇語言",
+    languagePillsLabel: "快捷語言按鈕",
+    infographicEnterBtn: "📸 2分鐘資訊圖速覽",
+    infographicExitBtn: "📸 退出2分鐘資訊圖速覽",
+    expandAllScienceBtn: "🔬 展開全部臨床依據",
+    hideClinicalDetailsBtn: "🔬 收起臨床細節",
+    headerViewFullGuideBtn: "📖 檢視完整指南",
+    headerFocusedTabsBtn: "🎯 分欄聚焦檢視",
+    showAllSectionsBtn: "展開全部章節",
+    returnFocusedTabsBtn: "返回分欄檢視",
+    activePrefix: "目前：",
+    prevPrefix: "上一欄：",
+    nextPrefix: "下一欄：",
+    formatPagerIndicator: (cur, total, label) => `正在瀏覽第 ${cur} / ${total} 頁 • ${label}`,
+    backToOverviewBtn: "← 返回每日計劃與總覽",
+    jumpToChannelsBtn: "前往觀看 · 安全頻道 (28) →",
+    fullHandbookModeLabel: "完整手冊模式 • 全部 8 個分欄已展開",
+    globalAgeLabel: "👶 孩子年齡：",
+    globalAges: {"all": "全部年齡", "under-2": "0–24個月", "toddler": "2–3歲", "preschool": "4–5歲", "early-elementary": "6–7歲", "middle-elementary": "8–9歲", "preteen": "10–12歲"},
+    sidebarBrandTitle: "觀看 • 益智 • 營養 • 傾聽",
+    sidebarBrandSub: "喺上方揀選年齡，或直接跳去下方專題目錄。",
+    sidebarGroups: ["1. 由呢度開始", "2. 每日嚴選四大目錄", "3. 自測工具與臨床科學", "4. 向專家學習"],
+    sidebarNav: {"overview": {"title": "每日計劃與10大守則", "caption": "雪櫃貼與四大支柱總覽", "pill": "起點"}, "channels": {"title": "觀看：低刺激頻道", "caption": "零演算法影片白名單", "pill": "28"}, "games": {"title": "益智：教育者遊戲", "caption": "無廣告空間與邏輯遊戲", "pill": "33"}, "nutrition": {"title": "營養：天然全食物", "caption": "便當盒替換與 NFI-10", "pill": "32"}, "listen": {"title": "傾聽與閱讀：無屏音頻", "caption": "科普播客、音頻卡與繪本", "pill": "26"}, "science": {"title": "科學與自測量表", "caption": "SEM-10、NFI-10 與 30 項研究", "pill": "30 文獻"}, "lockdown": {"title": "裝置與網絡防護", "caption": "開源應用、系統與 DNS 鎖定", "pill": "13 工具"}, "expert": {"title": "Becky 博士：自信孩子", "caption": "點樣同小朋友講：話術與影片", "pill": "10 條片"}, "all": {"title": "檢視完整手冊 / 列印", "caption": "單頁展開所有章節", "pill": "全部"}},
+    mobileBar: {"overview": "總覽", "channels": "觀看", "games": "益智", "nutrition": "營養", "listen": "傾聽", "lockdown": "防護", "expert": "專家"},
+    heroHeading: "溫和、實證支持嘅兒童影視、益智遊戲、天然營養與無屏音頻家長中心",
+    heroSubtitle: "揀選孩子年齡即可獲得每日作息方案，或瀏覽 119 項精選低刺激節目、建構主義益智遊戲、天然全食物便當替換，以及無屏播客同經典繪本。",
+    heroStats: ["精選低刺激頻道", "教育者認可遊戲", "全食物替換與主食", "無屏播客與經典繪本", "雙 10 分制評估量表", "臨床研究與法規引用"],
+    blueprintSyncBtn: "🔗 將四大目錄同步至呢個年齡",
+    blueprintReadBtn: "🔊 朗讀每日計劃",
+    blueprintCopyBtn: "📋 複製照護者每日計劃",
+    blueprintPrintBtn: "🖨️ 列印雪櫃速查貼",
+    searchPlaceholders: {"channel": "搜尋核准頻道（例如：自然、數學、自然拼讀、科學）...", "game": "搜尋益智遊戲（例如：國際象棋、編程、空間幾何、蒙特梭利）...", "food": "搜尋 32 款天然食物與替換方案（例如：DHA、鐵、膽鹼、無人工色素）...", "listen": "搜尋音頻與繪本（例如：Yoto、科普播客、自然拼讀、青蛙與蟾蜍）..."},
+    viewChannelBtn: "前往官方頻道",
+    visitGameBtn: "造訪官方遊戲 / 應用",
+    viewFoodRefBtn: "檢視臨床與營養參考",
+    viewListenRefBtn: "收聽 / 檢視圖書參考",
+    drawerShowLabel: "🔬 + 點解有效、家長指南與文獻引用",
+    drawerHideLabel: "🔬 − 收起臨床細節與家長指南",
+    formatChannelsCount: (n) => (n === 1 ? "1 個頻道" : `${n} 個頻道`),
+    formatGamesCount: (n) => (n === 1 ? "1 款遊戲" : `${n} 款遊戲`),
+    formatFoodsCount: (n) => (n === 1 ? "1 項全食物或替換方案" : `${n} 項全食物與替換方案`),
+    formatListenCount: (n) => (n === 1 ? "1 項音頻或圖書精選" : `${n} 項音頻與圖書精選`),
+    emptyChannelsTitle: "冇搵到符合條件嘅頻道。",
+    emptyChannelsSub: "請試下切換年齡篩選或清除搜尋關鍵字。",
+    emptyGamesTitle: "冇搵到符合條件嘅益智遊戲。",
+    emptyGamesSub: "請試下揀選「全部遊戲」或清除領域、退出摩擦與搜尋篩選。",
+    emptyFoodsTitle: "冇搵到符合條件嘅全食物或替換方案。",
+    emptyFoodsSub: "請試下揀選全部食物或清除營養領域篩選。",
+    emptyListenTitle: "冇搵到符合條件嘅播客、有聲書或繪本。",
+    emptyListenSub: "請試下揀選全部音頻與圖書或清除搜尋詞。",
+    tabs: {"overview": {"kicker": "第 1 / 8 頁 • 由呢度開始", "title": "總覽、分齡每日作息計劃與 10 大核心家庭守則", "sub": "溫和每日節奏、可列印四大支柱雪櫃速查貼與家長核心行動框架。", "shortLabel": "每日計劃與總覽"}, "science": {"kicker": "第 2 / 8 頁 • 臨床證據與量表", "title": "臨床神經科學、雙 10 分自測器（SEM-10 與 NFI-10）及 30 項文獻", "sub": "同儕審查腦成像、發展心理學、兒科營養隨機對照試驗與 60 秒自測工具。", "shortLabel": "科學與量表 (30)"}, "channels": {"kicker": "第 3 / 8 頁 • 第一支柱（觀看）", "title": "家長認可低刺激影視頻道目錄（28 個頻道）", "sub": "按 SEM-10 量表評分嘅慢節奏頻道，支援一鍵匯出 JSON/CSV 白名單。", "shortLabel": "觀看 · 頻道 (28)"}, "games": {"kicker": "第 4 / 8 頁 • 第二支柱（益智）", "title": "教育者認可認知與建構主義遊戲目錄（33 款遊戲）", "sub": "零廣告、零抽獎箱嘅空間幾何、邏輯編程與蒙特梭利互動應用。", "shortLabel": "益智 · 遊戲 (33)"}, "nutrition": {"kicker": "第 5 / 8 頁 • 第三支柱（營養）", "title": "兒科醫生與營養師審核全食物及便當替換目錄（32 項方案）", "sub": "用天然 NOVA-1 全食物取代超加工零食、果泥吸吸袋與人工合成色素。", "shortLabel": "營養 · 全食物 (32)"}, "listen": {"kicker": "第 6 / 8 頁 • 第四支柱（傾聽與閱讀）", "title": "傾聽與閱讀：無屏音頻、科普播客與經典繪本目錄（26 項精選）", "sub": "精選科學故事播客、Yoto/Tonie 實體音頻卡、自然拼讀讀本與對話式共讀繪本。", "shortLabel": "傾聽與閱讀 (26)"}, "lockdown": {"kicker": "第 7 / 8 頁 • 技術防護體系", "title": "開源家長控制工具對比與分步裝置 / DNS 鎖定指南", "sub": "13 款開源工具架構對比，以及 BrainRotGuard、KidTube、Family Link、引導使用模式與 NextDNS 設定步驟。", "shortLabel": "裝置與 DNS 防護"}, "expert": {"kicker": "第 8 / 8 頁 • 專家視角（Becky Kennedy 博士）", "title": "向專家學習：Becky Kennedy 博士談點樣培養自信嘅小朋友", "sub": "5 個 Good Inside 核心理念、9 條「換個講法」話術、7 日練習計劃，配 Chirp 3 HD 語音朗讀與 10 條經核實免費影片。", "shortLabel": "專家 · Becky 博士 (10)"}, "all": {"kicker": "完整手冊模式 • 全部 8 個分欄可見", "title": "SafeKids 家長門戶完整參考手冊（全部章節）", "sub": "單頁展示 10 大建議、30+ 臨床研究、28 個頻道、33 款遊戲、32 項全食物方案、26 項無屏音頻圖書與 5 套防護指南。", "shortLabel": "完整手冊（全部章節）"}},
+    blueprintStages: {"under-2": {"ageLabelShort": "2歲以下（0–24個月）", "directoryFilterAge": "toddler", "stageHeadline": "👶 2歲以下（0–24個月）— 100% 零螢幕感官動作與鐵 / DHA 黃金期", "stageSummary": "AAP (2016) 與 Kuhl (2003)：24個月以下嬰幼兒存在「影片學習赤字」，需要真人面對面語言互動、地板探索，以及富含血紅素鐵與 DHA 嘅天然輔食。", "screenBudget": "0 分鐘/日被動影片（按 AAP 僅限親友即時視像通話）", "sleepCutoff": "100% 無屏暗光嬰兒房；每日總睡眠/小睡 12–16 小時", "mealRule": "零添加糖、零蜜糖（<12個月）；軟爛天然高鐵 + DHA 全食物"}, "toddler": {"ageLabelShort": "幼兒期（2–3歲）", "directoryFilterAge": "toddler", "stageHeadline": "🧸 幼兒期（2–3歲）— 家長陪睇慢節奏（SEM-10 ≤ 2/10）與防鯁塞天然飲食", "stageSummary": "WHO (2019) 與 Lillard (2011)：每日螢幕總時長控制喺 30–45 分鐘內，並喺客廳電視全程陪睇；配搭無失敗懲罰嘅開放式玩具箱與切開四瓣嘅 NOVA-1 全食物。", "screenBudget": "≤ 30–45 分鐘/日（100% 家長喺共享電視陪睇）", "sleepCutoff": "午睡及睡前 60+ 分鐘關閉所有螢幕（保護褪黑激素）", "mealRule": "100% 無屏餐桌；提子/車厘茄縱向切成四瓣；堅果醬薄塗防鯁塞"}, "preschool": {"ageLabelShort": "學齡前（4–5歲）", "directoryFilterAge": "preschool", "stageHeadline": "🎨 學齡前（4–5歲）— 前額葉執行功能、自然拼讀與感官食物橋樑", "stageSummary": "Diamond (2013) 與 Hirsh-Pasek (2015)：透過低喚醒度故事與觸覺拼讀應用培養抑制控制與數感，並實踐零壓力家庭共餐。", "screenBudget": "≤ 45–60 分鐘/日精選低刺激電視或引導式應用", "sleepCutoff": "睡前 60+ 分鐘關閉所有螢幕（改為繪本共讀與有聲故事）", "mealRule": "100% 無屏用餐；零人工合成色素（誘惑紅 Red 40 / E129、檸檬黃 Yellow 5 / E102）；完整生果取代吸吸袋果泥"}, "early-elementary": {"ageLabelShort": "小學低年級（6–7歲）", "directoryFilterAge": "early-elementary", "stageHeadline": "🚀 小學低年級（6–7歲）— 動手 STEM 探究、空間邏輯與平穩課堂血糖", "stageSummary": "Papert (1980) 與 Benton (2007)：由被動觀看轉向動手繪畫、自然探究與關卡制空間謎題；準備低升糖負荷早餐與便當，預防上午 10:30 注意力下滑。", "screenBudget": "上學日娛樂螢幕 ≤ 60 分鐘/日（僅限客廳公共區域）", "sleepCutoff": "睡前 60+ 分鐘硬體斷網；睡房嚴禁擺放螢幕", "mealRule": "低升糖負荷早餐 + 便當（燕麥/雞蛋/堅果籽仁），維持 4 小時課堂專注"}, "middle-elementary": {"ageLabelShort": "小學中年級（8–9歲）", "directoryFilterAge": "middle-elementary", "stageHeadline": "🧩 小學中年級（8–9歲）— 建構主義編程、演繹數學與神經輔因子營養", "stageSummary": "Resnick (2017) 與 Asbell-Clarke (2012)：將自主性引導至 Scratch 積木編程、布爾邏輯與工程沙盒（配 5 分鐘視覺倒數計時），補充鐵、鋅與海洋 DHA。", "screenBudget": "≤ 60–75 分鐘/日（優先創意編程與雙人合作解謎）", "sleepCutoff": "熄燈前 60+ 分鐘所有裝置統一放廚房充電（Chang et al., 2015）", "mealRule": "無屏家庭晚餐；血紅素鐵/扁豆鐵 + 維他命 C 及每週 2–3 次深海魚 DHA"}, "preteen": {"ageLabelShort": "青春前期（10–12歲）", "directoryFilterAge": "preteen", "stageHeadline": "🔭 青春前期（10–12歲）— 深度系統思維、骨量峰值儲備與零演算法短片", "stageSummary": "Nisan & Schocken (2005) 與 Weaver (2016)：用軌道物理、CPU 架構與深度策略取代短片瀑布流同抽獎箱遊戲，把握骨礦化峰值補充鈣 / D3 / K2 與多酚。", "screenBudget": "娛樂螢幕 ≤ 60–90 分鐘/日（零無限捲動短片流、零聊天功能）", "sleepCutoff": "睡前 60 分鐘嚴格宵禁；充電器過夜留喺睡房外", "mealRule": "骨量峰值 D3 + K2 + 鈣 + 益生元膳食纖維；零咖啡因與能量飲品"}},
+    expertTab: {"chirpListenBtn": "🔊 粵語朗讀", "chirpStopBtn": "⏹ 停止", "chirpReadPlanBtn": "🔊 朗讀每日計劃", "chirpVoiceLabel": "🎙️ Chirp 3 HD 聲線：", "entryKicker": "新增 • 向專家學習", "entryTitle": "點樣同小朋友講先可以培養自信", "entrySub": "9 句應對日常難關嘅平和說話，支援 Chirp 3 HD 廣東話朗讀同 Becky 博士免費影片。", "entryCta": "打開 →", "heading": "點樣同小朋友講先可以培養自信", "badge": "10 條已核實影片", "lede": "湊仔女遇到崩潰時刻好正常。呢度有幾句簡短、平和嘅說話，今日就可以即刻用。", "about": "理念來自臨床心理學家、Good Inside 創辦人兼《Good Inside》（2022）作者 Becky Kennedy 博士嘅免費 YouTube、TED 同 Facebook 教學。", "disclaimer": "獨立學習指南。SafeKids 與 Becky Kennedy 博士或 Good Inside 並無關聯或背書關係。以下語句係根據公開教學整理嘅意譯版本，並非逐字引用。", "pickerTitle": "而家發生緊咩事？", "pickerSub": "撳一下情境睇建議講法，或者撳「粵語朗讀」用 Google Cloud Chirp 3 HD 聽下示範語氣。", "topics": {"confidence": "建立內在自信 (4)", "frustration": "溫和守住界線 (2)", "big-feelings": "處理強烈情緒 (2)", "repair": "發脾氣後修補 (1)", "all": "顯示全部 (9)"}, "statusAll": "顯示緊全部 {n} 條話術。", "statusFiltered": "顯示緊 {shown} / {total} 條話術。", "insteadLabel": "唔好急住講", "tryLabel": "試下咁樣講", "copyBtn": "複製呢句", "copiedBtn": "已複製 ✓", "whySummary": "點解有效", "principlesTitle": "話術背後嘅 5 大核心理念", "practiceTitle": "試足一星期：每日一個小改變", "practiceSub": "SafeKids 整理嘅練習計劃。細微而持續嘅改變，好過一次過推倒重來。", "videosTitle": "睇片學習：10 條免費公開影片", "videosSub": "連結會喺新分頁打開 YouTube，未撳之前唔會載入任何追蹤器。", "channelsTitle": "追蹤 Becky 博士嘅官方頻道", "channelsSub": "佢每日嘅簡短育兒貼士會發佈喺以下官方帳號。", "scripts": [{"id": "script_1", "moment": "小朋友攞幅畫或者勞作畀你睇", "instead": "「好叻呀！你真係個小畫家！」", "tryText": "「同我講下幅畫啦，你點樣決定由邊度開始畫先㗎？」", "why": "好奇嘅提問令小朋友將注意力放返自己身上，令自信建立喺自己嘅思考，而唔係單靠大人讚賞。"}, {"id": "script_2", "moment": "「佢玩呢樣嘢叻過我好多呀。」", "instead": "「傻啦，你先係最叻嗰個！」", "tryText": "「見到人哋喺自己重視嘅事上面叻過自己，個心真係會唔舒服。我都試過咁樣覺得。不過你依然係你，你已經好好。」", "why": "否定感受會令小朋友懷疑自己嘅內心體驗；講出嗰份失落，先至教到佢就算羨慕人哋都可以接納自己。"}, {"id": "script_3", "moment": "做功課或者砌拼圖卡住咗，想放棄", "instead": "「畀我啦，等我幫你整埋佢。」", "tryText": "「呢度真係好難喎。我喺度陪住你。有冇邊一小步你可以而家試下先？」", "why": "即刻出手幫忙會拎走練習抗逆力嘅機會；留喺身邊陪佢試，先可以幫佢儲起靠自己過關嘅信心。"}, {"id": "script_4", "moment": "大仔大女喺比賽或者測驗前好緊張", "instead": "「唔使驚，你一定得嘅！」", "tryText": "「你會緊張好正常呀，因為呢件事對你好重要。又緊張、又準備好，兩樣嘢可以同時係真嘅。」", "why": "接納緊張感，小朋友就唔會將正常嘅心跳加速當成「我搞唔掂」嘅訊號。"}, {"id": "script_5", "moment": "夠鐘熄電視，小朋友即刻大喊", "instead": "「唔好喊啦，只不過係套卡通片啫！」", "tryText": "「你好想繼續睇落去，要停低真係好唔捨得。不過今日睇螢幕嘅時間完咗喇。你可以嬲我，我會喺度陪住你。」", "why": "界線企硬，同時容許佢唔開心。小朋友係喺冷靜嘅大人身邊學會承受失望嘅。"}, {"id": "script_6", "moment": "你講咗「唔得」之後，小朋友不斷扭計乞求", "instead": "「好啦好啦，最後一次咋，唔好再扭計喇。」", "tryText": "「答案依然係唔得。你為咗呢件事嬲係無問題嘅，我接得住你嘅大情緒。」", "why": "溫和而堅定嘅「唔得」話畀小朋友知：界線係安全嘅，佢嘅情緒亦唔會令爸爸媽媽失控。"}, {"id": "script_7", "moment": "小朋友出手打細佬妹", "instead": "「唔准打人！返入房反省！」", "tryText": "「我唔會畀你打人。我而家帶開你先，確保大家都安全。你係個好孩子，只係而家好辛苦。」", "why": "用行動冷靜制止，同時保住「你係好孩子」嘅訊息，等大家冷靜落嚟先容易傾點樣修補。"}, {"id": "script_8", "moment": "感受特別強烈嘅小朋友因為小事大爆發", "instead": "「你使唔使咁誇張呀。」", "tryText": "「頭先嗰下令你覺得好大件事呀呵。我喺度陪住你。」", "why": "情緒風暴期間講太多道理只會令神經系統更加超載。先用簡短陪伴穩住安全感，遲啲再慢慢傾。"}, {"id": "script_9", "moment": "你忍唔住鬧咗小朋友，事後好後悔", "instead": "扮無事發生，或者講「都係因為你唔聽話我先大聲鬧你」。", "tryText": "「我頭先一直諗緊之前件事。對唔住，我唔應該向你大聲呼喝。呢個唔係你嘅錯，控制情緒係我自己要練習嘅事。我好愛你。」", "why": "大人誠實承擔自己嗰份責任、唔賴落小朋友度，可以保護佢嘅自我價值，仲示範咗點樣修補關係。"}], "principles": [{"title": "每個小朋友內心都係好嘅", "body": "難搞嘅行為只係小朋友遇到困難嘅訊號，唔代表佢係壞孩子。用好奇心了解行為背後嘅需要。"}, {"title": "兩件事可以同時係真", "body": "你可以企硬守住界線，同時體諒佢嘅感受：「你好想繼續玩，同時今日時間到喇。」"}, {"title": "做個穩陣嘅領航員", "body": "父母嘅責任唔係令小朋友每分每秒都開心，而係自己保持冷靜，陪佢發現原來唔開心都捱得過。"}, {"title": "自信等於相信自己", "body": "真正嘅自信唔係靠大人讚「好叻」，而係識得向內傾聽自己，並累積靠自己跨過難關嘅經驗。"}, {"title": "事後修補好過追求完美", "body": "無父母可以永遠唔發脾氣。事後返嚟道歉、承擔責任同重新連結，會教識小朋友關係經得起犯錯。"}]}
+  },
+  pt: {
+    langCode: "pt",
+    langName: "Português",
+    darkModeBtnOff: "🌙 Modo Escuro",
+    darkModeBtnOn: "☀️ Modo Claro",
+    darkModeToggleTitle: "Alternar entre modo escuro e claro",
+    languageSwitcherLabel: "Seletor de idioma",
+    languageSelectLabel: "Selecionar idioma",
+    languagePillsLabel: "Botões rápidos de idioma",
+    infographicEnterBtn: "📸 Visão Infográfica (2 min)",
+    infographicExitBtn: "📸 Sair da Visão Infográfica",
+    expandAllScienceBtn: "🔬 Expandir Ciência Clínica",
+    hideClinicalDetailsBtn: "🔬 Ocultar Detalhes Clínicos",
+    headerViewFullGuideBtn: "📖 Ver Guia Completo",
+    headerFocusedTabsBtn: "🎯 Abas Focadas",
+    showAllSectionsBtn: "Mostrar Todas as Seções",
+    returnFocusedTabsBtn: "Voltar às Abas Focadas",
+    activePrefix: "Ativo:",
+    prevPrefix: "Ant.:",
+    nextPrefix: "Próx.:",
+    formatPagerIndicator: (cur, total, label) => `Aba ${cur} de ${total} • ${label}`,
+    backToOverviewBtn: "← Voltar ao Plano Diário e Visão Geral",
+    jumpToChannelsBtn: "Ir para Assistir · Canais (28) →",
+    fullHandbookModeLabel: "Modo Guia Completo • Todas as 8 Abas Visíveis",
+    globalAgeLabel: "👶 Idade da Criança:",
+    globalAges: {"all": "Todas as Idades", "under-2": "0–24 m", "toddler": "2–3 anos", "preschool": "4–5 anos", "early-elementary": "6–7 anos", "middle-elementary": "8–9 anos", "preteen": "10–12 anos"},
+    sidebarBrandTitle: "Assistir • Brincar • Nutrir • Ouvir",
+    sidebarBrandSub: "Escolha uma idade acima ou pule para qualquer diretório abaixo.",
+    sidebarGroups: ["1. Comece Aqui", "2. Diretórios Diários Curados", "3. Ferramentas e Ciência Clínica", "4. Aprenda com uma Especialista"],
+    sidebarNav: {"overview": {"title": "Plano Diário e 10 Regras", "caption": "Folha de geladeira e 4 pilares", "pill": "Início"}, "channels": {"title": "Assistir: Canais Seguros", "caption": "Lista branca de baixa estimulação", "pill": "28"}, "games": {"title": "Brincar: Jogos Educativos", "caption": "Lógica e STEM sem anúncios", "pill": "33"}, "nutrition": {"title": "Nutrir: Comida de Verdade", "caption": "Trocas de lancheira e NFI-10", "pill": "32"}, "listen": {"title": "Ouvir e Ler: Áudio", "caption": "Podcasts, Yoto e livros vivos", "pill": "26"}, "science": {"title": "Ciência e Auditores", "caption": "SEM-10, NFI-10 e 30 estudos", "pill": "30 Citas"}, "lockdown": {"title": "Guias de Bloqueio", "caption": "Apps livres, SO e escudos DNS", "pill": "13 Ferr."}, "expert": {"title": "Dra. Becky: Crianças Confiantes", "caption": "O que dizer: frases e vídeos", "pill": "10 Vídeos"}, "all": {"title": "Ver Guia Completo / Imprimir", "caption": "Mostrar todas as seções juntas", "pill": "Tudo"}},
+    mobileBar: {"overview": "Plano", "channels": "Ver", "games": "Jogar", "nutrition": "Nutrir", "listen": "Áudio", "lockdown": "Escudo", "expert": "Esp."},
+    heroHeading: "Central Calma e Baseada em Evidências de Mídia, Jogos, Nutrição e Áudio para Pais",
+    heroSubtitle: "Escolha a idade do seu filho para obter um ritmo diário instantâneo ou explore 119 recursos curados: séries de baixa estimulação, jogos construtivistas, trocas de lancheira com alimentos integrais e podcasts e livros sem tela.",
+    heroStats: ["Canais Calmos Curados", "Jogos Aprovados por Educadores", "Alimentos Reais e Trocas", "Áudio e Livros Sem Tela", "Dupla Rubrica de 10 Pontos", "Estudos e Leis Citados"],
+    blueprintSyncBtn: "🔗 Sincronizar os 4 Diretórios para Esta Idade",
+    blueprintReadBtn: "🔊 Ouvir Plano Diário",
+    blueprintCopyBtn: "📋 Copiar Plano para Cuidadores",
+    blueprintPrintBtn: "🖨️ Imprimir Folha de Geladeira",
+    searchPlaceholders: {"channel": "Buscar canais aprovados (ex.: Bluey, natureza, matemática, fonética)...", "game": "Buscar jogos educativos (ex.: xadrez, programação, DragonBox, Montessori)...", "food": "Buscar 32 alimentos e trocas (ex.: salmão, ferro, DHA, sem corantes)...", "listen": "Buscar áudio e livros (ex.: Yoto, Brains On, fonética, histórias)..."},
+    viewChannelBtn: "Ver Canal Oficial",
+    visitGameBtn: "Visitar Jogo / App Oficial",
+    viewFoodRefBtn: "Ver Referência Clínica e Nutricional",
+    viewListenRefBtn: "Ouvir / Ver Referência do Livro",
+    drawerShowLabel: "🔬 + Por Que Funciona, Guia para Pais e Citações",
+    drawerHideLabel: "🔬 − Ocultar Detalhes Clínicos e Guia",
+    formatChannelsCount: (n) => (n === 1 ? "1 canal" : `${n} canais`),
+    formatGamesCount: (n) => (n === 1 ? "1 jogo" : `${n} jogos`),
+    formatFoodsCount: (n) => (n === 1 ? "1 alimento ou troca" : `${n} alimentos e trocas`),
+    formatListenCount: (n) => (n === 1 ? "1 áudio ou livro" : `${n} áudios e livros`),
+    emptyChannelsTitle: "Nenhum canal corresponde à sua busca.",
+    emptyChannelsSub: "Tente alterar o filtro de idade ou limpar o termo de busca.",
+    emptyGamesTitle: "Nenhum jogo educativo corresponde à sua busca.",
+    emptyGamesSub: "Tente limpar os filtros de idade, domínio, sinal de parada e busca.",
+    emptyFoodsTitle: "Nenhum alimento ou troca corresponde à sua busca.",
+    emptyFoodsSub: "Tente selecionar todos os alimentos ou limpar o filtro nutricional.",
+    emptyListenTitle: "Nenhum podcast, audiolivro ou livro corresponde à sua busca.",
+    emptyListenSub: "Tente selecionar todos os formatos ou limpar a busca.",
+    tabs: {"overview": {"kicker": "Aba 1 de 8 • Comece Aqui", "title": "Visão Geral, Plano Diário por Idade e 10 Regras Essenciais da Família", "sub": "Ritmo diário calmo, folha imprimível de 4 pilares para a geladeira e guia prático para pais.", "shortLabel": "Plano Diário e Visão Geral"}, "science": {"kicker": "Aba 2 de 8 • Evidência Clínica e Rubricas", "title": "Ciência Clínica, Auditores Duplos de 10 Pontos (SEM-10 e NFI-10) e 30 Citações", "sub": "Neuroimagem revisada por pares, psicologia do desenvolvimento, nutrição pediátrica e calculadoras de 60 segundos.", "shortLabel": "Ciência e Rubricas (30)"}, "channels": {"kicker": "Aba 3 de 8 • Pilar 1 (Assistir)", "title": "Diretório de Canais de Baixa Estimulação Aprovados por Pais (28 Canais)", "sub": "Canais de vídeo calmos avaliados na rubrica SEM-10 com exportação de lista branca em JSON/CSV.", "shortLabel": "Assistir · Canais (28)"}, "games": {"kicker": "Aba 4 de 8 • Pilar 2 (Brincar)", "title": "Diretório de Jogos Cognitivos e Apps Aprovados por Educadores (33 Jogos)", "sub": "Mundos construtivistas, quebra-cabeças espaciais e apps Montessori com zero anúncios e zero loot boxes.", "shortLabel": "Brincar · Jogos (33)"}, "nutrition": {"kicker": "Aba 5 de 8 • Pilar 3 (Nutrir)", "title": "Alimentos Integrais e Trocas de Lancheira Avaliados por Pediatras (32 Trocas)", "sub": "Substituições reais NOVA-1 no lugar de ultraprocessados infantis, sachês de purê e corantes sintéticos.", "shortLabel": "Nutrir · Alimentos (32)"}, "listen": {"kicker": "Aba 6 de 8 • Pilar 4 (Ouvir e Ler)", "title": "Ouvir e Ler: Diretório de Áudio Sem Tela, Podcasts e Livros Vivos (26 Escolhas)", "sub": "Podcasts de ciência e contos, cartões Yoto/Tonie, livros fonéticos decodificáveis e leitura dialógica.", "shortLabel": "Ouvir e Ler (26)"}, "lockdown": {"kicker": "Aba 7 de 8 • Defesa Técnica", "title": "Ferramentas Abertas de Controle Parental e Guias Passo a Passo de Bloqueio DNS", "sub": "13 arquiteturas de código aberto mais os Passos A–E para BrainRotGuard, KidTube, Family Link, Acesso Guiado e NextDNS.", "shortLabel": "Bloqueio de Dispositivos e DNS"}, "expert": {"kicker": "Aba 8 de 8 • Lente de Especialista (Dra. Becky Kennedy)", "title": "Aprenda com uma Especialista: Dra. Becky Kennedy sobre Criar Crianças Confiantes", "sub": "5 ideias centrais do Good Inside, 9 frases \"diga isto em vez daquilo\" com leitura em voz alta Chirp 3 HD, plano de 7 dias e 10 vídeos gratuitos verificados.", "shortLabel": "Especialista · Dra. Becky (10)"}, "all": {"kicker": "Modo Guia Completo • Todas as 8 Abas Visíveis", "title": "Referência Completa do Portal SafeKids para Pais (Todas as Seções)", "sub": "Exibindo todas as 10 recomendações, 30+ estudos clínicos, 28 canais, 33 jogos, 32 trocas alimentares, 26 áudios/livros e 5 guias.", "shortLabel": "Guia Completo (Tudo)"}},
+    blueprintStages: {"under-2": {"ageLabelShort": "Menores de 2 anos (0–24 m)", "directoryFilterAge": "toddler", "stageHeadline": "👶 Menores de 2 Anos (0–24 Meses) — 100% Zero Telas, Base Sensório-Motora e Ferro/DHA", "stageSummary": "AAP (2016) e Kuhl (2003): Pelo efeito de déficit de vídeo, bebês menores de 24 meses precisam de interação vocal ao vivo com os pais, exploração no chão e alimentos ricos em ferro heme e DHA.", "screenBudget": "0 min/dia de vídeo passivo (Apenas videochamadas familiares ao vivo segundo a AAP)", "sleepCutoff": "Quarto 100% escuro e sem telas; 12–16 h de sono total e sonecas", "mealRule": "Zero açúcar adicionado e zero mel (<12 m); alimentos macios ricos em ferro + DHA"}, "toddler": {"ageLabelShort": "Crianças pequenas (2–3 anos)", "directoryFilterAge": "toddler", "stageHeadline": "🧸 Crianças Pequenas (2–3 Anos) — Ritmo Lento em Família (SEM-10 ≤ 2/10) e Segurança contra Engasgo", "stageSummary": "OMS (2019) e Lillard (2011): Manter o tempo total de tela abaixo de 30–45 min/dia, sempre assistindo junto na TV da sala, com alimentos integrais NOVA-1 cortados em quartos ou amassados.", "screenBudget": "≤ 30–45 min/dia (100% acompanhado pelos pais na TV compartilhada)", "sleepCutoff": "Telas DESLIGADAS 60+ min antes da soneca e de dormir (Proteção da melatonina)", "mealRule": "Mesa 100% sem telas; cortar uvas e tomates-cereja em quartos no sentido do comprimento; pasta de oleaginosas em camada fina"}, "preschool": {"ageLabelShort": "Pré-escola (4–5 anos)", "directoryFilterAge": "preschool", "stageHeadline": "🎨 Pré-Escola (4–5 Anos) — Função Executiva Pré-Frontal, Fonética e Pontes Sensoriais", "stageSummary": "Diamond (2013) e Hirsh-Pasek (2015): Desenvolva controle inibitório, fonética sintética e senso numérico espacial com histórias calmas, apps táteis e refeições em família.", "screenBudget": "≤ 45–60 min/dia de TV de baixa estimulação ou app educativo guiado", "sleepCutoff": "Todas as telas DESLIGADAS 60+ min antes de dormir (Rotina de leitura em voz alta)", "mealRule": "Refeições 100% sem telas; zero corantes sintéticos (Vermelho 40 / Amarelo 5; E129 / E102); fruta inteira em vez de sachês de purê"}, "early-elementary": {"ageLabelShort": "Fundamental I inicial (6–7 anos)", "directoryFilterAge": "early-elementary", "stageHeadline": "🚀 Fundamental Inicial (6–7 Anos) — Investigação STEM Prática, Lógica Espacial e Glicose Estável", "stageSummary": "Papert (1980) e Benton (2007): Transição do vídeo passivo para desenho prático, ciência na natureza, desafios espaciais em fases e lancheiras de baixa carga glicêmica para 10:30 da manhã.", "screenBudget": "≤ 60 min/dia recreativo em dias de aula (Apenas em sala compartilhada)", "sleepCutoff": "Desligamento físico 60+ min antes de dormir; zero telas nos quartos", "mealRule": "Café da manhã + lancheira de baixa carga glicêmica (aveia/ovos/sementes) para 4 h de foco na aula"}, "middle-elementary": {"ageLabelShort": "Fundamental I médio (8–9 anos)", "directoryFilterAge": "middle-elementary", "stageHeadline": "🧩 Fundamental Médio (8–9 Anos) — Programação Construtivista, Matemática Dedutiva e Neuro-Nutrição", "stageSummary": "Resnick (2017) e Asbell-Clarke (2012): Canalize a autonomia para programação em blocos no Scratch, lógica booleana e engenharia (com timer visual de 5 min) junto com ferro, zinco e DHA.", "screenBudget": "≤ 60–75 min/dia (Priorizar programação criativa e quebra-cabeças cooperativos)", "sleepCutoff": "Dispositivos carregando na cozinha 60+ min antes de apagar as luzes (Chang et al., 2015)", "mealRule": "Jantar em família sem telas; Ferro heme/lentilha + Vitamina C e DHA marinho 2–3x/sem"}, "preteen": {"ageLabelShort": "Pré-adolescentes (10–12 anos)", "directoryFilterAge": "preteen", "stageHeadline": "🔭 Pré-Adolescentes (10–12 Anos) — Pensamento Sistêmico, Pico de Massa Óssea e Zero Feeds Sociais", "stageSummary": "Nisan & Schocken (2005) e Weaver (2016): Substitua feeds algorítmicos curtos (Shorts/TikTok) por física orbital, arquitetura de CPU e estratégia profunda, com cálcio/D3/K2 e polifenóis.", "screenBudget": "≤ 60–90 min/dia recreativo (Zero feeds de rolagem infinita ou chat)", "sleepCutoff": "Toque de recolher estrito 60 min antes de dormir; carregadores fora do quarto à noite", "mealRule": "Pico de massa óssea com D3 + K2 + cálcio + fibra prebiótica; zero cafeína ou energéticos"}},
+    expertTab: {"chirpListenBtn": "🔊 Ouvir Frase", "chirpStopBtn": "⏹ Parar", "chirpReadPlanBtn": "🔊 Ouvir Plano Diário", "chirpVoiceLabel": "🎙️ Voz Chirp 3 HD:", "entryKicker": "Novo • Aprenda com uma Especialista", "entryTitle": "O que dizer para criar crianças confiantes", "entrySub": "9 frases calmas para momentos difíceis, com narração Chirp 3 HD e vídeos gratuitos da Dra. Becky Kennedy.", "entryCta": "Abrir →", "heading": "O Que Dizer para Criar Crianças Confiantes", "badge": "10 vídeos verificados", "lede": "Momentos difíceis são normais. Aqui está o que dizer quando eles acontecem — frases curtas e serenas para usar hoje.", "about": "Ideias da Dra. Becky Kennedy, psicóloga clínica, fundadora da Good Inside e autora de Good Inside (2022), a partir de seus vídeos públicos gratuitos no YouTube, TED e Facebook.", "disclaimer": "Guia de estudo independente. O SafeKids não é afiliado nem endossado pela Dra. Becky Kennedy ou pela Good Inside. As frases abaixo são paráfrases educacionais, não citações literais.", "pickerTitle": "O que está acontecendo agora?", "pickerSub": "Toque em um momento para ver o que dizer ou toque em Ouvir Frase com Google Cloud Chirp 3 HD.", "topics": {"confidence": "Construir confiança (4)", "frustration": "Manter um limite (2)", "big-feelings": "Emoções intensas (2)", "repair": "Depois que perdi a calma (1)", "all": "Mostrar tudo (9)"}, "statusAll": "Mostrando todas as {n} frases.", "statusFiltered": "Mostrando {shown} de {total} frases.", "insteadLabel": "Em vez de", "tryLabel": "Tente dizer", "copyBtn": "Copiar frase", "copiedBtn": "Copiado ✓", "whySummary": "Por que isso funciona", "principlesTitle": "As 5 grandes ideias por trás das frases", "practiceTitle": "Experimente por uma semana: uma pequena troca por dia", "practiceSub": "Pequenas trocas repetidas funcionam melhor do que tentar mudar tudo de uma vez.", "videosTitle": "Assista e aprenda: 10 vídeos gratuitos", "videosSub": "Os links abrem no YouTube em nova aba; nenhum rastreador carrega antes do clique.", "channelsTitle": "Siga os canais oficiais da Dra. Becky", "channelsSub": "Dicas diárias curtas são publicadas nestes perfis oficiais.", "scripts": [{"id": "script_1", "moment": "Seu filho mostra um desenho ou projeto", "instead": "“Muito bem! Você é um grande artista!”", "tryText": "“Me conta sobre o seu desenho. Como você decidiu por onde começar?”", "why": "Uma pergunta curiosa direciona a criança para dentro, apoiando a confiança no próprio pensamento em vez de depender de aprovação externa."}, {"id": "script_2", "moment": "“Ela é muito melhor nisso do que eu.”", "instead": "“Imagina, você é o melhor de todos!”", "tryText": "“Dói quando alguém manda melhor em algo que importa para você. Eu já senti isso também. E você continua sendo você, e está tudo bem.”", "why": "Negar o sentimento ensina a criança a desconfiar do que sente; acolher a frustração mostra que ela continua inteira mesmo comparando-se."}, {"id": "script_3", "moment": "Travou na lição ou no quebra-cabeça e quer desistir", "instead": "“Deixa aqui que eu faço para você.”", "tryText": "“Isso está bem difícil mesmo. Estou bem aqui com você. Qual pequena coisa você poderia testar agora?”", "why": "Resolver pela criança tira o esforço que constrói autoconfiança. Ficar perto sem assumir o controle cria histórico de superação."}, {"id": "script_4", "moment": "Seu pré-adolescente ou adolescente está nervoso antes de uma prova", "instead": "“Não se preocupe, vai dar tudo certo!”", "tryText": "“Claro que você está nervoso — isso importa para você. Estar nervoso e estar pronto podem ser verdade ao mesmo tempo.”", "why": "Normalizar o frio na barriga mostra que o nervosismo não impede o bom desempenho."}, {"id": "script_5", "moment": "O tempo de tela acabou e começa o choro", "instead": "“Pare de chorar, é só um desenho!”", "tryText": "“Você queria muito continuar assistindo. É difícil parar. E as telas acabaram por hoje. Você pode ficar bravo — estou aqui com você.”", "why": "O limite permanece firme e a emoção é permitida. A tolerância à frustração nasce ao lado de um adulto calmo."}, {"id": "script_6", "moment": "Choramingo ou insistência depois de ouvir “não”", "instead": "“Está bom, só mais um — mas pare de choramingar.”", "tryText": "“A resposta continua sendo não. Tudo bem ficar chateado com isso. Eu dou conta dos seus sentimentos grandes.”", "why": "Um “não” calmo e firme mostra que o limite é seguro e que as emoções da criança não assustam você."}, {"id": "script_7", "moment": "Seu filho bate no irmão", "instead": "“Não pode bater! Vai já para o seu quarto!”", "tryText": "“Eu não vou deixar você bater. Vou afastar vocês para todo mundo ficar seguro. Você é uma boa criança passando por um momento bem difícil.”", "why": "Você interrompe o comportamento com firmeza calma e preserva a identidade positiva da criança para reparar depois."}, {"id": "script_8", "moment": "Uma criança de emoções intensas explode por algo pequeno", "instead": "“Você está exagerando completamente.”", "tryText": "“Isso pareceu gigante para você. Estou aqui.”", "why": "No auge da tempestade emocional, muitas palavras sobrecarregam ainda mais. Primeiro presença tranquila; conversa depois."}, {"id": "script_9", "moment": "Você gritou e se arrependeu", "instead": "Fingir que nada aconteceu ou dizer “Gritei porque você não obedeceu”.", "tryText": "“Fiquei pensando no que aconteceu antes. Me desculpe por ter gritado. Não foi culpa sua — cuidar disso é responsabilidade minha. Eu te amo.”", "why": "Assumir sua parte sem culpar a criança protege a autoestima dela e ensina na prática como reparar erros."}], "principles": [{"title": "As Crianças São Boas por Dentro", "body": "Comportamento difícil é sinal de um momento difícil, não de uma criança ruim. Olhe com curiosidade para o que está por baixo."}, {"title": "Duas Coisas São Verdadeiras", "body": "Você pode manter um limite firme e validar o sentimento ao mesmo tempo: “Você quer mais tempo, e as telas acabaram por hoje.”"}, {"title": "Seja um Líder Firme e Calmo", "body": "Seu papel não é impedir toda frustração, mas manter a calma enquanto seu filho descobre que sobrevive ao desconforto."}, {"title": "Confiança = Autoconfiança", "body": "Confiança real não vem de elogios vazios, mas de olhar para dentro e acumular experiências atravessando desafios."}, {"title": "Reparar Vale Mais que Perfeição", "body": "Todo pai ou mãe perde a paciência às vezes. Voltar, assumir sua parte e reconectar mostra que o vínculo supera erros."}]}
+  },
+  fr: {
+    langCode: "fr",
+    langName: "Français",
+    darkModeBtnOff: "🌙 Mode Sombre",
+    darkModeBtnOn: "☀️ Mode Clair",
+    darkModeToggleTitle: "Basculer entre le mode sombre et clair",
+    languageSwitcherLabel: "Sélecteur de langue",
+    languageSelectLabel: "Choisir la langue",
+    languagePillsLabel: "Boutons rapides de langue",
+    infographicEnterBtn: "📸 Vue Infographie (2 min)",
+    infographicExitBtn: "📸 Quitter la Vue Infographie",
+    expandAllScienceBtn: "🔬 Déplier la Science Clinique",
+    hideClinicalDetailsBtn: "🔬 Masquer les Détails Cliniques",
+    headerViewFullGuideBtn: "📖 Voir le Guide Complet",
+    headerFocusedTabsBtn: "🎯 Onglets Ciblés",
+    showAllSectionsBtn: "Afficher Toutes les Sections",
+    returnFocusedTabsBtn: "Retour aux Onglets Ciblés",
+    activePrefix: "Actif :",
+    prevPrefix: "Préc. :",
+    nextPrefix: "Suiv. :",
+    formatPagerIndicator: (cur, total, label) => `Onglet ${cur} sur ${total} • ${label}`,
+    backToOverviewBtn: "← Retour au Plan Quotidien et Aperçu",
+    jumpToChannelsBtn: "Aller à Regarder · Chaînes (28) →",
+    fullHandbookModeLabel: "Mode Manuel Complet • Les 8 Onglets Visibles",
+    globalAgeLabel: "👶 Âge de l’Enfant :",
+    globalAges: {"all": "Tous Âges", "under-2": "0–24 m", "toddler": "2–3 ans", "preschool": "4–5 ans", "early-elementary": "6–7 ans", "middle-elementary": "8–9 ans", "preteen": "10–12 ans"},
+    sidebarBrandTitle: "Regarder • Jouer • Nourrir • Écouter",
+    sidebarBrandSub: "Choisissez un âge ci-dessus ou accédez à un répertoire ci-dessous.",
+    sidebarGroups: ["1. Commencer Ici", "2. Répertoires Quotidiens", "3. Outils et Science Clinique", "4. Apprendre d’une Experte"],
+    sidebarNav: {"overview": {"title": "Plan Quotidien et 10 Règles", "caption": "Fiche frigo et 4 piliers", "pill": "Début"}, "channels": {"title": "Regarder : Chaînes Calmes", "caption": "Liste blanche basse stimulation", "pill": "28"}, "games": {"title": "Jouer : Jeux Éducatifs", "caption": "Logique et STEM sans pub", "pill": "33"}, "nutrition": {"title": "Nourrir : Aliments Bruts", "caption": "Échanges boîte à lunch et NFI-10", "pill": "32"}, "listen": {"title": "Écouter et Lire : Audio", "caption": "Podcasts, Yoto et livres vivants", "pill": "26"}, "science": {"title": "Science et Auto-Audits", "caption": "SEM-10, NFI-10 et 30 études", "pill": "30 Études"}, "lockdown": {"title": "Guides de Verrouillage", "caption": "Apps libres, OS et boucliers DNS", "pill": "13 Outils"}, "expert": {"title": "Dre Becky : Enfants Confiants", "caption": "Quoi dire : phrases et vidéos", "pill": "10 Vidéos"}, "all": {"title": "Guide Complet / Imprimer", "caption": "Afficher toutes les sections", "pill": "Tout"}},
+    mobileBar: {"overview": "Plan", "channels": "Vidéo", "games": "Jeux", "nutrition": "Repas", "listen": "Audio", "lockdown": "Bouclier", "expert": "Experte"},
+    heroHeading: "Portail Calme et Fondé sur la Science : Écrans, Jeux, Nutrition et Audio pour Parents",
+    heroSubtitle: "Choisissez l’âge de votre enfant pour obtenir un rythme quotidien immédiat, ou parcourez 119 ressources sélectionnées : émissions apaisées, jeux constructivistes, collations brutes et podcasts sans écran.",
+    heroStats: ["Chaînes Calmes Sélectionnées", "Jeux Validés par des Éducateurs", "Aliments Bruts et Échanges", "Audio et Livres Sans Écran", "Double Grille sur 10 Points", "Études et Lois Citées"],
+    blueprintSyncBtn: "🔗 Synchroniser les 4 Répertoires sur Cet Âge",
+    blueprintReadBtn: "🔊 Lire le Plan",
+    blueprintCopyBtn: "📋 Copier le Plan pour Proches / Garde",
+    blueprintPrintBtn: "🖨️ Imprimer la Fiche Frigo",
+    searchPlaceholders: {"channel": "Rechercher une chaîne approuvée (ex. : nature, maths, phonétique, pleine conscience)...", "game": "Rechercher un jeu éducatif (ex. : échecs, codage, DragonBox, Montessori)...", "food": "Rechercher parmi 32 aliments bruts et échanges (ex. : saumon, fer, DHA, sans colorants)...", "listen": "Rechercher un podcast, une carte Yoto ou un livre (ex. : Brains On, phonétique, contes)..."},
+    viewChannelBtn: "Voir la Chaîne Officielle",
+    visitGameBtn: "Visiter le Jeu / l’App",
+    viewFoodRefBtn: "Voir la Référence Clinique et Nutritionnelle",
+    viewListenRefBtn: "Écouter / Voir la Référence du Livre",
+    drawerShowLabel: "🔬 + Pourquoi Ça Marche, Guide Parent et Études",
+    drawerHideLabel: "🔬 − Masquer les Détails Cliniques",
+    formatChannelsCount: (n) => (n === 1 ? "1 chaîne" : `${n} chaînes`),
+    formatGamesCount: (n) => (n === 1 ? "1 jeu" : `${n} jeux`),
+    formatFoodsCount: (n) => (n === 1 ? "1 aliment brut ou échange" : `${n} aliments bruts et échanges`),
+    formatListenCount: (n) => (n === 1 ? "1 audio ou livre" : `${n} audios et livres`),
+    emptyChannelsTitle: "Aucune chaîne ne correspond à votre recherche.",
+    emptyChannelsSub: "Essayez de modifier le filtre d’âge ou d’effacer votre recherche.",
+    emptyGamesTitle: "Aucun jeu éducatif ne correspond à votre recherche.",
+    emptyGamesSub: "Essayez d’effacer les filtres d’âge, de domaine, d’arrêt et de recherche.",
+    emptyFoodsTitle: "Aucun aliment brut ou échange ne correspond à votre recherche.",
+    emptyFoodsSub: "Essayez d’afficher tous les aliments ou d’effacer le filtre nutritionnel.",
+    emptyListenTitle: "Aucun podcast, livre audio ou album ne correspond à votre recherche.",
+    emptyListenSub: "Essayez d’afficher tous les formats ou d’effacer la recherche.",
+    tabs: {"overview": {"kicker": "Onglet 1 sur 8 • Commencer Ici", "title": "Aperçu, Plan Quotidien par Âge et 10 Règles Familiales Clés", "sub": "Rythme quotidien apaisé, fiche frigo imprimable en 4 piliers et repères essentiels pour les parents.", "shortLabel": "Plan Quotidien et Aperçu"}, "science": {"kicker": "Onglet 2 sur 8 • Preuves Cliniques et Grilles", "title": "Science Clinique, Doubles Auditeurs sur 10 Points (SEM-10 et NFI-10) et 30 Études", "sub": "Neuro-imagerie évaluée par les pairs, psychologie du développement, nutrition pédiatrique et calculateurs en 60 secondes.", "shortLabel": "Science et Grilles (30)"}, "channels": {"kicker": "Onglet 3 sur 8 • Pilier 1 (Regarder)", "title": "Répertoire de Chaînes à Basse Stimulation Approuvées par les Parents (28 Chaînes)", "sub": "Chaînes vidéo calmes notées selon la grille SEM-10 avec export de liste blanche JSON/CSV.", "shortLabel": "Regarder · Chaînes (28)"}, "games": {"kicker": "Onglet 4 sur 8 • Pilier 2 (Jouer)", "title": "Répertoire de Jeux Cognitifs et d’Apps Validés par des Éducateurs (33 Jeux)", "sub": "Bacs à sable constructivistes, puzzles spatiaux et apps Montessori sans publicité ni coffres à butin.", "shortLabel": "Jouer · Jeux (33)"}, "nutrition": {"kicker": "Onglet 5 sur 8 • Pilier 3 (Nourrir)", "title": "Aliments Bruts et Échanges de Boîte à Lunch Validés en Pédiatrie (32 Échanges)", "sub": "Alternatives NOVA-1 remplaçant snacks ultra-transformés, gourdes de compote et colorants synthétiques.", "shortLabel": "Nourrir · Aliments (32)"}, "listen": {"kicker": "Onglet 6 sur 8 • Pilier 4 (Écouter et Lire)", "title": "Écouter et Lire : Audio Sans Écran, Podcasts et Livres Vivants (26 Sélections)", "sub": "Podcasts scientifiques et contes, cartes Yoto/Tonie, décodables phonétiques et lecture dialogique.", "shortLabel": "Écouter et Lire (26)"}, "lockdown": {"kicker": "Onglet 7 sur 8 • Défense Technique", "title": "Outils Libres de Contrôle Parental et Guides de Verrouillage Appareil / DNS", "sub": "13 architectures open source et étapes A–E pour BrainRotGuard, KidTube, Family Link, Accès Guidé et NextDNS.", "shortLabel": "Verrouillage Appareil et DNS"}, "expert": {"kicker": "Onglet 8 sur 8 • Regard d’Experte (Dre Becky Kennedy)", "title": "Apprendre d’une Experte : la Dre Becky Kennedy pour Élever des Enfants Confiants", "sub": "5 grandes idées Good Inside, 9 phrases « dites plutôt ceci » avec lecture vocale Chirp 3 HD, plan sur 7 jours et 10 vidéos gratuites vérifiées.", "shortLabel": "Experte · Dre Becky (10)"}, "all": {"kicker": "Mode Manuel Complet • Les 8 Onglets Visibles", "title": "Référence Complète du Portail Parent SafeKids (Toutes les Sections)", "sub": "Affichage des 10 recommandations, 30+ études cliniques, 28 chaînes, 33 jeux, 32 échanges alimentaires, 26 audios/livres et 5 guides.", "shortLabel": "Guide Complet (Tout)"}},
+    blueprintStages: {"under-2": {"ageLabelShort": "Moins de 2 ans (0–24 m)", "directoryFilterAge": "toddler", "stageHeadline": "👶 Moins de 2 Ans (0–24 Mois) — 100 % Zéro Écran, Base Sensorimotrice et Fer/DHA", "stageSummary": "AAP (2016) et Kuhl (2003) : En raison du déficit d’apprentissage vidéo avant 24 mois, privilégiez les échanges vocaux en direct, le jeu au sol et des aliments riches en fer héminique et DHA.", "screenBudget": "0 min/jour de vidéo passive (Appels vidéo familiaux en direct uniquement selon l’AAP)", "sleepCutoff": "Chambre 100 % sombre et sans écran ; 12–16 h de sommeil total et siestes", "mealRule": "Zéro sucre ajouté et zéro miel (<12 m) ; aliments fondants riches en fer + DHA"}, "toddler": {"ageLabelShort": "Tout-petits (2–3 ans)", "directoryFilterAge": "toddler", "stageHeadline": "🧸 Tout-Petits (2–3 Ans) — Co-Visionnage Lent (SEM-10 ≤ 2/10) et Prévention de l’Étouffement", "stageSummary": "OMS (2019) et Lillard (2011) : Limiter l’écran à 30–45 min/jour maximum, toujours co-visionné sur le téléviseur du salon, avec des aliments bruts NOVA-1 coupés en quartiers.", "screenBudget": "≤ 30–45 min/jour (100 % co-visionné avec un parent sur TV partagée)", "sleepCutoff": "Écrans ÉTEINTS 60+ min avant la sieste et le coucher (Protection de la mélatonine)", "mealRule": "Table 100 % sans écran ; couper raisins et tomates cerises en quartiers dans la longueur ; purées d’oléagineux en couche fine"}, "preschool": {"ageLabelShort": "Maternelle (4–5 ans)", "directoryFilterAge": "preschool", "stageHeadline": "🎨 Maternelle (4–5 Ans) — Fonction Exécutive Préfrontale, Phonétique et Ponts Sensoriels", "stageSummary": "Diamond (2013) et Hirsh-Pasek (2015) : Développer le contrôle inhibiteur, la phonétique synthétique et le sens du nombre grâce à des récits calmes et des repas familiaux sereins.", "screenBudget": "≤ 45–60 min/jour de TV à basse stimulation ou d’app éducative guidée", "sleepCutoff": "Tous les écrans ÉTEINTS 60+ min avant le coucher (Rituel lecture à voix haute)", "mealRule": "Repas 100 % sans écran ; zéro colorant synthétique (Rouge 40 / Jaune 5 ; E129 / E102) ; fruits entiers plutôt que gourdes"}, "early-elementary": {"ageLabelShort": "CP–CE1 (6–7 ans)", "directoryFilterAge": "early-elementary", "stageHeadline": "🚀 Primaire Début (6–7 Ans) — Exploration STEM Manuelle, Logique Spatiale et Glycémie Stable", "stageSummary": "Papert (1980) et Benton (2007) : Passer du visionnage passif au dessin, à l’enquête nature et aux puzzles spatiaux par niveaux, avec un déjeuner à faible charge glycémique pour éviter le creux de 10h30.", "screenBudget": "≤ 60 min/jour de loisir les jours d’école (Pièce commune uniquement)", "sleepCutoff": "Arrêt matériel 60+ min avant le sommeil ; zéro écran dans les chambres", "mealRule": "Petit-déjeuner + boîte à lunch à faible charge glycémique (avoine/œufs/graines) pour 4 h d’attention en classe"}, "middle-elementary": {"ageLabelShort": "CE2–CM1 (8–9 ans)", "directoryFilterAge": "middle-elementary", "stageHeadline": "🧩 Primaire Milieu (8–9 Ans) — Codage Constructiviste, Mathématiques Déductives et Neuro-Nutrition", "stageSummary": "Resnick (2017) et Asbell-Clarke (2012) : Orienter l’autonomie vers Scratch, la logique booléenne et l’ingénierie (avec minuteur visuel de 5 min), soutenus par le fer, le zinc et le DHA marin.", "screenBudget": "≤ 60–75 min/jour (Priorité au codage créatif et aux énigmes coopératives)", "sleepCutoff": "Appareils posés en cuisine 60+ min avant l’extinction des feux (Chang et al., 2015)", "mealRule": "Dîner familial sans écran ; Fer héminique/lentilles + Vitamine C et DHA marin 2–3x/sem."}, "preteen": {"ageLabelShort": "Pré-ados (10–12 ans)", "directoryFilterAge": "preteen", "stageHeadline": "🔭 Pré-Ados (10–12 Ans) — Pensée Systémique, Pic de Minéralisation Osseuse et Zéro Flux Social", "stageSummary": "Nisan & Schocken (2005) et Weaver (2016) : Remplacer les flux courts algorithmiques (Shorts/TikTok) par la physique orbitale, l’architecture CPU et la stratégie, avec calcium/D3/K2 et polyphénols.", "screenBudget": "≤ 60–90 min/jour récréatif (Zéro flux à défilement infini ni chat)", "sleepCutoff": "Couvre-feu strict 60 min avant le coucher ; chargeurs hors des chambres la nuit", "mealRule": "Pic osseux D3 + K2 + calcium + fibres prébiotiques ; zéro caféine ni boissons énergisantes"}},
+    expertTab: {"chirpListenBtn": "🔊 Écouter", "chirpStopBtn": "⏹ Arrêter", "chirpReadPlanBtn": "🔊 Lire le Plan", "chirpVoiceLabel": "🎙️ Voix Chirp 3 HD :", "entryKicker": "Nouveau • Apprendre d’une Experte", "entryTitle": "Quoi dire pour élever des enfants confiants", "entrySub": "9 phrases apaisées pour les moments difficiles, avec lecture vocale Chirp 3 HD et vidéos gratuites de la Dre Becky Kennedy.", "entryCta": "Ouvrir →", "heading": "Quoi Dire pour Élever des Enfants Confiants", "badge": "10 vidéos vérifiées", "lede": "Les moments difficiles sont normaux. Voici des phrases courtes et posées à utiliser dès aujourd’hui.", "about": "Idées issues des enseignements publics gratuits de la Dre Becky Kennedy, psychologue clinicienne, fondatrice de Good Inside et autrice de Good Inside (2022).", "disclaimer": "Guide d’étude indépendant. SafeKids n’est ni affilié ni approuvé par la Dre Becky Kennedy ou Good Inside. Les phrases ci-dessous sont des paraphrases pédagogiques de SafeKids.", "pickerTitle": "Que se passe-t-il en ce moment ?", "pickerSub": "Touchez une situation pour voir quoi dire, ou cliquez sur Écouter pour entendre la voix Google Cloud Chirp 3 HD.", "topics": {"confidence": "Bâtir la confiance (4)", "frustration": "Tenir une limite (2)", "big-feelings": "Grandes émotions (2)", "repair": "Après avoir crié (1)", "all": "Tout afficher (9)"}, "statusAll": "Affichage des {n} phrases.", "statusFiltered": "Affichage de {shown} phrases sur {total}.", "insteadLabel": "Au lieu de", "tryLabel": "Essayez de dire", "copyBtn": "Copier la phrase", "copiedBtn": "Copié ✓", "whySummary": "Pourquoi ça marche", "principlesTitle": "Les 5 grandes idées derrière ces phrases", "practiceTitle": "Essayez pendant une semaine : un petit changement par jour", "practiceSub": "De petits ajustements répétés valent mieux qu’un grand bouleversement.", "videosTitle": "Regarder et apprendre : 10 vidéos gratuites", "videosSub": "Les liens s’ouvrent sur YouTube dans un nouvel onglet sans traceur intégré.", "channelsTitle": "Suivre les chaînes officielles de la Dre Becky", "channelsSub": "Ses conseils quotidiens sont publiés sur ces comptes officiels.", "scripts": [{"id": "script_1", "moment": "Votre enfant vous montre un dessin ou un bricolage", "instead": "« Bravo ! Tu es un grand artiste ! »", "tryText": "« Raconte-moi ton dessin. Comment as-tu choisi par où commencer ? »", "why": "Une question curieuse invite l’enfant à se tourner vers lui-même afin d’ancrer sa confiance dans sa propre réflexion."}, {"id": "script_2", "moment": "« Elle est tellement plus forte que moi. »", "instead": "« Mais non, c’est toi le meilleur ! »", "tryText": "« Ça pince le cœur quand quelqu’un réussit mieux quelque chose qui compte pour toi. J’ai déjà ressenti ça aussi. Et tu restes toi, et tu es très bien comme tu es. »", "why": "Nier l’émotion fait douter l’enfant de son ressenti ; la nommer lui montre qu’on peut ressentir de l’envie sans perdre sa valeur."}, {"id": "script_3", "moment": "Bloqué sur un devoir ou un puzzle, il veut abandonner", "instead": "« Donne, je vais le faire pour toi. »", "tryText": "« C’est vraiment difficile. Je suis juste là avec toi. Quelle toute petite chose pourrais-tu essayer maintenant ? »", "why": "Faire à sa place retire l’effort qui construit la confiance. Rester présent sans sauver bâtit son expérience de persévérance."}, {"id": "script_4", "moment": "Votre pré-ado ou ado stresse avant un examen ou un essai", "instead": "« Ne t’inquiète pas, tout ira bien ! »", "tryText": "« Bien sûr que tu as le trac : ça compte beaucoup pour toi. Être stressé et être prêt peuvent être vrais en même temps. »", "why": "Ce langage montre que le trac est normal et n’empêche pas d’être capable."}, {"id": "script_5", "moment": "Le temps d’écran est fini et la crise éclate", "instead": "« Arrête de pleurer, ce n’est qu’un dessin animé ! »", "tryText": "« Tu aurais vraiment voulu continuer à regarder. C’est dur d’arrêter. Et les écrans sont finis pour aujourd’hui. Tu as le droit d’être fâché — je suis là. »", "why": "La limite tient bon et l’émotion est accueillie. La tolérance à la frustration grandit auprès d’un adulte calme."}, {"id": "script_6", "moment": "Il pleurniche ou insiste après un « non »", "instead": "« Bon d’accord, juste un dernier, mais arrête de râler. »", "tryText": "« La réponse reste non. Tu as le droit d’être mécontent. Je peux accueillir ta grande colère. »", "why": "Un « non » chaleureux et solide prouve que le cadre est fiable et que ses émotions ne vous dépassent pas."}, {"id": "script_7", "moment": "Votre enfant tape son frère ou sa sœur", "instead": "« On ne tape pas ! File dans ta chambre ! »", "tryText": "« Je ne te laisserai pas taper. Je vous sépare pour que tout le monde soit en sécurité. Tu es un bon enfant qui traverse un moment très dur. »", "why": "On stoppe le geste calmement tout en préservant l’identité positive de l’enfant, ce qui facilite la réparation une fois le calme revenu."}, {"id": "script_8", "moment": "Un enfant aux émotions intenses explose pour un détail", "instead": "« Tu exagères complètement. »", "tryText": "« Ça t’a semblé immense. Je suis là. »", "why": "En pleine tempête émotionnelle, trop de paroles submergent davantage. D’abord une présence calme, les explications plus tard."}, {"id": "script_9", "moment": "Vous avez crié et vous le regrettez", "instead": "Faire comme si de rien n’était ou dire « J’ai crié parce que tu n’écoutais pas ».", "tryText": "« J’ai repensé à tout à l’heure. Je suis désolé d’avoir crié. Ce n’était pas ta faute — c’est à moi de travailler là-dessus. Je t’aime. »", "why": "Reconnaître sa part sans blâmer l’enfant protège son estime de soi et lui montre comment réparer ses propres erreurs."}], "principles": [{"title": "Les Enfants Sont Bons à l’Intérieur", "body": "Un comportement difficile signale un moment difficile, pas un mauvais enfant. Cherchez avec curiosité ce qui se cache dessous."}, {"title": "Deux Choses Sont Vraies", "body": "On peut poser une limite ferme et valider l’émotion : « Tu veux rester, et il est l’heure de partir. »"}, {"title": "Être un Pilote Solide", "body": "Votre rôle n’est pas d’éviter toute contrariété, mais de rester calme à la barre pendant que l’enfant traverse la tempête."}, {"title": "Confiance = Confiance en Soi", "body": "La vraie confiance ne vient pas des « bravo », mais de l’écoute intérieure et des défis surmontés pas à pas."}, {"title": "La Réparation Vaut Mieux que la Perfection", "body": "Tout parent s’emporte parfois. Revenir s’excuser sincèrement enseigne que le lien survit aux erreurs."}]}
+  },
+  it: {
+    langCode: "it",
+    langName: "Italiano",
+    darkModeBtnOff: "🌙 Modalità Scura",
+    darkModeBtnOn: "☀️ Modalità Chiara",
+    darkModeToggleTitle: "Passa tra modalità scura e chiara",
+    languageSwitcherLabel: "Selettore lingua",
+    languageSelectLabel: "Seleziona lingua",
+    languagePillsLabel: "Pulsanti rapidi lingua",
+    infographicEnterBtn: "📸 Vista Infografica (2 min)",
+    infographicExitBtn: "📸 Esci dalla Vista Infografica",
+    expandAllScienceBtn: "🔬 Espandi Scienza Clinica",
+    hideClinicalDetailsBtn: "🔬 Nascondi Dettagli Clinici",
+    headerViewFullGuideBtn: "📖 Vedi Guida Completa",
+    headerFocusedTabsBtn: "🎯 Schede Mirate",
+    showAllSectionsBtn: "Mostra Tutte le Sezioni",
+    returnFocusedTabsBtn: "Torna alle Schede Mirate",
+    activePrefix: "Attivo:",
+    prevPrefix: "Prec.:",
+    nextPrefix: "Succ.:",
+    formatPagerIndicator: (cur, total, label) => `Scheda ${cur} di ${total} • ${label}`,
+    backToOverviewBtn: "← Torna al Piano Giornaliero e Panoramica",
+    jumpToChannelsBtn: "Vai a Guarda · Canali (28) →",
+    fullHandbookModeLabel: "Modalità Manuale Completo • Tutte le 8 Schede Visibili",
+    globalAgeLabel: "👶 Età del Bambino:",
+    globalAges: {"all": "Tutte le Età", "under-2": "0–24 m", "toddler": "2–3 anni", "preschool": "4–5 anni", "early-elementary": "6–7 anni", "middle-elementary": "8–9 anni", "preteen": "10–12 anni"},
+    sidebarBrandTitle: "Guarda • Gioca • Nutri • Ascolta",
+    sidebarBrandSub: "Scegli un’età sopra o passa a una directory qui sotto.",
+    sidebarGroups: ["1. Inizia Qui", "2. Directory Giornaliere Curate", "3. Strumenti e Scienza Clinica", "4. Impara da un’Esperta"],
+    sidebarNav: {"overview": {"title": "Piano Giornaliero e 10 Regole", "caption": "Scheda frigo e 4 pilastri", "pill": "Inizio"}, "channels": {"title": "Guarda: Canali Sicuri", "caption": "Whitelist a bassa stimolazione", "pill": "28"}, "games": {"title": "Gioca: Giochi Educativi", "caption": "Logica e STEM senza pubblicità", "pill": "33"}, "nutrition": {"title": "Nutri: Cibi Integrali", "caption": "Alternative merenda e NFI-10", "pill": "32"}, "listen": {"title": "Ascolta e Leggi: Audio", "caption": "Podcast, Yoto e libri vivi", "pill": "26"}, "science": {"title": "Scienza e Auto-Revisori", "caption": "SEM-10, NFI-10 e 30 studi", "pill": "30 Studi"}, "lockdown": {"title": "Guide di Blocco", "caption": "App libere, OS e scudi DNS", "pill": "13 Strum."}, "expert": {"title": "Dott.ssa Becky: Bambini Sicuri", "caption": "Cosa dire: frasi e video", "pill": "10 Video"}, "all": {"title": "Guida Completa / Stampa", "caption": "Mostra tutte le sezioni insieme", "pill": "Tutto"}},
+    mobileBar: {"overview": "Piano", "channels": "Guarda", "games": "Gioca", "nutrition": "Cibo", "listen": "Audio", "lockdown": "Scudo", "expert": "Esperta"},
+    heroHeading: "Centro Calmo e Basato sulle Evidenze per Media, Gioco, Nutrizione e Audio per Genitori",
+    heroSubtitle: "Scegli l’età di tuo figlio per ottenere subito un ritmo giornaliero o esplora 119 risorse selezionate: programmi a bassa stimolazione, giochi costruttivisti, merende integrali e podcast e libri senza schermo.",
+    heroStats: ["Canali Calmi Selezionati", "Giochi Approvati da Educatori", "Cibi Integrali e Sostituzioni", "Audio e Libri Senza Schermo", "Doppia Rubrica a 10 Punti", "Studi e Leggi Citati"],
+    blueprintSyncBtn: "🔗 Sincronizza le 4 Directory su Questa Età",
+    blueprintReadBtn: "🔊 Leggi il Piano",
+    blueprintCopyBtn: "📋 Copia Piano per Educatori / Nonni",
+    blueprintPrintBtn: "🖨️ Stampa Scheda da Frigorifero",
+    searchPlaceholders: {"channel": "Cerca canali approvati (es. natura, matematica, fonetica, mindfulness)...", "game": "Cerca giochi educativi (es. scacchi, programmazione, DragonBox, Montessori)...", "food": "Cerca tra 32 cibi integrali e sostituzioni (es. salmone, ferro, DHA, senza coloranti)...", "listen": "Cerca podcast, audiolibri o libri (es. Yoto, Brains On, fonetica, fiabe)..."},
+    viewChannelBtn: "Vedi Canale Ufficiale",
+    visitGameBtn: "Visita Gioco / App Ufficiale",
+    viewFoodRefBtn: "Vedi Riferimento Clinico e Nutrizionale",
+    viewListenRefBtn: "Ascolta / Vedi Riferimento Libro",
+    drawerShowLabel: "🔬 + Perché Funziona, Guida Genitori e Fonti",
+    drawerHideLabel: "🔬 − Nascondi Dettagli Clinici e Guida",
+    formatChannelsCount: (n) => (n === 1 ? "1 canale" : `${n} canali`),
+    formatGamesCount: (n) => (n === 1 ? "1 gioco" : `${n} giochi`),
+    formatFoodsCount: (n) => (n === 1 ? "1 cibo integrale o sostituzione" : `${n} cibi integrali e sostituzioni`),
+    formatListenCount: (n) => (n === 1 ? "1 audio o libro" : `${n} audio e libri`),
+    emptyChannelsTitle: "Nessun canale corrisponde alla ricerca.",
+    emptyChannelsSub: "Prova a cambiare il filtro per età o a cancellare il testo cercato.",
+    emptyGamesTitle: "Nessun gioco educativo corrisponde alla ricerca.",
+    emptyGamesSub: "Prova a reimpostare età, dominio, segnale di stop e ricerca.",
+    emptyFoodsTitle: "Nessun cibo integrale o sostituzione corrisponde alla ricerca.",
+    emptyFoodsSub: "Prova a mostrare tutti gli alimenti o a cancellare il filtro nutrizionale.",
+    emptyListenTitle: "Nessun podcast, audiolibro o libro corrisponde alla ricerca.",
+    emptyListenSub: "Prova a mostrare tutti i formati o a cancellare la ricerca.",
+    tabs: {"overview": {"kicker": "Scheda 1 di 8 • Inizia Qui", "title": "Panoramica, Piano Giornaliero per Età e 10 Regole Familiari Chiave", "sub": "Ritmo quotidiano calmo, scheda stampabile a 4 pilastri per il frigo e guida essenziale per i genitori.", "shortLabel": "Piano Giornaliero e Panoramica"}, "science": {"kicker": "Scheda 2 di 8 • Evidenze Cliniche e Rubriche", "title": "Scienza Clinica, Doppi Revisori a 10 Punti (SEM-10 e NFI-10) e 30 Citazioni", "sub": "Neuroimaging peer-reviewed, psicologia dello sviluppo, nutrizione pediatrica e calcolatori da 60 secondi.", "shortLabel": "Scienza e Rubriche (30)"}, "channels": {"kicker": "Scheda 3 di 8 • Pilastro 1 (Guarda)", "title": "Directory dei Canali a Bassa Stimolazione Approvati dai Genitori (28 Canali)", "sub": "Canali video calmi valutati con la rubrica SEM-10 ed esportazione whitelist in JSON/CSV.", "shortLabel": "Guarda · Canali (28)"}, "games": {"kicker": "Scheda 4 di 8 • Pilastro 2 (Gioca)", "title": "Directory di Giochi Cognitivi e App Approvati dagli Educatori (33 Giochi)", "sub": "Ambienti costruttivisti, puzzle spaziali e app Montessori con zero pubblicità e zero loot box.", "shortLabel": "Gioca · Giochi (33)"}, "nutrition": {"kicker": "Scheda 5 di 8 • Pilastro 3 (Nutri)", "title": "Cibi Integrali e Sostituzioni per la Merenda Validati dai Pediatri (32 Scelte)", "sub": "Alternative reali NOVA-1 al posto di snack ultra-processati, spremibili di purea e coloranti sintetici.", "shortLabel": "Nutri · Cibi (32)"}, "listen": {"kicker": "Scheda 6 di 8 • Pilastro 4 (Ascolta e Leggi)", "title": "Ascolta e Leggi: Audio Senza Schermo, Podcast e Libri Vivi (26 Scelte)", "sub": "Podcast di scienza e fiabe, schede Yoto/Tonie, letture fonetiche decodificabili e lettura dialogica.", "shortLabel": "Ascolta e Leggi (26)"}, "lockdown": {"kicker": "Scheda 7 di 8 • Difesa Tecnica", "title": "Strumenti Open Source di Parental Control e Guide Passo-Passo di Blocco DNS", "sub": "13 architetture open source più i Passi A–E per BrainRotGuard, KidTube, Family Link, Accesso Guidato e NextDNS.", "shortLabel": "Blocco Dispositivi e DNS"}, "expert": {"kicker": "Scheda 8 di 8 • Voce Esperta (Dott.ssa Becky Kennedy)", "title": "Impara da un’Esperta: la Dott.ssa Becky Kennedy su Come Crescere Bambini Sicuri di Sé", "sub": "5 idee chiave Good Inside, 9 frasi «dì questo invece» con lettura vocale Chirp 3 HD, piano di 7 giorni e 10 video gratuiti verificati.", "shortLabel": "Esperta · Dott.ssa Becky (10)"}, "all": {"kicker": "Modalità Manuale Completo • Tutte le 8 Schede Visibili", "title": "Riferimento Completo del Portale Genitori SafeKids (Tutte le Sezioni)", "sub": "Mostra tutte le 10 raccomandazioni, 30+ studi clinici, 28 canali, 33 giochi, 32 scelte alimentari, 26 audio/libri e 5 guide.", "shortLabel": "Guida Completa (Tutto)"}},
+    blueprintStages: {"under-2": {"ageLabelShort": "Sotto i 2 anni (0–24 m)", "directoryFilterAge": "toddler", "stageHeadline": "👶 Sotto i 2 Anni (0–24 Mesi) — 100% Zero Schermi, Base Sensomotoria e Ferro/DHA", "stageSummary": "AAP (2016) e Kuhl (2003): Per l’effetto deficit da video sotto i 24 mesi servono interazione vocale dal vivo con i genitori, gioco a terra e cibi ricchi di ferro eme e DHA.", "screenBudget": "0 min/giorno di video passivi (Solo videochiamate familiari dal vivo secondo AAP)", "sleepCutoff": "Cameretta 100% buia e senza schermi; 12–16 ore di sonno totale e riposini", "mealRule": "Zero zuccheri aggiunti e zero miele (<12 m); cibi morbidi ricchi di ferro + DHA"}, "toddler": {"ageLabelShort": "Bambini piccoli (2–3 anni)", "directoryFilterAge": "toddler", "stageHeadline": "🧸 Bambini Piccoli (2–3 Anni) — Co-Visione Lenta (SEM-10 ≤ 2/10) e Tagli Sicuri Anti-Soffocamento", "stageSummary": "OMS (2019) e Lillard (2011): Mantenere gli schermi entro 30–45 min/giorno, sempre insieme sulla TV del soggiorno, con cibi integrali NOVA-1 tagliati in quarti o schiacciati.", "screenBudget": "≤ 30–45 min/giorno (100% co-visione con i genitori su TV condivisa)", "sleepCutoff": "Schermi SPENTI 60+ min prima del riposino e della nanna (Protezione melatonina)", "mealRule": "Tavola 100% senza schermi; tagliare uva e pomodorini in quarti per il lungo; creme di frutta secca in strato sottile"}, "preschool": {"ageLabelShort": "Età prescolare (4–5 anni)", "directoryFilterAge": "preschool", "stageHeadline": "🎨 Età Prescolare (4–5 Anni) — Funzioni Esecutive Prefrontali, Fonetica e Ponti Sensoriali", "stageSummary": "Diamond (2013) e Hirsh-Pasek (2015): Allenare controllo inibitorio, fonetica sintetica e senso del numero con storie calme, app tattili e pasti familiari sereni.", "screenBudget": "≤ 45–60 min/giorno di TV a bassa stimolazione o app educativa guidata", "sleepCutoff": "Tutti gli schermi SPENTI 60+ min prima della nanna (Lettura ad alta voce)", "mealRule": "Pasti 100% senza schermi; zero coloranti sintetici (Rosso 40 / Giallo 5; E129 / E102); frutta intera invece di puree in bustina"}, "early-elementary": {"ageLabelShort": "Primaria iniziale (6–7 anni)", "directoryFilterAge": "early-elementary", "stageHeadline": "🚀 Primaria Iniziale (6–7 Anni) — Indagine STEM Pratica, Logica Spaziale e Glicemia Stabile", "stageSummary": "Papert (1980) e Benton (2007): Passare dalla visione passiva al disegno pratico, all’esplorazione naturale e ai puzzle spaziali a livelli, con pranzi a basso carico glicemico per evitare il calo delle 10:30.", "screenBudget": "≤ 60 min/giorno ricreativi nei giorni di scuola (Solo stanza condivisa)", "sleepCutoff": "Spegnimento fisico 60+ min prima del sonno; zero schermi nelle camere", "mealRule": "Colazione + merenda a basso carico glicemico (avena/uova/semi) per 4 ore di attenzione in classe"}, "middle-elementary": {"ageLabelShort": "Primaria media (8–9 anni)", "directoryFilterAge": "middle-elementary", "stageHeadline": "🧩 Primaria Media (8–9 Anni) — Coding Costruttivista, Matematica Deduttiva e Neuro-Nutrizione", "stageSummary": "Resnick (2017) e Asbell-Clarke (2012): Indirizzare l’autonomia verso Scratch, logica booleana e sandbox ingegneristiche (con timer visivo di 5 min) insieme a ferro, zinco e DHA marino.", "screenBudget": "≤ 60–75 min/giorno (Priorità a coding creativo e rompicapi cooperativi)", "sleepCutoff": "Dispositivi in carica in cucina 60+ min prima di spegnere le luci (Chang et al., 2015)", "mealRule": "Cena in famiglia senza schermi; Ferro eme/lenticchie + Vitamina C e DHA marino 2–3 volte/sett."}, "preteen": {"ageLabelShort": "Pre-adolescenti (10–12 anni)", "directoryFilterAge": "preteen", "stageHeadline": "🔭 Pre-Adolescenti (10–12 Anni) — Pensiero Sistemico, Picco di Massa Ossea e Zero Feed Social", "stageSummary": "Nisan & Schocken (2005) e Weaver (2016): Sostituire i feed brevi algoritmici (Shorts/TikTok) con fisica orbitale, architettura CPU e strategia profonda, con calcio/D3/K2 e polifenoli.", "screenBudget": "≤ 60–90 min/giorno ricreativi (Zero feed a scorrimento infinito o chat)", "sleepCutoff": "Coprifuoco rigoroso 60 min prima della nanna; caricabatterie fuori dalla camera", "mealRule": "Picco osseo con D3 + K2 + calcio + fibre prebiotiche; zero caffeina o energy drink"}},
+    expertTab: {"chirpListenBtn": "🔊 Ascolta", "chirpStopBtn": "⏹ Ferma", "chirpReadPlanBtn": "🔊 Leggi il Piano", "chirpVoiceLabel": "🎙️ Voce Chirp 3 HD:", "entryKicker": "Nuovo • Impara da un’Esperta", "entryTitle": "Cosa dire per crescere bambini sicuri di sé", "entrySub": "9 frasi calme per i momenti difficili, con lettura vocale Chirp 3 HD e video gratuiti della Dott.ssa Becky Kennedy.", "entryCta": "Apri →", "heading": "Cosa Dire per Crescere Bambini Sicuri di Sé", "badge": "10 video verificati", "lede": "I momenti difficili sono normali. Ecco frasi brevi e serene che puoi usare già oggi.", "about": "Idee tratte dagli insegnamenti pubblici gratuiti della Dott.ssa Becky Kennedy, psicologa clinica, fondatrice di Good Inside e autrice di Good Inside (2022).", "disclaimer": "Guida di studio indipendente. SafeKids non è affiliato né approvato dalla Dott.ssa Becky Kennedy o da Good Inside. Le frasi riportate sono parafrasi didattiche di SafeKids.", "pickerTitle": "Cosa sta succedendo adesso?", "pickerSub": "Tocca un momento per leggere cosa dire oppure premi Ascolta con voce Google Cloud Chirp 3 HD.", "topics": {"confidence": "Costruire fiducia (4)", "frustration": "Tenere un limite (2)", "big-feelings": "Grandi emozioni (2)", "repair": "Dopo aver urlato (1)", "all": "Mostra tutte (9)"}, "statusAll": "Visualizzazione di tutte le {n} frasi.", "statusFiltered": "Visualizzazione di {shown} frasi su {total}.", "insteadLabel": "Invece di", "tryLabel": "Prova a dire", "copyBtn": "Copia frase", "copiedBtn": "Copiato ✓", "whySummary": "Perché funziona", "principlesTitle": "Le 5 grandi idee alla base delle frasi", "practiceTitle": "Prova per una settimana: un piccolo cambio al giorno", "practiceSub": "Piccoli cambiamenti ripetuti funzionano meglio di grandi rivoluzioni.", "videosTitle": "Guarda e impara: 10 video gratuiti", "videosSub": "I link aprono YouTube in una nuova scheda senza caricare traccianti in anticipo.", "channelsTitle": "Segui i canali ufficiali della Dott.ssa Becky", "channelsSub": "I suoi brevi consigli quotidiani sono pubblicati su questi profili ufficiali.", "scripts": [{"id": "script_1", "moment": "Tuo figlio ti mostra un disegno o un lavoretto", "instead": "«Bravissimo! Sei un vero artista!»", "tryText": "«Raccontami di questo disegno. Come hai deciso da dove cominciare?»", "why": "Una domanda curiosa porta il bambino a guardarsi dentro, fondando la fiducia sul proprio pensiero anziché sul giudizio esterno."}, {"id": "script_2", "moment": "«Lei è molto più brava di me in questo.»", "instead": "«Ma no, sei tu il più bravo di tutti!»", "tryText": "«Brucia quando qualcuno riesce meglio in qualcosa a cui tieni. L’ho provato anch’io. E tu resti comunque tu, e vai bene così.»", "why": "Negare il sentimento fa dubitare il bambino di ciò che prova; dargli un nome insegna che si può provare invidia restando al sicuro in sé stessi."}, {"id": "script_3", "moment": "Bloccato sui compiti o su un puzzle, vuole mollare", "instead": "«Dai qua, lo faccio io per te.»", "tryText": "«Questo passaggio è davvero difficile. Sono qui vicino a te. Qual è una piccola prova che potresti fare adesso?»", "why": "Sostituirsi toglie la fatica che costruisce autostima. Restare accanto senza risolvere crea esperienza reale nel superare gli ostacoli."}, {"id": "script_4", "moment": "Il tuo ragazzo è agitato prima di una verifica o di una gara", "instead": "«Non agitarti, andrà benissimo!»", "tryText": "«Certo che sei agitato: questa cosa conta per te. Essere agitati ed essere pronti possono essere veri insieme.»", "why": "Normalizzare l’emozione mostra che il batticuore non significa non farcela."}, {"id": "script_5", "moment": "Il tempo dello schermo finisce e inizia la crisi", "instead": "«Smettila di piangere, è solo un cartone!»", "tryText": "«Vorresti tanto continuare a guardare. È durissima fermarsi. E per oggi gli schermi sono finiti. Puoi essere arrabbiato: io sono qui.»", "why": "Il limite resta fermo e l’emozione è accolta. La tolleranza alla frustrazione cresce accanto a un adulto calmo."}, {"id": "script_6", "moment": "Insiste o piagnucola dopo che hai detto «no»", "instead": "«E va bene, solo un altro, ma smettila di lamentarti.»", "tryText": "«La risposta resta no. Va bene essere arrabbiato per questo. Posso reggere le tue emozioni grandi.»", "why": "Un «no» caldo e saldo mostra che il confine è sicuro e che le sue emozioni non ti spaventano."}, {"id": "script_7", "moment": "Tuo figlio colpisce il fratello o la sorella", "instead": "«Non si picchia! Fila in camera tua!»", "tryText": "«Non ti lascerò picchiare. Vi allontano così siete tutti al sicuro. Sei un buon bambino che sta vivendo un momento molto difficile.»", "why": "Fermi il gesto con calma senza minacce e proteggi l’identità buona del bambino, facilitando la riparazione quando torna la calma."}, {"id": "script_8", "moment": "Un bambino dalle emozioni intense esplode per un nonnulla", "instead": "«Stai esagerando per niente.»", "tryText": "«Questa cosa ti è sembrata enorme. Sono qui con te.»", "why": "Nel pieno della tempesta emotiva troppe parole sovraccaricano ancora di più. Prima presenza calma, poi il confronto."}, {"id": "script_9", "moment": "Hai urlato e te ne penti", "instead": "Far finta di niente o dire «Ho urlato perché non ascoltavi».", "tryText": "«Ho ripensato a prima. Mi dispiace aver urlato. Non è stata colpa tua: tocca a me lavorarci su. Ti voglio bene.»", "why": "Assumersi la propria responsabilità senza incolpare il figlio protegge il suo valore e gli insegna come riparare gli errori."}], "principles": [{"title": "I Bambini Sono Buoni Dentro", "body": "Un comportamento difficile segnala un momento difficile, non un bambino cattivo. Guarda con curiosità cosa c’è sotto."}, {"title": "Due Cose Sono Vere Insieme", "body": "Puoi mantenere un limite fermo e validare l’emozione: «Vorresti restare, ed è ora di andare.»"}, {"title": "Essere una Guida Solida", "body": "Il tuo compito non è evitare ogni dispiacere, ma restare calmo al timone mentre impara che può attraversare la frustrazione."}, {"title": "Fiducia = Fiducia in Sé", "body": "La vera fiducia nasce dall’ascoltarsi dentro e dal superare le difficoltà passo dopo passo, non dai «bravo» automatici."}, {"title": "La Riparazione Conta Più della Perfezione", "body": "Ogni genitore perde la pazienza a volte. Tornare a chiedere scusa insegna che il legame resiste agli errori."}]}
+  },
+  de: {
+    langCode: "de",
+    langName: "Deutsch",
+    darkModeBtnOff: "🌙 Dunkelmodus",
+    darkModeBtnOn: "☀️ Hellmodus",
+    darkModeToggleTitle: "Zwischen Dunkel- und Hellmodus wechseln",
+    languageSwitcherLabel: "Sprachauswahl",
+    languageSelectLabel: "Sprache wählen",
+    languagePillsLabel: "Schnellauswahl Sprache",
+    infographicEnterBtn: "📸 2-Min-Infografik-Ansicht",
+    infographicExitBtn: "📸 Infografik-Ansicht beenden",
+    expandAllScienceBtn: "🔬 Klinische Evidenz ausklappen",
+    hideClinicalDetailsBtn: "🔬 Klinische Details ausblenden",
+    headerViewFullGuideBtn: "📖 Gesamtleitfaden",
+    headerFocusedTabsBtn: "🎯 Einzel-Tabs",
+    showAllSectionsBtn: "Alle Abschnitte anzeigen",
+    returnFocusedTabsBtn: "Zurück zu Einzel-Tabs",
+    activePrefix: "Aktiv:",
+    prevPrefix: "Zurück:",
+    nextPrefix: "Weiter:",
+    formatPagerIndicator: (cur, total, label) => `Tab ${cur} von ${total} • ${label}`,
+    backToOverviewBtn: "← Zurück zu Tagesplan & Übersicht",
+    jumpToChannelsBtn: "Weiter zu Schauen · Kanäle (28) →",
+    fullHandbookModeLabel: "Vollständiges Handbuch • Alle 8 Tabs sichtbar",
+    globalAgeLabel: "👶 Alter des Kindes:",
+    globalAges: {"all": "Alle Alter", "under-2": "0–24 Mon.", "toddler": "2–3 J.", "preschool": "4–5 J.", "early-elementary": "6–7 J.", "middle-elementary": "8–9 J.", "preteen": "10–12 J."},
+    sidebarBrandTitle: "Schauen • Spielen • Ernähren • Hören",
+    sidebarBrandSub: "Oben ein Alter wählen oder direkt in ein Verzeichnis springen.",
+    sidebarGroups: ["1. Startpunkt", "2. Kuratierte Tagesverzeichnisse", "3. Selbsttests & Klinische Evidenz", "4. Von einer Expertin lernen"],
+    sidebarNav: {"overview": {"title": "Tagesplan & 10 Regeln", "caption": "Kühlschrankblatt & 4 Säulen", "pill": "Start"}, "channels": {"title": "Schauen: Ruhige Kanäle", "caption": "Reizarme Video-Whitelist", "pill": "28"}, "games": {"title": "Spielen: Lernspiele", "caption": "Werbefreie Logik- & MINT-Spiele", "pill": "33"}, "nutrition": {"title": "Ernähren: Vollwertkost", "caption": "Brotdosen-Tausch & NFI-10", "pill": "32"}, "listen": {"title": "Hören & Lesen: Audio", "caption": "Podcasts, Yoto & Vorlesebücher", "pill": "26"}, "science": {"title": "Wissenschaft & Rechner", "caption": "SEM-10, NFI-10 & 30 Studien", "pill": "30 Studien"}, "lockdown": {"title": "Schutz-Anleitungen", "caption": "FOSS-Apps, OS- & DNS-Sperren", "pill": "13 Tools"}, "expert": {"title": "Dr. Becky: Starke Kinder", "caption": "Was sagen? Sätze & Videos", "pill": "10 Videos"}, "all": {"title": "Gesamtleitfaden / Drucken", "caption": "Alle Abschnitte auf einer Seite", "pill": "Alle"}},
+    mobileBar: {"overview": "Plan", "channels": "Video", "games": "Spiel", "nutrition": "Essen", "listen": "Audio", "lockdown": "Schutz", "expert": "Expertin"},
+    heroHeading: "Ruhiger, evidenzbasierter Medien-, Spiel-, Vollwert- & Audio-Kompass für Eltern",
+    heroSubtitle: "Wählen Sie das Alter Ihres Kindes für einen sofortigen Tagesrhythmus oder entdecken Sie 119 geprüfte Angebote: reizarme Sendungen, konstruktivistische Spiele, Vollwert-Alternativen für die Brotdose sowie bildschirmfreie Podcasts und Bücher.",
+    heroStats: ["Geprüfte ruhige Kanäle", "Pädagogisch empfohlene Spiele", "Vollwert-Lebensmittel & Tauschideen", "Bildschirmfreie Podcasts & Bücher", "Zwei 10-Punkte-Prüfraster", "Zitierte Studien & Gesetze"],
+    blueprintSyncBtn: "🔗 Alle 4 Verzeichnisse auf dieses Alter filtern",
+    blueprintReadBtn: "🔊 Tagesplan vorlesen",
+    blueprintCopyBtn: "📋 Betreuungsplan kopieren",
+    blueprintPrintBtn: "🖨️ Kühlschrank-Kurzblatt drucken",
+    searchPlaceholders: {"channel": "Geprüfte Kanäle durchsuchen (z. B. Natur, MINT, Anlaute, Achtsamkeit)...", "game": "Lernspiele durchsuchen (z. B. Schach, Programmieren, DragonBox, Montessori)...", "food": "32 Vollwert-Lebensmittel & Tauschideen durchsuchen (z. B. Lachs, Eisen, DHA, farbstofffrei)...", "listen": "26 Podcasts, Hörkarten oder Bücher durchsuchen (z. B. Yoto, Brains On, Erstlesebücher)..."},
+    viewChannelBtn: "Zum Kanal",
+    visitGameBtn: "Zum Spiel / zur App",
+    viewFoodRefBtn: "Klinische & Nährstoff-Referenz",
+    viewListenRefBtn: "Hörprobe / Buchreferenz",
+    drawerShowLabel: "🔬 + Wirkprinzip, Elternleitfaden & Quellen",
+    drawerHideLabel: "🔬 − Klinische Details ausblenden",
+    formatChannelsCount: (n) => (n === 1 ? "1 Kanal" : `${n} Kanäle`),
+    formatGamesCount: (n) => (n === 1 ? "1 Spiel" : `${n} Spiele`),
+    formatFoodsCount: (n) => (n === 1 ? "1 Vollwert-Lebensmittel oder Tausch" : `${n} Vollwert-Lebensmittel & Tauschideen`),
+    formatListenCount: (n) => (n === 1 ? "1 Audio- oder Buchtipp" : `${n} Audio- & Buchtipps`),
+    emptyChannelsTitle: "Keine Kanäle entsprechen Ihrer Suche.",
+    emptyChannelsSub: "Bitte Altersfilter wechseln oder den Suchbegriff löschen.",
+    emptyGamesTitle: "Keine Lernspiele entsprechen Ihrer Suche.",
+    emptyGamesSub: "Bitte Alters-, Förderbereichs-, Ausstiegs- und Suchfilter zurücksetzen.",
+    emptyFoodsTitle: "Keine Vollwert-Lebensmittel entsprechen Ihrer Suche.",
+    emptyFoodsSub: "Bitte alle Lebensmittel wählen oder den Nährstofffilter zurücksetzen.",
+    emptyListenTitle: "Keine Podcasts, Hörbücher oder Bücher gefunden.",
+    emptyListenSub: "Bitte alle Formate wählen oder den Suchbegriff löschen.",
+    tabs: {"overview": {"kicker": "Tab 1 von 8 • Startpunkt", "title": "Übersicht, Alters-Tagesplan & 10 zentrale Familienregeln", "sub": "Ruhiger Tagesrhythmus, druckbares 4-Säulen-Kühlschrankblatt und Entscheidungshilfe für Eltern.", "shortLabel": "Tagesplan & Übersicht"}, "science": {"kicker": "Tab 2 von 8 • Klinische Evidenz & Prüfraster", "title": "Klinische Forschung, 10-Punkte-Rechner (SEM-10 & NFI-10) & 30 Quellen", "sub": "Begutachtete Bildgebungsstudien, Entwicklungspsychologie, pädiatrische Ernährungsstudien und 60-Sekunden-Rechner.", "shortLabel": "Evidenz & Raster (30)"}, "channels": {"kicker": "Tab 3 von 8 • Säule 1 (Schauen)", "title": "Elterngeprüftes Verzeichnis reizarmer Videokanäle (28 Kanäle)", "sub": "Ruhige Kanäle nach dem SEM-10-Raster bewertet, inklusive 1-Klick-JSON/CSV-Whitelist-Export.", "shortLabel": "Schauen · Kanäle (28)"}, "games": {"kicker": "Tab 4 von 8 • Säule 2 (Spielen)", "title": "Pädagogisch geprüfte Kognitions- & Konstruktionsspiele (33 Spiele)", "sub": "Konstruktivistische Welten, Raumlogik-Rätsel und Montessori-Apps ohne Werbung und ohne Lootboxen.", "shortLabel": "Spielen · Spiele (33)"}, "nutrition": {"kicker": "Tab 5 von 8 • Säule 3 (Ernähren)", "title": "Kinderärztlich & ernährungsmedizinisch geprüfte Vollwertkost (32 Tauschideen)", "sub": "Echte NOVA-1-Lebensmittel statt hochverarbeiteter Kindersnacks, Quetschbeutel und synthetischer Farbstoffe.", "shortLabel": "Ernähren · Vollwert (32)"}, "listen": {"kicker": "Tab 6 von 8 • Säule 4 (Hören & Lesen)", "title": "Hören & Lesen: Bildschirmfreie Podcasts, Hörkarten & Bücher (26 Tipps)", "sub": "Wissens- und Erzählpodcasts, Yoto/Tonie-Hörkarten, lautgetreue Erstlesebücher und dialogisches Vorlesen.", "shortLabel": "Hören & Lesen (26)"}, "lockdown": {"kicker": "Tab 7 von 8 • Technischer Schutz", "title": "Open-Source-Kinderschutz & Schritt-für-Schritt-Geräte-/DNS-Sperren", "sub": "13 Open-Source-Architekturen sowie Schritte A–E für BrainRotGuard, KidTube, Family Link, Geführten Zugriff und NextDNS.", "shortLabel": "Geräte- & DNS-Schutz"}, "expert": {"kicker": "Tab 8 von 8 • Expertenblick (Dr. Becky Kennedy)", "title": "Von einer Expertin lernen: Dr. Becky Kennedy über selbstvertrauende Kinder", "sub": "5 Good-Inside-Kernideen, 9 „Sag lieber das“-Sätze mit Chirp-3-HD-Vorlesestimme, 7-Tage-Übungsplan und 10 geprüfte kostenlose Videos.", "shortLabel": "Expertin · Dr. Becky (10)"}, "all": {"kicker": "Vollständiges Handbuch • Alle 8 Tabs sichtbar", "title": "Komplettes SafeKids-Elternhandbuch (Alle Abschnitte)", "sub": "Alle 10 Empfehlungen, 30+ klinische Studien, 28 Kanäle, 33 Spiele, 32 Vollwert-Alternativen, 26 Hör-/Buchtipps und 5 Sperranleitungen.", "shortLabel": "Gesamtleitfaden (Alle)"}},
+    blueprintStages: {"under-2": {"ageLabelShort": "Unter 2 J. (0–24 Mon.)", "directoryFilterAge": "toddler", "stageHeadline": "👶 Unter 2 Jahren (0–24 Monate) — 100 % Bildschirmfrei, Sensomotorik & Eisen/DHA", "stageSummary": "AAP (2016) & Kuhl (2003): Wegen des Video-Defizit-Effekts brauchen Kinder unter 24 Monaten echten Sprachdialog mit Bezugspersonen, freies Bodenspiel sowie eisen- und DHA-reiche Beikost.", "screenBudget": "0 Min./Tag passives Video (Nur Live-Videoanrufe mit der Familie laut AAP)", "sleepCutoff": "100 % dunkles, bildschirmfreies Schlafzimmer; 12–16 Std. Gesamtschlaf inkl. Tagschlaf", "mealRule": "Null zugesetzter Zucker & kein Honig (<12 Mon.); weiche Vollwertkost mit Eisen + DHA"}, "toddler": {"ageLabelShort": "Kleinkinder (2–3 J.)", "directoryFilterAge": "toddler", "stageHeadline": "🧸 Kleinkinder (2–3 Jahre) — Begleitetes ruhiges Schauen (SEM-10 ≤ 2/10) & Verschluckschutz", "stageSummary": "WHO (2019) & Lillard (2011): Bildschirmzeit unter 30–45 Min./Tag halten, immer gemeinsam am Wohnzimmer-TV, kombiniert mit geviertelten NOVA-1-Lebensmitteln.", "screenBudget": "≤ 30–45 Min./Tag (100 % gemeinsam mit Eltern am Familien-TV)", "sleepCutoff": "Bildschirme 60+ Min. vor Mittagsschlaf & Zubettgehen AUS (Melatoninschutz)", "mealRule": "100 % bildschirmfreier Esstisch; Trauben & Kirschtomaten längs vierteln; Nussmus dünn verstreichen"}, "preschool": {"ageLabelShort": "Vorschule (4–5 J.)", "directoryFilterAge": "preschool", "stageHeadline": "🎨 Vorschule (4–5 Jahre) — Exekutive Funktionen, Anlaute & Sensorische Esserfahrungen", "stageSummary": "Diamond (2013) & Hirsh-Pasek (2015): Impulskontrolle, Lautbewusstsein und Mengenverständnis durch ruhige Geschichten, taktile Lern-Apps und druckfreie Familienmahlzeiten stärken.", "screenBudget": "≤ 45–60 Min./Tag kuratiertes reizarmes TV oder begleitete Lern-App", "sleepCutoff": "Alle Bildschirme 60+ Min. vor dem Schlafen AUS (Vorleseritual am Abend)", "mealRule": "100 % bildschirmfreie Mahlzeiten; keine Azofarbstoffe (Allurarot Red 40 / E129, Tartrazin Yellow 5 / E102); ganzes Obst statt Quetschies"}, "early-elementary": {"ageLabelShort": "Grundschule Start (6–7 J.)", "directoryFilterAge": "early-elementary", "stageHeadline": "🚀 Frühe Grundschule (6–7 Jahre) — Praktisches MINT-Forschen, Raumlogik & Stabiler Blutzucker", "stageSummary": "Papert (1980) & Benton (2007): Vom passiven Schauen zu Zeichnen, Naturerkundung und Raumlogik-Rätseln wechseln; Brotdose mit niedriger glykämischer Last gegen das Konzentrationstief um 10:30 Uhr.", "screenBudget": "≤ 60 Min./Tag Freizeit-Bildschirm an Schultagen (Nur im Gemeinschaftsraum)", "sleepCutoff": "Geräte 60+ Min. vor dem Schlafen abschalten; keine Bildschirme im Kinderzimmer", "mealRule": "Frühstück + Brotdose mit niedriger GL (Hafer/Eier/Saaten) für 4 Std. Unterrichtsfokus"}, "middle-elementary": {"ageLabelShort": "Mittlere Grundschule (8–9 J.)", "directoryFilterAge": "middle-elementary", "stageHeadline": "🧩 Mittlere Grundschule (8–9 Jahre) — Kreatives Programmieren, Logik & Gehirn-Mikronährstoffe", "stageSummary": "Resnick (2017) & Asbell-Clarke (2012): Wachsende Selbstständigkeit in Scratch-Programmierung, Boolesche Logik und Konstruktionsspiele (mit sichtbarem 5-Min-Timer) lenken, ergänzt durch Eisen, Zink und DHA.", "screenBudget": "≤ 60–75 Min./Tag (Vorrang für kreatives Coding & kooperative Rätsel)", "sleepCutoff": "Alle Geräte 60+ Min. vor dem Lichtlöschen in der Küche parken (Chang et al., 2015)", "mealRule": "Bildschirmfreies Familienabendessen; Häm-/Linseneisen + Vitamin C & Meeresfisch-DHA 2–3x/Woche"}, "preteen": {"ageLabelShort": "Vorpubertät (10–12 J.)", "directoryFilterAge": "preteen", "stageHeadline": "🔭 Vorpubertät (10–12 Jahre) — Systemdenken, Knochenmineralisierung & Null Kurzvideo-Feeds", "stageSummary": "Nisan & Schocken (2005) & Weaver (2016): Algorithmische Kurzvideo-Feeds (Shorts/TikTok) und Lootbox-Spiele durch Orbitalphysik, CPU-Logik und Strategie ersetzen; Knochenaufbau mit Kalzium/D3/K2 stärken.", "screenBudget": "≤ 60–90 Min./Tag Freizeit (Null Endlos-Scroll-Feeds und null Chat)", "sleepCutoff": "Striktes Geräteende 60 Min. vor dem Schlafen; Ladegeräte über Nacht außerhalb des Zimmers", "mealRule": "Knochenaufbau mit D3 + K2 + Kalzium + präbiotischen Ballaststoffen; null Koffein/Energy-Drinks"}},
+    expertTab: {"chirpListenBtn": "🔊 Vorlesen", "chirpStopBtn": "⏹ Stopp", "chirpReadPlanBtn": "🔊 Tagesplan vorlesen", "chirpVoiceLabel": "🎙️ Chirp 3 HD Stimme:", "entryKicker": "Neu • Von einer Expertin lernen", "entryTitle": "Was wir sagen können, damit Kinder selbstbewusst wachsen", "entrySub": "9 ruhige Sätze für schwierige Alltagsmomente – mit Chirp-3-HD-Vorlesestimme und kostenlosen Videos von Dr. Becky Kennedy.", "entryCta": "Öffnen →", "heading": "Was Sagen, Damit Kinder Selbstbewusst Aufwachsen", "badge": "10 geprüfte Videos", "lede": "Schwierige Momente sind völlig normal. Hier finden Sie kurze, ruhige Sätze, die Sie sofort im Alltag nutzen können.", "about": "Gedanken nach Dr. Becky Kennedy, klinische Psychologin, Gründerin von Good Inside und Autorin von Good Inside (2022), basierend auf ihren freien YouTube-, TED- und Facebook-Beiträgen.", "disclaimer": "Unabhängiger Lernleitfaden. SafeKids steht in keiner Verbindung zu Dr. Becky Kennedy oder Good Inside. Die Sätze unten sind eigenständige SafeKids-Paraphrasen öffentlich gelehrter Ideen.", "pickerTitle": "Was passiert gerade?", "pickerSub": "Tippen Sie auf eine Situation oder auf Vorlesen, um den Satz mit Google Cloud Chirp 3 HD anzuhören.", "topics": {"confidence": "Selbstvertrauen stärken (4)", "frustration": "Grenze ruhig halten (2)", "big-feelings": "Große Gefühle (2)", "repair": "Nach eigenem Ausraster (1)", "all": "Alle zeigen (9)"}, "statusAll": "Alle {n} Sätze werden angezeigt.", "statusFiltered": "{shown} von {total} Sätzen werden angezeigt.", "insteadLabel": "Statt", "tryLabel": "Versuchen Sie", "copyBtn": "Satz kopieren", "copiedBtn": "Kopiert ✓", "whySummary": "Warum das wirkt", "principlesTitle": "Die 5 Grundideen hinter den Sätzen", "practiceTitle": "7-Tage-Praxis: jeden Tag ein kleiner Tausch", "practiceSub": "Kleine, wiederholte Formulierungswechsel wirken nachhaltiger als perfekte Vorsätze.", "videosTitle": "Anschauen & vertiefen: 10 kostenlose Videos", "videosSub": "Links öffnen YouTube in einem neuen Tab – ohne eingebettete Tracker.", "channelsTitle": "Offizielle Kanäle von Dr. Becky", "channelsSub": "Kurze tägliche Impulse erscheinen auf diesen offiziellen Profilen.", "scripts": [{"id": "script_1", "moment": "Ihr Kind zeigt Ihnen ein Bild oder Bauwerk", "instead": "„Super gemacht! Du bist ein richtiger Künstler!“", "tryText": "„Erzähl mir davon. Wie bist du darauf gekommen, genau dort anzufangen?“", "why": "Eine neugierige Frage lenkt den Blick nach innen – Selbstvertrauen wächst aus eigenem Nachdenken statt aus Lob von außen."}, {"id": "script_2", "moment": "„Sie kann das viel besser als ich.“", "instead": "„Quatsch, du bist doch die Beste!“", "tryText": "„Es tut weh, wenn jemand in etwas besser ist, das dir wichtig ist. Das kenne ich auch. Und du bleibst trotzdem du – und bist genau richtig.“", "why": "Gefühle wegzureden lässt Kinder an ihrer Wahrnehmung zweifeln. Anerkennung zeigt: Neid darf sein, ohne den eigenen Wert zu verlieren."}, {"id": "script_3", "moment": "Bei Hausaufgaben oder einem Puzzle festgefahren und kurz vorm Aufgeben", "instead": "„Gib her, ich mach das schnell für dich.“", "tryText": "„Das ist wirklich knifflig. Ich bin direkt bei dir. Welchen kleinen Schritt könntest du als Nächstes probieren?“", "why": "Abnehmen nimmt genau das Ringen weg, aus dem Selbstvertrauen entsteht. Ruhig dabeibleiben schafft echte Erfolgserfahrung."}, {"id": "script_4", "moment": "Ihr älteres Kind ist vor einer Prüfung oder Sichtung nervös", "instead": "„Mach dir keine Sorgen, das klappt bestimmt!“", "tryText": "„Klar bist du aufgeregt – dir liegt viel daran. Aufgeregt sein und gut vorbereitet sein kann gleichzeitig stimmen.“", "why": "So lernt Ihr Kind, dass Lampenfieber normal ist und kein Zeichen von Schwäche."}, {"id": "script_5", "moment": "Die Bildschirmzeit ist vorbei und der Wutanfall beginnt", "instead": "„Hör auf zu weinen, es ist doch nur eine Serie!“", "tryText": "„Du würdest so gern weiterschauen. Aufhören fällt richtig schwer. Und für heute sind die Bildschirme aus. Du darfst sauer sein – ich bin hier.“", "why": "Die Grenze bleibt bestehen und das Gefühl darf da sein. Frustrationstoleranz wächst neben einem ruhigen Erwachsenen."}, {"id": "script_6", "moment": "Quengeln oder Betteln nach einem klaren „Nein“", "instead": "„Na gut, noch ein einziges – aber hör auf zu quengeln.“", "tryText": "„Die Antwort bleibt Nein. Es ist völlig okay, darüber wütend zu sein. Ich halte deine großen Gefühle aus.“", "why": "Ein warmes, standfestes Nein zeigt: Die Grenze ist verlässlich und Gefühle überfordern die Eltern nicht."}, {"id": "script_7", "moment": "Ihr Kind schlägt ein Geschwisterkind", "instead": "„Wir hauen nicht! Ab in dein Zimmer!“", "tryText": "„Ich lasse nicht zu, dass du haust. Ich gehe dazwischen, damit alle sicher sind. Du bist ein gutes Kind in einem richtig schweren Moment.“", "why": "Sie stoppen das Verhalten ruhig durch Handeln statt Drohen und schützen das Selbstbild als gutes Kind."}, {"id": "script_8", "moment": "Ein gefühlsstarkes Kind explodiert wegen einer Kleinigkeit", "instead": "„Du übertreibst maßlos.“", "tryText": "„Das hat sich gerade riesig angefühlt. Ich bin bei dir.“", "why": "Mitten im Gefühlssturm überfordern viele Worte noch mehr. Erst ruhige Präsenz, Lösungen später."}, {"id": "script_9", "moment": "Sie haben geschrien und bereuen es", "instead": "So tun, als wäre nichts gewesen, oder sagen: „Ich habe geschrien, weil du nicht gehört hast.“", "tryText": "„Ich habe über vorhin nachgedacht. Es tut mir leid, dass ich geschrien habe. Das war nicht deine Schuld – daran arbeite ich. Ich hab dich lieb.“", "why": "Verantwortung ohne Schuldumkehr schützt den Selbstwert Ihres Kindes und lebt echte Wiedergutmachung vor."}], "principles": [{"title": "Kinder sind im Kern gut", "body": "Schwieriges Verhalten zeigt einen schwierigen Moment, kein schlechtes Kind. Schauen Sie neugierig hinter das Verhalten."}, {"title": "Zwei Dinge sind gleichzeitig wahr", "body": "Sie können eine klare Grenze halten und das Gefühl würdigen: „Du möchtest bleiben, und wir gehen jetzt.“"}, {"title": "Eine standfeste Führung sein", "body": "Ihre Aufgabe ist nicht Dauerzufriedenheit, sondern ruhig am Steuer zu bleiben, während Ihr Kind lernt, Frust zu überstehen."}, {"title": "Selbstvertrauen heißt Selbstvertrauen", "body": "Echtes Vertrauen entsteht nicht durch „Toll gemacht!“, sondern durch den Blick nach innen und gemeisterte Hürden."}, {"title": "Beziehungsreparatur schlägt Perfektion", "body": "Jeder Elternteil verliert mal die Geduld. Aufrichtiges Entschuldigen zeigt, dass Bindung Fehler übersteht."}]}
+  },
+  ar: {
+    langCode: "ar",
+    langName: "العربية",
+    darkModeBtnOff: "🌙 الوضع الداكن",
+    darkModeBtnOn: "☀️ الوضع الفاتح",
+    darkModeToggleTitle: "التبديل بين الوضع الداكن والفاتح",
+    languageSwitcherLabel: "مبدّل اللغة",
+    languageSelectLabel: "اختر اللغة",
+    languagePillsLabel: "أزرار اللغة السريعة",
+    infographicEnterBtn: "📸 عرض الملصقات (دقيقتان)",
+    infographicExitBtn: "📸 إنهاء عرض الملصقات",
+    expandAllScienceBtn: "🔬 عرض الأدلة السريرية",
+    hideClinicalDetailsBtn: "🔬 إخفاء التفاصيل السريرية",
+    headerViewFullGuideBtn: "📖 عرض الدليل الكامل",
+    headerFocusedTabsBtn: "🎯 التبويبات المركّزة",
+    showAllSectionsBtn: "إظهار جميع الأقسام",
+    returnFocusedTabsBtn: "العودة للتبويبات المركّزة",
+    activePrefix: "الحالي:",
+    prevPrefix: "السابق:",
+    nextPrefix: "التالي:",
+    formatPagerIndicator: (cur, total, label) => `التبويب ${cur} من ${total} • ${label}`,
+    backToOverviewBtn: "← العودة إلى الخطة اليومية والملخص",
+    jumpToChannelsBtn: "الانتقال إلى المشاهدة · القنوات (28) →",
+    fullHandbookModeLabel: "وضع الدليل الكامل • جميع التبويبات الـ 8 ظاهرة",
+    globalAgeLabel: "👶 عمر الطفل:",
+    globalAges: {"all": "كل الأعمار", "under-2": "0–24 شهراً", "toddler": "2–3 سنوات", "preschool": "4–5 سنوات", "early-elementary": "6–7 سنوات", "middle-elementary": "8–9 سنوات", "preteen": "10–12 سنة"},
+    sidebarBrandTitle: "شاهد • العب • تغذَّ • استمع",
+    sidebarBrandSub: "اختر عمر طفلك في الأعلى أو انتقل مباشرة إلى أي دليل بالأسفل.",
+    sidebarGroups: ["1. ابدأ من هنا", "2. الأدلة اليومية المنتقاة", "3. أدوات التقييم والعلوم السريرية", "4. تعلّم من خبيرة"],
+    sidebarNav: {"overview": {"title": "الخطة اليومية و10 قواعد", "caption": "ملصق الثلاجة والمحاور الأربعة", "pill": "البداية"}, "channels": {"title": "شاهد: قنوات هادئة آمنة", "caption": "قائمة بيضاء منخفضة التحفيز", "pill": "28"}, "games": {"title": "العب: ألعاب تعليمية", "caption": "منطق وعلوم بلا إعلانات", "pill": "33"}, "nutrition": {"title": "تغذَّ: أطعمة طبيعية كاملة", "caption": "بدائل حقيبة الغداء وNFI-10", "pill": "32"}, "listen": {"title": "استمع واقرأ: صوتيات وكتب", "caption": "بودكاست، Yoto وكتب حية", "pill": "26"}, "science": {"title": "العلوم ومقاييس الفحص", "caption": "SEM-10 وNFI-10 و30 دراسة", "pill": "30 دراسة"}, "lockdown": {"title": "أدلة الحماية والإغلاق", "caption": "تطبيقات مفتوحة ونظام وDNS", "pill": "13 أداة"}, "expert": {"title": "د. بيكي: أطفال واثقون", "caption": "ماذا نقول؟ عبارات وفيديوهات", "pill": "10 فيديو"}, "all": {"title": "الدليل الكامل / طباعة الكل", "caption": "عرض جميع الأقسام في صفحة واحدة", "pill": "الكل"}},
+    mobileBar: {"overview": "الخطة", "channels": "شاهد", "games": "العب", "nutrition": "غذاء", "listen": "صوتيات", "lockdown": "حماية", "expert": "خبيرة"},
+    heroHeading: "بوابة هادئة قائمة على الأدلة العلمية للإعلام واللعب والتغذية الطبيعية والصوتيات للوالدين",
+    heroSubtitle: "اختر عمر طفلك للحصول على روتين يومي فوري، أو تصفّح 119 مورداً منتقى: قنوات منخفضة التحفيز، ألعاب بنائية، بدائل غذائية طبيعية، وبودكاست وكتب بلا شاشات.",
+    heroStats: ["قناة هادئة منتقاة", "لعبة معتمدة تربوياً", "غذاءً كاملاً وبديلاً صحياً", "صوتية وكتاباً بلا شاشة", "مقياسان من 10 نقاط", "دراسة وتشريعاً موثقاً"],
+    blueprintSyncBtn: "🔗 مزامنة الأدلة الأربعة مع هذا العمر",
+    blueprintReadBtn: "🔊 قراءة الخطة اليومية",
+    blueprintCopyBtn: "📋 نسخ خطة مقدم الرعاية",
+    blueprintPrintBtn: "🖨️ طباعة ملصق الثلاجة السريع",
+    searchPlaceholders: {"channel": "ابحث في القنوات المعتمدة (مثل: الطبيعة، العلوم، الصوتيات، الهدوء)...", "game": "ابحث في الألعاب التعليمية (مثل: الشطرنج، البرمجة، الهندسة المكانية، مونتيسوري)...", "food": "ابحث في 32 غذاءً طبيعياً وبديلاً (مثل: السلمون، الحديد، DHA، بدون ألوان صناعية)...", "listen": "ابحث في الصوتيات والكتب (مثل: Yoto، بودكاست علمي، القراءة الصوتية، القصص)..."},
+    viewChannelBtn: "زيارة القناة الرسمية",
+    visitGameBtn: "زيارة اللعبة / التطبيق",
+    viewFoodRefBtn: "عرض المرجع السريري والغذائي",
+    viewListenRefBtn: "استماع / عرض مرجع الكتاب",
+    drawerShowLabel: "🔬 + لماذا ينجح، دليل الوالدين والمراجع",
+    drawerHideLabel: "🔬 − إخفاء التفاصيل السريرية والدليل",
+    formatChannelsCount: (n) => (n === 1 ? "قناة واحدة (1)" : `${n} قناة`),
+    formatGamesCount: (n) => (n === 1 ? "لعبة واحدة (1)" : `${n} لعبة`),
+    formatFoodsCount: (n) => (n === 1 ? "غذاء طبيعي أو بديل واحد (1)" : `${n} غذاءً طبيعياً وبديلاً`),
+    formatListenCount: (n) => (n === 1 ? "اختيار صوتي أو كتاب واحد (1)" : `${n} اختياراً صوتياً وكتاباً`),
+    emptyChannelsTitle: "لا توجد قنوات تطابق بحثك.",
+    emptyChannelsSub: "جرّب تغيير فلتر العمر أو مسح كلمة البحث.",
+    emptyGamesTitle: "لا توجد ألعاب تعليمية تطابق بحثك.",
+    emptyGamesSub: "جرّب مسح فلاتر العمر والمجال وإشارة التوقف والبحث.",
+    emptyFoodsTitle: "لا توجد أطعمة طبيعية أو بدائل تطابق بحثك.",
+    emptyFoodsSub: "جرّب اختيار كل الأطعمة أو مسح الفلتر الغذائي.",
+    emptyListenTitle: "لا توجد حلقات بودكاست أو كتب صوتية تطابق بحثك.",
+    emptyListenSub: "جرّب اختيار جميع الصيغ أو مسح البحث.",
+    tabs: {"overview": {"kicker": "التبويب 1 من 8 • ابدأ من هنا", "title": "نظرة عامة، الخطة اليومية حسب العمر و10 توصيات أساسية للأسرة", "sub": "روتين يومي هادئ، ملصق ثلاجة قابل للطباعة من 4 محاور، وإطار عملي للوالدين.", "shortLabel": "الخطة اليومية والملخص"}, "science": {"kicker": "التبويب 2 من 8 • الأدلة السريرية والمقاييس", "title": "العلوم السريرية، مقياسا الفحص من 10 نقاط (SEM-10 وNFI-10) و30 مرجعاً", "sub": "تصوير عصبي محكّم، علم نفس النمو، تجارب تغذية الأطفال، وحاسبات تقييم في 60 ثانية.", "shortLabel": "العلوم والمقاييس (30)"}, "channels": {"kicker": "التبويب 3 من 8 • المحور 1 (شاهد)", "title": "دليل القنوات الهادئة منخفضة التحفيز المعتمدة من الوالدين (28 قناة)", "sub": "قنوات فيديو هادئة مقيّمة بمقياس SEM-10 مع تصدير القائمة البيضاء بصيغة JSON/CSV.", "shortLabel": "شاهد · القنوات (28)"}, "games": {"kicker": "التبويب 4 من 8 • المحور 2 (العب)", "title": "دليل الألعاب المعرفية والتطبيقات المعتمدة من التربويين (33 لعبة)", "sub": "بيئات بنائية وألغاز مكانية وتطبيقات مونتيسوري بلا إعلانات وبلا صناديق حظ.", "shortLabel": "العب · الألعاب (33)"}, "nutrition": {"kicker": "التبويب 5 من 8 • المحور 3 (تغذَّ)", "title": "الأطعمة الطبيعية الكاملة وبدائل حقيبة الغداء المعتمدة طبياً (32 بديلاً)", "sub": "بدائل طبيعية من الفئة NOVA-1 تحلّ محل الوجبات فائقة التصنيع وأكياس الهريس والألوان الصناعية.", "shortLabel": "تغذَّ · الأطعمة (32)"}, "listen": {"kicker": "التبويب 6 من 8 • المحور 4 (استمع واقرأ)", "title": "استمع واقرأ: صوتيات بلا شاشة وبودكاست وكتب حية (26 اختياراً)", "sub": "بودكاست علوم وحكايات، بطاقات Yoto/Tonie الصوتية، كتب صوتيات منهجية وقراءة حوارية.", "shortLabel": "استمع واقرأ (26)"}, "lockdown": {"kicker": "التبويب 7 من 8 • الحماية التقنية", "title": "أدوات الرقابة الأبوية مفتوحة المصدر وأدلة قفل الأجهزة وشبكة DNS", "sub": "مقارنة 13 أداة مفتوحة المصدر مع الخطوات A–E لإعداد BrainRotGuard وKidTube وFamily Link والوصول الموجّه وNextDNS.", "shortLabel": "قفل الأجهزة وDNS"}, "expert": {"kicker": "التبويب 8 من 8 • نافذة الخبراء (د. بيكي كينيدي)", "title": "تعلّم من خبيرة: د. بيكي كينيدي حول تربية أطفال واثقين بأنفسهم", "sub": "5 أفكار محورية من Good Inside، و9 عبارات «قل هذا بدلاً من ذلك» بقراءة صوتية Chirp 3 HD، وخطة 7 أيام و10 فيديوهات مجانية موثّقة.", "shortLabel": "خبيرة · د. بيكي (10)"}, "all": {"kicker": "وضع الدليل الكامل • جميع التبويبات الـ 8 ظاهرة", "title": "المرجع الكامل لبوابة SafeKids للوالدين (جميع الأقسام)", "sub": "يعرض التوصيات الـ 10، وأكثر من 30 دراسة سريرية، و28 قناة، و33 لعبة، و32 بديلاً غذائياً، و26 مادة صوتية/كتاباً، و5 أدلة حماية.", "shortLabel": "الدليل الكامل (الكل)"}},
+    blueprintStages: {"under-2": {"ageLabelShort": "أقل من سنتين (0–24 شهراً)", "directoryFilterAge": "toddler", "stageHeadline": "👶 أقل من سنتين (0–24 شهراً) — 100% بلا شاشات، تأسيس حسي حركي وحديد/DHA", "stageSummary": "الأكاديمية الأمريكية لطب الأطفال AAP (2016) وKuhl (2003): بسبب ضعف التعلّم من الفيديو قبل عمر 24 شهراً، يحتاج الرضيع إلى تفاعل صوتي حي مع الوالدين ولعب أرضي وأغذية غنية بالحديد وDHA.", "screenBudget": "0 دقيقة/يوم من الفيديو السلبي (مكالمات الفيديو العائلية الحية فقط حسب AAP)", "sleepCutoff": "غرفة مظلمة 100% خالية من الشاشات؛ 12–16 ساعة نوم إجمالي مع القيلولة", "mealRule": "صفر سكر مضاف وصفر عسل (<12 شهراً)؛ أطعمة طبيعية طرية غنية بالحديد + DHA"}, "toddler": {"ageLabelShort": "الصغار (2–3 سنوات)", "directoryFilterAge": "toddler", "stageHeadline": "🧸 الصغار (2–3 سنوات) — مشاهدة مشتركة بطيئة الإيقاع (SEM-10 ≤ 2/10) وأمان من الاختناق", "stageSummary": "منظمة الصحة العالمية (2019) وLillard (2011): إبقاء الشاشة ضمن 30–45 دقيقة/يوم بمشاهدة مشتركة على تلفاز الصالة، مع أطعمة NOVA-1 مقطّعة إلى أرباع.", "screenBudget": "≤ 30–45 دقيقة/يوم (مشاهدة مشتركة 100% مع الوالدين على التلفاز)", "sleepCutoff": "إيقاف الشاشات قبل القيلولة والنوم بـ 60+ دقيقة (حماية الميلاتونين)", "mealRule": "مائدة خالية من الشاشات 100%؛ تقطيع العنب والطماطم الكرزية طولياً إلى أرباع (4 أجزاء)؛ فرد زبدة المكسرات بطبقة رقيقة"}, "preschool": {"ageLabelShort": "ما قبل المدرسة (4–5 سنوات)", "directoryFilterAge": "preschool", "stageHeadline": "🎨 ما قبل المدرسة (4–5 سنوات) — الوظائف التنفيذية، الصوتيات وجسور التذوق الحسية", "stageSummary": "Diamond (2013) وHirsh-Pasek (2015): تنمية ضبط النفس والوعي الصوتي والحس العددي عبر قصص هادئة وتطبيقات لمسية ووجبات عائلية بلا ضغط.", "screenBudget": "≤ 45–60 دقيقة/يوم من تلفاز منخفض التحفيز أو تطبيق تعليمي موجّه", "sleepCutoff": "إيقاف جميع الشاشات قبل النوم بـ 60+ دقيقة (روتين قراءة بصوت عالٍ)", "mealRule": "وجبات بلا شاشات 100%؛ صفر ألوان صناعية (الأحمر 40 / الأصفر 5؛ E129 / E102)؛ فاكهة كاملة بدلاً من أكياس الهريس"}, "early-elementary": {"ageLabelShort": "بداية الابتدائي (6–7 سنوات)", "directoryFilterAge": "early-elementary", "stageHeadline": "🚀 بداية الابتدائي (6–7 سنوات) — استكشاف علمي يدوي، منطق مكاني وسكر دم مستقر", "stageSummary": "Papert (1980) وBenton (2007): الانتقال من المشاهدة السلبية إلى الرسم واستكشاف الطبيعة وألغاز المنطق المكاني، مع فطور وحقيبة غداء منخفضَي الحمل الجلايسيمي لمنع هبوط التركيز الساعة 10:30 صباحاً.", "screenBudget": "≤ 60 دقيقة/يوم ترفيهي في أيام الدراسة (في غرفة المعيشة فقط)", "sleepCutoff": "إغلاق الأجهزة قبل النوم بـ 60+ دقيقة؛ صفر شاشات في غرف النوم", "mealRule": "فطور وغداء منخفضا الحمل الجلايسيمي (شوفان/بيض/بذور) لتركيز صفي يدوم 4 ساعات"}, "middle-elementary": {"ageLabelShort": "وسط الابتدائي (8–9 سنوات)", "directoryFilterAge": "middle-elementary", "stageHeadline": "🧩 وسط الابتدائي (8–9 سنوات) — برمجة بنائية، رياضيات استنتاجية وتغذية عصبية", "stageSummary": "Resnick (2017) وAsbell-Clarke (2012): توجيه الاستقلالية نحو برمجة Scratch والمنطق البولياني والهندسة (مع مؤقّت بصري لـ 5 دقائق) مع الحديد والزنك وDHA البحري.", "screenBudget": "≤ 60–75 دقيقة/يوم (الأولوية للبرمجة الإبداعية والألغاز التعاونية)", "sleepCutoff": "شحن جميع الأجهزة في المطبخ قبل إطفاء الأنوار بـ 60+ دقيقة (Chang et al., 2015)", "mealRule": "عشاء عائلي بلا شاشات؛ حديد الهيم/العدس + فيتامين C وDHA بحري 2–3 مرات أسبوعياً"}, "preteen": {"ageLabelShort": "ما قبل المراهقة (10–12 سنة)", "directoryFilterAge": "preteen", "stageHeadline": "🔭 ما قبل المراهقة (10–12 سنة) — تفكير منظومي، ذروة بناء العظام وصفر خلاصات خوارزمية", "stageSummary": "Nisan & Schocken (2005) وWeaver (2016): استبدال المقاطع القصيرة الخوارزمية (Shorts/TikTok) وصناديق الحظ بفيزياء المدارات وهندسة المعالجات والاستراتيجية العميقة، مع الكالسيوم وD3 وK2.", "screenBudget": "≤ 60–90 دقيقة/يوم ترفيهي (صفر تمرير لا نهائي وصفر دردشة)", "sleepCutoff": "حظر صارم قبل النوم بـ 60 دقيقة؛ إبقاء الشواحن خارج غرف النوم ليلاً", "mealRule": "ذروة الكتلة العظمية بـ D3 + K2 + الكالسيوم + الألياف الحيوية؛ صفر كافيين أو مشروبات طاقة"}},
+    expertTab: {"chirpListenBtn": "🔊 استماع", "chirpStopBtn": "⏹ إيقاف", "chirpReadPlanBtn": "🔊 قراءة الخطة اليومية", "chirpVoiceLabel": "🎙️ صوت Chirp 3 HD:", "entryKicker": "جديد • تعلّم من خبيرة", "entryTitle": "ماذا تقول لتربّي أطفالاً واثقين بأنفسهم", "entrySub": "9 عبارات هادئة للمواقف اليومية الصعبة مع قراءة صوتية بتقنية Chirp 3 HD وفيديوهات مجانية للدكتورة بيكي كينيدي.", "entryCta": "افتح ←", "heading": "ماذا تقول لتربّي أطفالاً واثقين بأنفسهم", "badge": "10 فيديوهات موثّقة", "lede": "اللحظات الصعبة في التربية أمر طبيعي. إليك عبارات قصيرة وهادئة يمكنك استخدامها اليوم.", "about": "أفكار مستخلصة من الدروس العامة المجانية للدكتورة بيكي كينيدي، الاختصاصية النفسية الإكلينيكية ومؤسِّسة Good Inside ومؤلِّفة كتاب Good Inside (2022).", "disclaimer": "دليل تعلّم مستقل. بوابة SafeKids غير تابعة للدكتورة بيكي كينيدي أو Good Inside. العبارات أدناه صياغة تعليمية من SafeKids للأفكار العامة وليست اقتباساً حرفياً.", "pickerTitle": "ما الذي يحدث الآن؟", "pickerSub": "اختر الموقف لمعرفة ما يُقال، أو اضغط على «استماع» لسماع العبارة بصوت Google Cloud Chirp 3 HD.", "topics": {"confidence": "بناء الثقة بالنفس (4)", "frustration": "تثبيت الحدود بهدوء (2)", "big-feelings": "المشاعر الكبيرة (2)", "repair": "الإصلاح بعد الغضب (1)", "all": "عرض الكل (9)"}, "statusAll": "عرض جميع العبارات ({n}).", "statusFiltered": "عرض {shown} من أصل {total} عبارات.", "insteadLabel": "بدلاً من قول", "tryLabel": "جرّب أن تقول", "copyBtn": "نسخ العبارة", "copiedBtn": "تم النسخ ✓", "whySummary": "لماذا تنجح هذه العبارة؟", "principlesTitle": "الأفكار الخمس الكبرى وراء هذه العبارات", "practiceTitle": "جرّبها لمدة أسبوع: تبديل بسيط كل يوم", "practiceSub": "التغييرات الصغيرة المتكررة أعمق أثراً من محاولة المثالية دفعة واحدة.", "videosTitle": "شاهد وتعلّم: 10 فيديوهات مجانية", "videosSub": "تُفتح الروابط في تبويب جديد على YouTube دون تحميل أي أدوات تتبّع مسبقة.", "channelsTitle": "تابع القنوات الرسمية للدكتورة بيكي", "channelsSub": "تُنشر نصائحها اليومية القصيرة عبر هذه الحسابات الرسمية.", "scripts": [{"id": "script_1", "moment": "يريك طفلك رسماً أو عملاً يدوياً أنجزه", "instead": "«أحسنت! أنت فنان عبقري!»", "tryText": "«حدّثني عن رسمتك، كيف قررت من أين تبدأ؟»", "why": "السؤال الفضولي يوجّه انتباه الطفل إلى تفكيره الداخلي، فتُبنى ثقته على جهده وقراره لا على انتظار المديح الخارجي."}, {"id": "script_2", "moment": "«إنها أبرع مني بكثير في هذا الأمر.»", "instead": "«مستحيل، أنت الأفضل بين الجميع!»", "tryText": "«يؤلمنا فعلاً أن يتفوّق غيرنا في شيء نهتم به. شعرتُ بذلك من قبل أيضاً. ومع ذلك تبقى أنت نفسك، وأنت بخير كما أنت.»", "why": "إنكار الشعور يعلّم الطفل التشكيك في إحساسه، أما تسميته فتُظهر له أنه يستطيع الشعور بالغيرة مع بقاء قيمته محفوظة."}, {"id": "script_3", "moment": "يتعثر في واجب أو أحجية ويريد الاستسلام", "instead": "«هاتها، دعني أحلّها عنك.»", "tryText": "«هذه المسألة صعبة حقاً. أنا بجانبك هنا. ما الخطوة الصغيرة التي يمكنك تجربتها الآن؟»", "why": "التدخل لحل المشكلة يحرمه من المحاولة التي تصنع الثقة؛ أما البقاء بقربه بهدوء فيمنحه رصيداً حقيقياً في تجاوز الصعاب."}, {"id": "script_4", "moment": "يشعر طفلك بالتوتر قبل اختبار أو تجربة أداء", "instead": "«لا تقلق أبداً، ستبدع بالتأكيد!»", "tryText": "«طبيعي جداً أن تتوتر لأن هذا الأمر يهمّك. يمكن أن تكون متوتراً ومستعداً في الوقت نفسه.»", "why": "تطبيع التوتر يطمئن الطفل أن خفقان القلب لا يعني العجز عن النجاح."}, {"id": "script_5", "moment": "انتهى وقت الشاشة وبدأ البكاء والغضب", "instead": "«توقّف عن البكاء، إنه مجرد كرتون!»", "tryText": "«كنتَ تتمنى متابعة المشاهدة، ومن الصعب جداً التوقف. وقد انتهى وقت الشاشات لليوم. يحق لك أن تغضب، وأنا هنا بجانبك.»", "why": "يبقى الحد ثابتاً مع السماح بالمشاعر؛ هكذا تنمو قدرة تحمّل الإحباط بجوار بالغ هادئ."}, {"id": "script_6", "moment": "الإلحاح والتذمّر بعد سماع كلمة «لا»", "instead": "«حسناً، مرة أخيرة فقط ولكن توقف عن التذمر.»", "tryText": "«الجواب ما زال لا. لا بأس أن تغضب بسبب ذلك، فأنا قادر على استيعاب مشاعرك الكبيرة.»", "why": "كلمة «لا» الدافئة والثابتة تثبت للطفل أن الحدود آمنة وأن مشاعره لا تُربك والديه."}, {"id": "script_7", "moment": "يضرب طفلك أخاه أو أخته", "instead": "«ممنوع الضرب! اذهب إلى غرفتك فوراً!»", "tryText": "«لن أسمح لك بالضرب. سأُبعدك الآن ليبقى الجميع بأمان. أنت طفل طيب يمرّ بلحظة صعبة جداً.»", "why": "تُوقف السلوك بهدوء دون تهديد مع الحفاظ على صورته كطفل طيب، مما يسهّل الإصلاح بعد هدوء الجميع."}, {"id": "script_8", "moment": "طفل عميق المشاعر ينفجر بسبب أمر بسيط", "instead": "«أنت تبالغ كثيراً بلا سبب.»", "tryText": "«بدا ذلك كبيراً جداً عليك. أنا هنا معك.»", "why": "أثناء العاصفة العاطفية تزيد كثرة الكلام من إرهاق الجهاز العصبي؛ الحضور الهادئ أولاً، والنقاش لاحقاً."}, {"id": "script_9", "moment": "صرختَ في وجه طفلك وندمت بعدها", "instead": "التظاهر بأن شيئاً لم يحدث، أو قول «صرختُ لأنك لم تسمع الكلام».", "tryText": "«كنتُ أفكر فيما حدث قبل قليل. أنا آسف لأنني صرخت. لم يكن ذلك خطأك أبداً، بل مسؤوليتي أنا أن أدرّب نفسي على الهدوء. أنا أحبك.»", "why": "تحمُّل الوالد لمسؤوليته دون لوم الطفل يحمي ثقته بنفسه ويعلّمه عملياً كيف يصلح أخطاءه."}], "principles": [{"title": "الأطفال طيبون في داخلهم", "body": "السلوك الصعب إشارة إلى لحظة صعبة يمر بها الطفل وليس دليلاً على سوء معدنه. ابحث بفضول عما وراء السلوك."}, {"title": "حقيقتان في آنٍ واحد", "body": "يمكنك تثبيت الحد وتفهُّم الشعور معاً: «تريد اللعب أكثر، وقد حان وقت النوم الآن»."}, {"title": "كن قائداً هادئاً راسخاً", "body": "مهمتك ليست منع كل انزعاج، بل البقاء هادئاً عند الدفة بينما يتعلم طفلك أنه قادر على تجاوز الإحباط."}, {"title": "الثقة الحقيقية هي الثقة بالذات", "body": "لا تُبنى الثقة بعبارات الإطراء السريعة، بل بالإصغاء للذات وتكوين خبرة متراكمة في اجتياز الصعوبات."}, {"title": "إصلاح العلاقة أهم من الكمال", "body": "كل أب وأم يخطئ أحياناً؛ والعودة للاعتذار الصادق تعلّم الطفل أن المحبة أقوى من الهفوات."}]}
   }
 };
 
@@ -6788,11 +7521,32 @@ function setupDarkModeToggle() {
 
 // BCP 47 tags for <html lang>: the zh dictionary is Simplified Chinese, so tag it zh-Hans
 // (drives Han glyph selection and screen-reader voice choice).
-const HTML_LANG_TAGS = { en: 'en', es: 'es', zh: 'zh-Hans', ja: 'ja', ko: 'ko' };
+const HTML_LANG_TAGS = {
+  en: 'en',
+  es: 'es',
+  zh: 'zh-Hans',
+  yue: 'yue-Hant-HK',
+  ja: 'ja',
+  ko: 'ko',
+  pt: 'pt',
+  fr: 'fr',
+  it: 'it',
+  de: 'de',
+  ar: 'ar'
+};
 
 function setDocumentLanguageTag(lang) {
+  const validLang = ALLOWED_LANGUAGES.has(lang) ? lang : 'en';
   if (document.documentElement && typeof document.documentElement.setAttribute === 'function') {
-    document.documentElement.setAttribute('lang', ALLOWED_LANGUAGES.has(lang) ? HTML_LANG_TAGS[lang] : 'en');
+    document.documentElement.setAttribute('lang', HTML_LANG_TAGS[validLang] || 'en');
+    document.documentElement.setAttribute('dir', validLang === 'ar' ? 'rtl' : 'ltr');
+  }
+  if (document.body && document.body.classList) {
+    if (validLang === 'ar') {
+      document.body.classList.add('rtl-mode');
+    } else {
+      document.body.classList.remove('rtl-mode');
+    }
   }
 }
 
@@ -6913,9 +7667,13 @@ function applyPortalLanguage(rawLang, opts) {
     }
   });
 
+  stopSafeKidsSpeech();
+
   // 4. Update Blueprint Action Buttons & Search Placeholders
   const btnSync = document.getElementById('btn-sync-age-directories');
   if (btnSync && i18n.blueprintSyncBtn) btnSync.textContent = i18n.blueprintSyncBtn;
+  const btnReadBp = document.getElementById('btn-read-blueprint');
+  if (btnReadBp && i18n.blueprintReadBtn) btnReadBp.textContent = i18n.blueprintReadBtn;
   const btnCopy = document.getElementById('btn-copy-blueprint');
   if (btnCopy && i18n.blueprintCopyBtn) btnCopy.textContent = i18n.blueprintCopyBtn;
   const btnPrint = document.getElementById('btn-print-fridge-sheet');
@@ -6941,6 +7699,7 @@ function applyPortalLanguage(rawLang, opts) {
   renderGames();
   renderFoods();
   renderListenItems();
+  applyExpertTabTranslations(i18n);
 }
 
 function setupLanguageSwitcher() {

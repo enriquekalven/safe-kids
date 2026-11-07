@@ -1,4 +1,4 @@
-.PHONY: test mutation forbid-fabrication preview verify all
+.PHONY: test mutation forbid-fabrication preview preview-tts verify all
 
 PYTHON ?= python3
 PORT ?= 8080
@@ -18,3 +18,6 @@ verify: forbid-fabrication test mutation
 
 preview:
 	$(PYTHON) -m http.server $(PORT) --bind 127.0.0.1 --directory public
+
+preview-tts:
+	$(PYTHON) server.py --port $(PORT)

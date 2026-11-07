@@ -26,8 +26,19 @@ install_network_guard()
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 SKIP_DIRS = frozenset(
-    {".git", ".firebase", "node_modules", "__pycache__", ".pytest_cache", ".ruff_cache", ".venv", "venv"}
+    {
+        ".git",
+        ".firebase",
+        ".tts_cache",
+        "node_modules",
+        "__pycache__",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".venv",
+        "venv",
+    }
 )
+BINARY_EXTENSIONS = frozenset({".jpg", ".jpeg", ".png", ".webp", ".gif", ".ico", ".mp3", ".wav", ".ogg", ".woff", ".woff2"})
 
 # SHA-256 digests of lowercase restricted customer tokens (Dell, Ford, Zscaler, etc.)
 BLOCKED_DIGESTS = frozenset(
@@ -66,7 +77,7 @@ class AccountHygieneAndPiiGuardTests(unittest.TestCase):
         for path in sorted(REPO_ROOT.rglob("*")):
             if any(p in SKIP_DIRS for p in path.parts) or not path.is_file():
                 continue
-            if path.name == "test_no_real_names.py":
+            if path.name == "test_no_real_names.py" or path.suffix.lower() in BINARY_EXTENSIONS:
                 continue
             data = path.read_bytes()
             if b"\x00" in data[:4096]:
@@ -118,6 +129,36 @@ class AccountHygieneAndPiiGuardTests(unittest.TestCase):
         }
         image_files = {p.name for p in (REPO_ROOT / "public" / "images").iterdir() if p.is_file()}
         self.assertEqual(image_files, approved_images)
+
+        # public/audio/ must contain ONLY the 11 Atlas of Wonder language directories and 15 Chirp 3 HD MP3s each (165 total)
+        public_subdirs = {p.name for p in (REPO_ROOT / "public").iterdir() if p.is_dir()}
+        self.assertEqual(public_subdirs, {"images", "audio"})
+        approved_langs = {"en", "es", "zh", "yue", "ja", "ko", "pt", "fr", "it", "de", "ar"}
+        approved_mp3s = {
+            *{f"script_{i}.mp3" for i in range(1, 10)},
+            "blueprint_under-2.mp3",
+            "blueprint_toddler.mp3",
+            "blueprint_preschool.mp3",
+            "blueprint_early-elementary.mp3",
+            "blueprint_middle-elementary.mp3",
+            "blueprint_preteen.mp3",
+        }
+        audio_root = REPO_ROOT / "public" / "audio"
+        audio_lang_dirs = {p.name for p in audio_root.iterdir() if p.is_dir()}
+        self.assertEqual(audio_lang_dirs, approved_langs)
+        self.assertEqual([p.name for p in audio_root.iterdir() if p.is_file()], [])
+        for lang_code in sorted(approved_langs):
+            lang_dir = audio_root / lang_code
+            mp3_names = {p.name for p in lang_dir.iterdir() if p.is_file()}
+            self.assertEqual(mp3_names, approved_mp3s, f"Unexpected MP3 set for {lang_code}")
+            for mp3_name in sorted(approved_mp3s):
+                mp3_path = lang_dir / mp3_name
+                raw = mp3_path.read_bytes()
+                self.assertGreater(len(raw), 1024, f"Chirp 3 HD MP3 too small: {mp3_path}")
+                self.assertTrue(
+                    raw[:3] == b"ID3" or (raw[0] == 0xFF and (raw[1] & 0xE0) == 0xE0),
+                    f"Invalid MP3 header in {mp3_path}: {raw[:4]!r}",
+                )
 
     def test_forbid_fabrication_passes_across_repo(self) -> None:
         hits = scan_repository(REPO_ROOT)

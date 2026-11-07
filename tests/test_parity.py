@@ -195,6 +195,7 @@ class MockElement {
     this.className = className;
     this.attributes = { ...attrs };
     this.style = {};
+    this.parentNode = null;
     this.children = [];
     this.listeners = {};
     this._textContent = '';
@@ -211,7 +212,14 @@ class MockElement {
         cls.forEach(c => set.delete(c));
         this.className = [...set].join(' ');
       },
-      contains: (c) => this.className.split(/\s+/).filter(Boolean).includes(c)
+      contains: (c) => this.className.split(/\s+/).filter(Boolean).includes(c),
+      toggle: (c, force) => {
+        const set = new Set(this.className.split(/\s+/).filter(Boolean));
+        const shouldHave = force === undefined ? !set.has(c) : Boolean(force);
+        if (shouldHave) set.add(c); else set.delete(c);
+        this.className = [...set].join(' ');
+        return shouldHave;
+      }
     };
   }
   get textContent() {
@@ -229,8 +237,10 @@ class MockElement {
   setAttribute(k, v) { this.attributes[k] = String(v); }
   appendChild(child) {
     if (child && child.isFragment) {
+      child.children.forEach(c => { if (c) c.parentNode = this; });
       this.children.push(...child.children);
     } else if (child) {
+      child.parentNode = this;
       this.children.push(child);
     }
     return child;
@@ -257,17 +267,40 @@ class MockElement {
     this.value = val;
     (this.listeners['change'] || []).forEach(fn => fn({ currentTarget: this, target: this }));
   }
+  closest(selector) {
+    let cur = this;
+    while (cur) {
+      if (selector.startsWith('.')) {
+        const cls = selector.slice(1).split('[')[0];
+        if (cur.classList && cur.classList.contains(cls)) return cur;
+      } else if (cur.tagName === selector.toUpperCase()) {
+        return cur;
+      }
+      cur = cur.parentNode || null;
+    }
+    return null;
+  }
   querySelector(selector) {
     return this.querySelectorAll(selector)[0] || null;
   }
   querySelectorAll(selector) {
+    if (selector.includes(' ')) {
+      const [first, ...rest] = selector.trim().split(/\s+/);
+      const subSel = rest.join(' ');
+      const out = [];
+      for (const mid of this.querySelectorAll(first)) {
+        out.push(...mid.querySelectorAll(subSel));
+      }
+      return out;
+    }
     const results = [];
     const matchSel = (el, sel) => {
+      if (!el) return false;
       if (sel.startsWith('.')) {
         const baseCls = sel.slice(1).split('[')[0];
-        return Boolean(el && el.classList && el.classList.contains(baseCls));
+        return Boolean(el.classList && el.classList.contains(baseCls));
       }
-      return false;
+      return el.tagName === sel.toUpperCase();
     };
     const walk = (node) => {
       for (const child of node.children || []) {
@@ -450,8 +483,76 @@ registerEl(new MockElement('ul', 'bp-games-list', 'fridge-col-list'));
 registerEl(new MockElement('ul', 'bp-foods-list', 'fridge-col-list'));
 registerEl(new MockElement('ul', 'bp-listen-list', 'fridge-col-list'));
 registerEl(new MockElement('button', 'btn-sync-age-directories', 'btn btn-primary btn-sm'));
+registerEl(new MockElement('button', 'btn-read-blueprint', 'btn btn-outline btn-sm chirp-read-btn', { 'aria-pressed': 'false' }));
 registerEl(new MockElement('button', 'btn-copy-blueprint', 'btn btn-outline btn-sm'));
 registerEl(new MockElement('button', 'btn-print-fridge-sheet', 'btn btn-outline btn-sm'));
+
+// Expert Tab & Chirp 3 HD Read Aloud mock elements
+const expertEntryCard = registerEl(new MockElement('a', 'expert-entry-card', 'expert-entry-card'));
+expertEntryCard.appendChild(new MockElement('span', '', 'expert-entry-kicker'));
+expertEntryCard.appendChild(new MockElement('strong', '', 'expert-entry-title'));
+expertEntryCard.appendChild(new MockElement('span', '', 'expert-entry-sub'));
+expertEntryCard.appendChild(new MockElement('span', '', 'expert-entry-cta'));
+
+registerEl(new MockElement('span', 'expert-heading-text', ''));
+registerEl(new MockElement('span', 'expert-video-count-badge', 'tag-badge'));
+registerEl(new MockElement('p', 'expert-lede-text', ''));
+registerEl(new MockElement('p', 'expert-about-text', ''));
+registerEl(new MockElement('p', 'expert-disclaimer-text', ''));
+registerEl(new MockElement('strong', 'expert-picker-title', ''));
+registerEl(new MockElement('p', 'expert-picker-sub', ''));
+registerEl(new MockElement('p', 'expert-filter-status', ''));
+registerEl(new MockElement('label', 'chirp-voice-label', 'chirp-voice-label'));
+registerEl(new MockElement('select', 'chirp-persona-select', 'chirp-persona-select'));
+registerEl(new MockElement('h3', 'expert-principles-title', ''));
+registerEl(new MockElement('h3', 'expert-practice-title', ''));
+registerEl(new MockElement('p', 'expert-practice-sub', ''));
+registerEl(new MockElement('h3', 'expert-videos-title', ''));
+registerEl(new MockElement('p', 'expert-videos-sub', ''));
+registerEl(new MockElement('h3', 'expert-channels-title', ''));
+registerEl(new MockElement('p', 'expert-channels-sub', ''));
+
+const expertTopicBtns = ['confidence', 'frustration', 'big-feelings', 'repair', 'all'].map((t, idx) => {
+  const b = new MockElement('button', '', idx === 4 ? 'filter-btn expert-topic-btn active' : 'filter-btn expert-topic-btn', {
+    'data-expert-topic': t,
+    'aria-pressed': idx === 4 ? 'true' : 'false'
+  });
+  b.appendChild(new MockElement('span', '', 'expert-topic-label'));
+  return b;
+});
+
+const expertTopicsFor9 = ['confidence', 'confidence', 'confidence', 'confidence', 'frustration', 'frustration', 'big-feelings', 'big-feelings', 'repair'];
+const expertScriptCards = expertTopicsFor9.map((topic, idx) => {
+  const card = new MockElement('article', '', 'card expert-script-card', { 'data-expert-topic': topic });
+  card.appendChild(new MockElement('span', '', 'expert-moment-text'));
+  card.appendChild(new MockElement('span', '', 'expert-instead-label'));
+  card.appendChild(new MockElement('span', '', 'expert-instead-text'));
+  card.appendChild(new MockElement('span', '', 'expert-try-label'));
+  const tryEl = new MockElement('span', '', 'expert-try-text');
+  tryEl.textContent = `"Tell me about script ${idx + 1}."`;
+  card.appendChild(tryEl);
+  const listenBtn = new MockElement('button', '', 'btn btn-primary btn-sm expert-listen-btn', {
+    'data-audio-key': `script_${idx + 1}`,
+    'aria-pressed': 'false'
+  });
+  listenBtn.textContent = '🔊 Read Aloud';
+  card.appendChild(listenBtn);
+  const copyBtn = new MockElement('button', '', 'btn btn-outline btn-sm expert-copy-btn');
+  copyBtn.textContent = 'Copy phrase';
+  card.appendChild(copyBtn);
+  const detailsEl = new MockElement('details', '', 'expert-why');
+  detailsEl.appendChild(new MockElement('summary'));
+  detailsEl.appendChild(new MockElement('p', '', 'expert-script-why'));
+  card.appendChild(detailsEl);
+  return card;
+});
+
+const expertPrincipleCards = [0, 1, 2, 3, 4].map(() => {
+  const pc = new MockElement('article', '', 'card expert-principle-card');
+  pc.appendChild(new MockElement('h4', '', 'card-title'));
+  pc.appendChild(new MockElement('p'));
+  return pc;
+});
 
 // Parse real [data-tab-panel] sections and [data-tab] buttons from index.html
 const tabPanels = [];
@@ -593,6 +694,11 @@ const documentMock = {
     if (sel === '.lang-switch-btn') return langSwitchBtns;
     if (sel === '.sidebar-group > .sidebar-group-label') return sidebarGroupLabelEls;
     if (sel === '.hero-stats .stat-label') return heroStatLabelEls;
+    if (sel === '#expert-topic-filters .filter-btn' || sel === '#expert-topic-filters .expert-topic-btn') return expertTopicBtns;
+    if (sel === '#expert-script-grid .expert-script-card') return expertScriptCards;
+    if (sel === '#expert-script-grid .expert-listen-btn') return expertScriptCards.map(c => c.querySelector('.expert-listen-btn'));
+    if (sel === '#expert-script-grid .expert-copy-btn') return expertScriptCards.map(c => c.querySelector('.expert-copy-btn'));
+    if (sel === '.expert-principles-grid .expert-principle-card') return expertPrincipleCards;
     if (sel === '[data-tab]') return tabSwitchBtns;
     if (sel === 'a[href^="#"]') return [];
     if (sel === '.copy-btn') return [];
@@ -602,13 +708,36 @@ const documentMock = {
   createElementNS: (ns, tag) => new MockElement(tag),
   createTextNode: (txt) => ({ textContent: String(txt) }),
   createDocumentFragment: () => ({ isFragment: true, children: [], appendChild(c) { this.children.push(c); } }),
-  documentElement: new MockElement('html', '', '', { lang: 'en', 'data-theme': 'light' }),
+  documentElement: new MockElement('html', '', '', { lang: 'en', dir: 'ltr', 'data-theme': 'light' }),
   body: new MockElement('body')
 };
 
+const playedAudioUrls = [];
+let pausedAudioCount = 0;
+class MockAudio {
+  constructor(src) {
+    this.src = src;
+    this.preload = 'auto';
+    this.onended = null;
+    this.onerror = null;
+  }
+  play() {
+    playedAudioUrls.push(this.src);
+    if (payload.failStaticAudio) {
+      return Promise.reject(new Error('Audio failed'));
+    }
+    return Promise.resolve();
+  }
+  pause() {
+    pausedAudioCount += 1;
+  }
+}
+
 const sandbox = {
   document: documentMock,
+  Audio: MockAudio,
   window: {
+    Audio: MockAudio,
     localStorage: localStorageMock,
     scrollTo: () => {},
     print: () => { printCalledCount += 1; },
@@ -646,6 +775,7 @@ globalThis.__exports = {
   computeDailyBlueprint: typeof computeDailyBlueprint === 'function' ? computeDailyBlueprint : null,
   getGameStoppingProfile: typeof getGameStoppingProfile === 'function' ? getGameStoppingProfile : null,
   portalI18n: typeof PORTAL_I18N !== 'undefined' ? PORTAL_I18N : null,
+  getLastChirpAudioSrc: () => (typeof lastChirpAudioSrc !== 'undefined' ? lastChirpAudioSrc : ''),
 };`, sandbox);
 
 domReadyCallbacks.forEach(fn => fn());
@@ -807,6 +937,33 @@ if (Array.isArray(payload.languageSequence)) {
   }
 }
 
+if (payload.selectChirpPersona) {
+  if (elementsById['chirp-persona-select']) {
+    elementsById['chirp-persona-select'].triggerChange(payload.selectChirpPersona);
+  }
+}
+
+if (typeof payload.clickExpertListenIndex === 'number') {
+  const card = expertScriptCards[payload.clickExpertListenIndex];
+  const listenBtn = card ? card.querySelector('.expert-listen-btn') : null;
+  const count = typeof payload.clickExpertListenCount === 'number' ? payload.clickExpertListenCount : 1;
+  for (let i = 0; i < count; i++) {
+    if (listenBtn) listenBtn.click();
+  }
+}
+
+if (payload.clickReadBlueprint) {
+  const count = typeof payload.clickReadBlueprint === 'number' ? payload.clickReadBlueprint : 1;
+  for (let i = 0; i < count; i++) {
+    if (elementsById['btn-read-blueprint']) elementsById['btn-read-blueprint'].click();
+  }
+}
+
+if (payload.languageAfterAudio) {
+  const pill = langSwitchBtns.find(b => b.getAttribute('data-lang') === payload.languageAfterAudio);
+  if (pill) pill.click();
+}
+
 const pluralSamples = {};
 if (payload.exportI18n && sandbox.__exports.portalI18n) {
   for (const [langKey, dict] of Object.entries(sandbox.__exports.portalI18n)) {
@@ -938,6 +1095,8 @@ const out = {
   activeMobilePillarTabs: tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn') && b.classList.contains('active')).map(b => b.getAttribute('data-tab')),
   htmlTheme: documentMock.documentElement.getAttribute('data-theme'),
   htmlLang: documentMock.documentElement.getAttribute('lang'),
+  htmlDir: documentMock.documentElement.getAttribute('dir'),
+  rtlModeBody: documentMock.body.classList.contains('rtl-mode'),
   darkModeBody: documentMock.body.classList.contains('dark-mode'),
   darkModeBtnText: elementsById['btn-toggle-dark-mode'].textContent,
   darkModeBtnAriaPressed: elementsById['btn-toggle-dark-mode'].getAttribute('aria-pressed'),
@@ -955,6 +1114,18 @@ const out = {
   sidebarNavTitles: Object.fromEntries(tabSwitchBtns.filter(b => b.classList.contains('sidebar-nav-btn')).map(b => [b.getAttribute('data-tab'), (b.querySelector('.sidebar-nav-title') || { textContent: '' }).textContent])),
   mobileBarTexts: Object.fromEntries(tabSwitchBtns.filter(b => b.classList.contains('mobile-pillar-btn')).map(b => [b.getAttribute('data-tab'), (b.querySelector('.mobile-pillar-text') || { textContent: '' }).textContent])),
   channelSearchPlaceholder: elementsById['channel-search'].getAttribute('placeholder'),
+  bpReadBtnText: elementsById['btn-read-blueprint'].textContent,
+  bpReadBtnAriaPressed: elementsById['btn-read-blueprint'].getAttribute('aria-pressed'),
+  bpReadBtnSpeaking: elementsById['btn-read-blueprint'].classList.contains('is-speaking'),
+  chirpPersonaValue: elementsById['chirp-persona-select'].value,
+  expertHeadingText: elementsById['expert-heading-text'].textContent,
+  expertFirstTryText: expertScriptCards[0].querySelector('.expert-try-text').textContent,
+  expertFirstListenBtnText: expertScriptCards[0].querySelector('.expert-listen-btn').textContent,
+  expertFirstListenAriaPressed: expertScriptCards[0].querySelector('.expert-listen-btn').getAttribute('aria-pressed'),
+  expertFirstListenSpeaking: expertScriptCards[0].querySelector('.expert-listen-btn').classList.contains('is-speaking'),
+  playedAudioUrls,
+  pausedAudioCount,
+  lastChirpAudioSrc: sandbox.__exports.getLastChirpAudioSrc(),
   portalI18n: payload.exportI18n ? JSON.parse(JSON.stringify(sandbox.__exports.portalI18n, (key, value) => (typeof value === 'function' ? '[fn]' : value))) : null,
   pluralSamples,
   activeLangPills: langSwitchBtns.filter(b => b.classList.contains('active')).map(b => b.getAttribute('data-lang')),
@@ -1069,6 +1240,7 @@ def extract_static_chrome(html_text: str) -> dict[str, Any]:
         "globalAgeLabel": _html_text(with_class("global-age-label", by_id["global-age-bar"])[0]),
         "globalAges": {b.attrs["data-global-age"]: _html_text(b) for b in with_class("global-age-btn", by_id["global-age-bar"])},
         "blueprintSyncBtn": _html_text(by_id["btn-sync-age-directories"]),
+        "blueprintReadBtn": _html_text(by_id["btn-read-blueprint"]),
         "blueprintCopyBtn": _html_text(by_id["btn-copy-blueprint"]),
         "blueprintPrintBtn": _html_text(by_id["btn-print-fridge-sheet"]),
         "darkModeBtnOff": _html_text(by_id["btn-toggle-dark-mode"]),
@@ -1846,28 +2018,32 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertIn("'expert'", js_text[js_text.index("const ORDERED_WORKSPACE_TABS"):][:200])
 
     # -----------------------------------------------------------------------
-    # R-11: Dark Mode Toggle & Multilingual i18n Switcher (EN, ES, ZH, JA, KO)
+    # R-11: Dark Mode Toggle & 11-Language Atlas of Wonder i18n Switcher
     # -----------------------------------------------------------------------
     def test_r11_dark_mode_and_multilingual_i18n_switcher(self) -> None:
-        """Dark mode toggle and language switcher (en, es, zh, ja, ko) must update DOM, translate chrome, and persist safely."""
+        """Dark mode toggle and 11-language switcher must update DOM, RTL/LTR dir, translate chrome, and persist safely."""
         html_text = INDEX_HTML.read_text(encoding="utf-8")
         css_text = STYLES_CSS.read_text(encoding="utf-8")
 
+        all_11_langs = ("en", "es", "zh", "yue", "ja", "ko", "pt", "fr", "it", "de", "ar")
         self.assertIn('id="btn-toggle-dark-mode"', html_text)
         self.assertIn('id="language-switcher"', html_text)
         self.assertIn('id="language-select"', html_text)
-        for lang_code in ("en", "es", "zh", "ja", "ko"):
+        for lang_code in all_11_langs:
             self.assertIn(f'data-lang="{lang_code}"', html_text)
             self.assertIn(f'value="{lang_code}"', html_text)
 
         self.assertIn(':root[data-theme="dark"]', css_text)
         self.assertIn("body.dark-mode", css_text)
         self.assertIn(".language-switcher", css_text)
+        self.assertIn('[dir="rtl"]', css_text)
 
-        # Default state: light theme + English ('en')
+        # Default state: light theme + English ('en') + LTR
         res_default = run_node_harness()
         self.assertEqual(res_default["htmlTheme"], "light")
         self.assertEqual(res_default["htmlLang"], "en")
+        self.assertEqual(res_default["htmlDir"], "ltr")
+        self.assertFalse(res_default["rtlModeBody"])
         self.assertFalse(res_default["darkModeBody"])
         self.assertIsNone(res_default["darkModeBtnAriaPressed"], "Dark toggle names its action, so it must not expose aria-pressed")
         self.assertEqual(res_default["darkModeBtnTitle"], "Toggle Dark / Light Mode")
@@ -1889,7 +2065,7 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertFalse(res_light_again["darkModeBody"])
         self.assertEqual(res_light_again["storageAfter"].get("safekids_theme"), "light")
 
-        # Test all 4 non-English languages (Spanish, Chinese, Japanese, Korean) via dropdown and pill buttons
+        # Test all 10 non-English Atlas of Wonder languages via pill buttons + RTL/LTR layout switching
         expected_i18n = {
             "es": {
                 "title_substr": "Resumen, Plan Diario por Edad",
@@ -1901,6 +2077,12 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
                 "title_substr": "总览、分龄每日作息计划",
                 "badge_substr": "28 个频道",
                 "bp_substr": "幼儿期（2–3岁）",
+                "dark_btn_substr": "深色模式",
+            },
+            "yue": {
+                "title_substr": "總覽、分齡每日作息計劃",
+                "badge_substr": "28 個頻道",
+                "bp_substr": "幼兒期（2–3歲）",
                 "dark_btn_substr": "深色模式",
             },
             "ja": {
@@ -1915,14 +2097,57 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
                 "bp_substr": "유아기 (2–3세)",
                 "dark_btn_substr": "다크 모드",
             },
+            "pt": {
+                "title_substr": "Visão Geral, Plano Diário por Idade",
+                "badge_substr": "28 canais",
+                "bp_substr": "Crianças Pequenas (2–3 Anos)",
+                "dark_btn_substr": "Modo Escuro",
+            },
+            "fr": {
+                "title_substr": "Aperçu, Plan Quotidien par Âge",
+                "badge_substr": "28 chaînes",
+                "bp_substr": "Tout-Petits (2–3 Ans)",
+                "dark_btn_substr": "Mode Sombre",
+            },
+            "it": {
+                "title_substr": "Panoramica, Piano Giornaliero per Età",
+                "badge_substr": "28 canali",
+                "bp_substr": "Bambini Piccoli (2–3 Anni)",
+                "dark_btn_substr": "Modalità Scura",
+            },
+            "de": {
+                "title_substr": "Übersicht, Alters-Tagesplan",
+                "badge_substr": "28 Kanäle",
+                "bp_substr": "Kleinkinder (2–3 Jahre)",
+                "dark_btn_substr": "Dunkelmodus",
+            },
+            "ar": {
+                "title_substr": "نظرة عامة، الخطة اليومية حسب العمر",
+                "badge_substr": "28 قناة",
+                "bp_substr": "الصغار (2–3 سنوات)",
+                "dark_btn_substr": "الوضع الداكن",
+            },
         }
 
-        expected_html_lang = {"es": "es", "zh": "zh-Hans", "ja": "ja", "ko": "ko"}
+        expected_html_lang = {
+            "es": "es",
+            "zh": "zh-Hans",
+            "yue": "yue-Hant-HK",
+            "ja": "ja",
+            "ko": "ko",
+            "pt": "pt",
+            "fr": "fr",
+            "it": "it",
+            "de": "de",
+            "ar": "ar",
+        }
         for lang_code, expectations in expected_i18n.items():
             res_lang = run_node_harness({"clickLanguagePill": lang_code, "exportI18n": True})
             dicts = res_lang["portalI18n"]
             d = dicts[lang_code]
             self.assertEqual(res_lang["htmlLang"], expected_html_lang[lang_code])
+            self.assertEqual(res_lang["htmlDir"], "rtl" if lang_code == "ar" else "ltr")
+            self.assertEqual(res_lang["rtlModeBody"], lang_code == "ar")
             # Every querySelector-driven surface receives this language's dictionary value
             self.assertEqual(res_lang["heroHeadingText"], d["heroHeading"])
             self.assertNotEqual(res_lang["heroHeadingText"], dicts["en"]["heroHeading"])
@@ -1934,6 +2159,9 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             self.assertEqual(res_lang["sidebarNavTitles"]["overview"], d["sidebarNav"]["overview"]["title"])
             self.assertEqual(res_lang["mobileBarTexts"]["nutrition"], d["mobileBar"]["nutrition"])
             self.assertEqual(res_lang["channelSearchPlaceholder"], d["searchPlaceholders"]["channel"])
+            self.assertEqual(res_lang["bpReadBtnText"], d["blueprintReadBtn"])
+            self.assertEqual(res_lang["expertHeadingText"], d["expertTab"]["heading"])
+            self.assertEqual(res_lang["expertFirstTryText"], d["expertTab"]["scripts"][0]["tryText"])
             self.assertEqual(res_lang["languageSelectAriaLabel"], d["languageSelectLabel"])
             self.assertEqual(res_lang["languageSwitcherAriaLabel"], d["languageSwitcherLabel"])
             self.assertEqual(res_lang["languagePillsAriaLabel"], d["languagePillsLabel"])
@@ -1964,19 +2192,31 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         )
         self.assertEqual(res_corrupt["htmlTheme"], "light")
         self.assertEqual(res_corrupt["htmlLang"], "en")
+        self.assertEqual(res_corrupt["htmlDir"], "ltr")
         self.assertFalse(res_corrupt["darkModeBody"])
         self.assertEqual(res_corrupt["activeLangPills"], ["en"])
 
-        # Round trip KO -> EN restores the English dictionary everywhere (R-12 proves en == shipped HTML)
-        res_round = run_node_harness({"languageSequence": ["ko", "en"], "exportI18n": True})
+        # Round trip AR (RTL) -> EN (LTR) restores English dictionary & LTR direction everywhere
+        res_round = run_node_harness({"languageSequence": ["ar", "en"], "exportI18n": True})
         en = res_round["portalI18n"]["en"]
         self.assertEqual(res_round["htmlLang"], "en")
+        self.assertEqual(res_round["htmlDir"], "ltr")
+        self.assertFalse(res_round["rtlModeBody"])
         self.assertEqual(res_round["heroHeadingText"], en["heroHeading"])
         self.assertEqual(res_round["mobileBarTexts"], {tab: en["mobileBar"][tab] for tab in res_round["mobileBarTexts"]})
         self.assertEqual(res_round["channelSearchPlaceholder"], en["searchPlaceholders"]["channel"])
         self.assertEqual(res_round["languageSelectAriaLabel"], en["languageSelectLabel"])
         self.assertIn("Dark Mode", res_round["darkModeBtnText"])
         self.assertEqual(res_round["storageAfter"].get("safekids_language"), "en")
+
+        # A returning user with saved AR + dark gets Arabic RTL chrome and dark theme on first render
+        res_reload_ar = run_node_harness({"initialStorage": {"safekids_language": "ar", "safekids_theme": "dark"}, "exportI18n": True})
+        self.assertEqual(res_reload_ar["htmlLang"], "ar")
+        self.assertEqual(res_reload_ar["htmlDir"], "rtl")
+        self.assertTrue(res_reload_ar["rtlModeBody"])
+        self.assertEqual(res_reload_ar["htmlTheme"], "dark")
+        self.assertTrue(res_reload_ar["darkModeBody"])
+        self.assertEqual(res_reload_ar["activeLangPills"], ["ar"])
 
         # A returning user with saved KO + dark gets Korean chrome and dark theme on first render
         res_reload = run_node_harness({"initialStorage": {"safekids_language": "ko", "safekids_theme": "dark"}, "exportI18n": True})
@@ -1999,10 +2239,12 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
     # R-12: i18n Dictionary Parity, Clinical-Safety Fidelity & Print-Safe Dark Mode
     # -----------------------------------------------------------------------
     def test_r12_i18n_dictionary_parity_clinical_safety_and_print_safe_dark_mode(self) -> None:
-        """Translations keep every key, number and safety instruction; en matches shipped HTML; dark mode never prints."""
+        """All 11 languages keep every key, number, expert script & safety instruction; en matches shipped HTML; dark mode never prints."""
         res = run_node_harness({"exportI18n": True})
         i18n = res["portalI18n"]
-        self.assertEqual(sorted(i18n), ["en", "es", "ja", "ko", "zh"])
+        all_langs = ["ar", "de", "en", "es", "fr", "it", "ja", "ko", "pt", "yue", "zh"]
+        non_en_langs = ("es", "zh", "yue", "ja", "ko", "pt", "fr", "it", "de", "ar")
+        self.assertEqual(sorted(i18n), all_langs)
 
         def shape(node: Any) -> Any:
             if isinstance(node, dict):
@@ -2012,15 +2254,17 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
             return "fn" if node == "[fn]" else type(node).__name__
 
         en = i18n["en"]
-        for lang in ("es", "zh", "ja", "ko"):
+        for lang in non_en_langs:
             self.assertEqual(shape(i18n[lang]), shape(en), f"{lang} keys/types/array lengths diverge from en")
+            self.assertEqual(len(i18n[lang]["expertTab"]["scripts"]), 9)
+            self.assertEqual(len(i18n[lang]["expertTab"]["principles"]), 5)
 
         # Every number in an English fridge-sheet rule (minutes, hours, months, dye numbers) survives translation
         def digits(text: str) -> collections.Counter:
             return collections.Counter(re.findall(r"\d+", text))
 
         for stage, en_stage in en["blueprintStages"].items():
-            for lang in ("es", "zh", "ja", "ko"):
+            for lang in non_en_langs:
                 local = i18n[lang]["blueprintStages"][stage]
                 self.assertEqual(local["directoryFilterAge"], en_stage["directoryFilterAge"], f"{lang}.{stage} filter slug was translated")
                 for field in ("screenBudget", "sleepCutoff", "mealRule"):
@@ -2029,10 +2273,35 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
 
         stages = {lang: i18n[lang]["blueprintStages"] for lang in i18n}
         # Choking hazard: grapes/cherry tomatoes must be QUARTERED lengthwise, not merely halved
-        for lang, token in {"en": "quarter", "es": "en cuartos", "zh": "四瓣", "ja": "4等分", "ko": "4등분"}.items():
+        quarter_tokens = {
+            "en": "quarter",
+            "es": "en cuartos",
+            "zh": "四瓣",
+            "yue": "四瓣",
+            "ja": "4等分",
+            "ko": "4등분",
+            "pt": "em quartos",
+            "fr": "en quartiers",
+            "it": "in quarti",
+            "de": "vierteln",
+            "ar": "أرباع",
+        }
+        for lang, token in quarter_tokens.items():
             self.assertIn(token, stages[lang]["toddler"]["mealRule"], f"{lang} toddler choking rule lost 'quarter'")
         # Preteens: zero chat, not only 'no chat with strangers'
-        for lang, token in {"es": "chat", "zh": "聊天", "ja": "チャット", "ko": "채팅"}.items():
+        chat_tokens = {
+            "es": "chat",
+            "zh": "聊天",
+            "yue": "聊天",
+            "ja": "チャット",
+            "ko": "채팅",
+            "pt": "chat",
+            "fr": "chat",
+            "it": "chat",
+            "de": "Chat",
+            "ar": "دردشة",
+        }
+        for lang, token in chat_tokens.items():
             self.assertIn(token, stages[lang]["preteen"]["screenBudget"])
         self.assertNotIn("陌生人", stages["zh"]["preteen"]["screenBudget"])
         self.assertNotIn("見知らぬ人", stages["ja"]["preteen"]["screenBudget"])
@@ -2041,7 +2310,7 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertNotIn("黄色5号", stages["ja"]["preschool"]["mealRule"])
         self.assertIn("황색 4호", stages["ko"]["preschool"]["mealRule"])
         self.assertNotIn("황색 5호", stages["ko"]["preschool"]["mealRule"])
-        for lang in ("es", "zh"):
+        for lang in ("es", "zh", "yue", "pt", "fr", "it", "de", "ar"):
             self.assertIn("E102", stages[lang]["preschool"]["mealRule"])
 
         # Singular/plural count badges (search can narrow a directory to exactly one result)
@@ -2076,13 +2345,88 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         head = html_text[: html_text.index("<body>")]
         self.assertIn("localStorage.getItem('safekids_theme') === 'dark'", head, "saved dark theme must apply before first paint")
         self.assertNotIn('id="btn-toggle-dark-mode" aria-pressed', html_text)
-        for lang_tag in ("en", "es", "zh-Hans", "ja", "ko"):
+        for lang_tag in ("en", "es", "zh-Hans", "yue-Hant-HK", "ja", "ko", "pt", "fr", "it", "de", "ar"):
             self.assertIn(f'lang="{lang_tag}"', html_text)
         self.assertRegex(
             css_text,
             r"@media\s*\(max-width:\s*768px\)\s*\{\s*\.header\s*\{\s*position:\s*static;",
             "Phone viewports (<=768px) must unpin .header so multi-row controls do not consume sticky viewport height",
         )
+
+    # -----------------------------------------------------------------------
+    # R-14: Chirp 3 HD Read Aloud (11 Languages, Static MP3s & Server Proxy)
+    # -----------------------------------------------------------------------
+    def test_r14_chirp_3_hd_read_aloud_and_multilingual_expert_scripts(self) -> None:
+        """Chirp 3 HD Read Aloud plays language-matched Studio MP3s across all 11 languages, toggles Stop cleanly, and maps server voices."""
+        import server as chirp_server
+
+        self.assertEqual(chirp_server.HOST, "127.0.0.1", "Local Chirp TTS server must bind strictly to localhost")
+        expected_voice_map = {
+            "en": ("en-US", "en-US-Chirp3-HD-Aoede"),
+            "es": ("es-ES", "es-ES-Chirp3-HD-Aoede"),
+            "zh": ("cmn-CN", "cmn-CN-Chirp3-HD-Aoede"),
+            "yue": ("yue-HK", "yue-HK-Chirp3-HD-Aoede"),
+            "ja": ("ja-JP", "ja-JP-Chirp3-HD-Aoede"),
+            "ko": ("ko-KR", "ko-KR-Chirp3-HD-Aoede"),
+            "pt": ("pt-BR", "pt-BR-Chirp3-HD-Aoede"),
+            "fr": ("fr-FR", "fr-FR-Chirp3-HD-Aoede"),
+            "it": ("it-IT", "it-IT-Chirp3-HD-Aoede"),
+            "de": ("de-DE", "de-DE-Chirp3-HD-Aoede"),
+            "ar": ("ar-XA", "ar-XA-Chirp3-HD-Aoede"),
+        }
+        for lang_code, (exp_locale, exp_voice) in expected_voice_map.items():
+            _, got_locale, got_voice = chirp_server.SYNTHESIZER.resolve_voice(lang_code, "Aoede")
+            self.assertEqual((got_locale, got_voice), (exp_locale, exp_voice))
+            self.assertTrue((REPO_ROOT / "public" / "audio" / lang_code / "script_1.mp3").is_file())
+            self.assertTrue((REPO_ROOT / "public" / "audio" / lang_code / "blueprint_toddler.mp3").is_file())
+
+        # Persona allow-list falls back safely on unknown persona names
+        _, _, fallback_voice = chirp_server.SYNTHESIZER.resolve_voice("yue", "Evil<script>")
+        self.assertEqual(fallback_voice, "yue-HK-Chirp3-HD-Aoede")
+
+        # Clicking Read Aloud on Script 1 in Cantonese ('yue') plays audio/yue/script_1.mp3 and sets Stop state
+        res_yue_play = run_node_harness({"clickLanguagePill": "yue", "clickExpertListenIndex": 0})
+        self.assertEqual(res_yue_play["playedAudioUrls"], ["audio/yue/script_1.mp3"])
+        self.assertEqual(res_yue_play["lastChirpAudioSrc"], "audio/yue/script_1.mp3")
+        self.assertEqual(res_yue_play["expertFirstListenAriaPressed"], "true")
+        self.assertTrue(res_yue_play["expertFirstListenSpeaking"])
+        self.assertEqual(res_yue_play["expertFirstListenBtnText"], "⏹ 停止")
+
+        # Clicking the same Read Aloud button a second time pauses playback and restores localized button label
+        res_yue_stop = run_node_harness(
+            {"clickLanguagePill": "yue", "clickExpertListenIndex": 0, "clickExpertListenCount": 2}
+        )
+        self.assertEqual(res_yue_stop["pausedAudioCount"], 1)
+        self.assertEqual(res_yue_stop["expertFirstListenAriaPressed"], "false")
+        self.assertFalse(res_yue_stop["expertFirstListenSpeaking"])
+        self.assertEqual(res_yue_stop["expertFirstListenBtnText"], "🔊 粵語朗讀")
+
+        # Clicking Read Fridge Plan in Arabic ('ar') with 'preschool' selected plays audio/ar/blueprint_preschool.mp3
+        res_ar_bp = run_node_harness(
+            {"clickLanguagePill": "ar", "clickBlueprintAge": "preschool", "clickReadBlueprint": 1}
+        )
+        self.assertEqual(res_ar_bp["playedAudioUrls"], ["audio/ar/blueprint_preschool.mp3"])
+        self.assertEqual(res_ar_bp["bpReadBtnAriaPressed"], "true")
+        self.assertTrue(res_ar_bp["bpReadBtnSpeaking"])
+        self.assertEqual(res_ar_bp["bpReadBtnText"], "⏹ إيقاف")
+
+        # Switching language while audio is playing immediately stops active playback and updates labels to the new language
+        res_switch_stop = run_node_harness(
+            {"clickLanguagePill": "es", "clickExpertListenIndex": 0, "languageAfterAudio": "de"}
+        )
+        self.assertGreaterEqual(res_switch_stop["pausedAudioCount"], 1)
+        self.assertEqual(res_switch_stop["expertFirstListenAriaPressed"], "false")
+        self.assertFalse(res_switch_stop["expertFirstListenSpeaking"])
+        self.assertEqual(res_switch_stop["expertFirstListenBtnText"], "🔊 Vorlesen")
+
+        # Persona selection persists allow-listed Chirp 3 HD personas and sanitizes corrupted values
+        res_persona = run_node_harness({"selectChirpPersona": "Kore"})
+        self.assertEqual(res_persona["chirpPersonaValue"], "Kore")
+        self.assertEqual(res_persona["storageAfter"].get("safekids_chirp_persona"), "Kore")
+
+        res_bad_persona = run_node_harness({"selectChirpPersona": "<script>alert(1)</script>"})
+        self.assertEqual(res_bad_persona["chirpPersonaValue"], "Aoede")
+        self.assertEqual(res_bad_persona["storageAfter"].get("safekids_chirp_persona"), "Aoede")
 
 
 if __name__ == "__main__":
