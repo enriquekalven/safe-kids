@@ -1705,18 +1705,20 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertIn("Listen & Read", res_listen["workspaceContextTitle"])
         self.assertIn("Viewing Tab 6 of 8", res_listen["workspacePagerIndicator"])
 
-        # Clicking 'expert' tab shows only the Dr. Becky Kennedy expert lens and persists to localStorage
+        # Clicking 'expert' tab shows only the Confidence & Co-Regulation scripts pillar and persists to localStorage
         res_expert = run_node_harness({"clickWorkspaceTab": "expert"})
         self.assertEqual(res_expert["visibleTabPanels"], ["expert"])
         self.assertEqual(res_expert["storageAfter"].get("safekids_active_tab"), "expert")
-        self.assertIn("Dr. Becky Kennedy", res_expert["workspaceContextTitle"])
+        self.assertIn("Confidence & Co-Regulation Scripts", res_expert["workspaceContextTitle"])
+        self.assertNotIn("Dr. Becky", res_expert["workspaceContextTitle"])
         self.assertIn("Viewing Tab 8 of 8", res_expert["workspacePagerIndicator"])
 
-        # Mobile bottom bar stays capped (bottom-nav-limit); phones reach the expert tab via the Overview entry card
+        # Mobile bottom bar stays capped (bottom-nav-limit); phones reach the scripts tab via the Overview entry card
         html_text = INDEX_HTML.read_text(encoding="utf-8")
         self.assertNotIn('class="mobile-pillar-btn" data-tab="expert"', html_text)
         self.assertIn('<a href="#expert-dr-becky" class="expert-entry-card"', html_text)
         self.assertIn("'#expert-dr-becky': 'expert'", APP_JS.read_text(encoding="utf-8"))
+        self.assertIn("'#confidence-scripts': 'expert'", APP_JS.read_text(encoding="utf-8"))
 
         # Clicking 'all' shows all 11 sections for full-page reading/printing
         res_all = run_node_harness({"clickWorkspaceTab": "all"})
@@ -2004,9 +2006,19 @@ class SafeKidsEnriqParityTests(unittest.TestCase):
         self.assertNotIn("<iframe", section)
         self.assertNotIn("ytimg.com", section)
 
-        # Radical honesty: scripts are labelled as paraphrases, not quotes, and no affiliation is implied
+        # IP & clinical framing safety: navigation and principle titles use general psychology framing (not single-creator brand headlines),
+        # while the disclaimer explicitly covers non-therapy, non-affiliation, nominative trademark notice, and SafeKids paraphrases.
+        html_nav_title = extract_static_chrome(html_text)["sidebarNav"]["expert"]["title"]
+        js_nav_title = run_node_harness({"clickLanguagePill": "en"})["sidebarNavTitles"]["expert"]
+        self.assertEqual(html_nav_title, "Speak: Confidence Scripts")
+        self.assertEqual(js_nav_title, "Speak: Confidence Scripts")
+        self.assertNotIn("Dr. Becky", html_nav_title)
+        for trademark_phrase in ("Kids Are Good Inside", "Two Things Are True", 'A "deeply feeling kid"'):
+            self.assertNotIn(trademark_phrase, section)
         self.assertIn("paraphrases", section)
-        self.assertIn("not affiliated with or endorsed by", section)
+        self.assertIn("not affiliated with", section)
+        self.assertIn("not psychotherapy", section)
+        self.assertIn("Good Inside® is a registered trademark of Good Inside, Inc.", section)
 
         # Script filter exists, is allow-listed, and never uses unsafe DOM sinks
         js_text = APP_JS.read_text(encoding="utf-8")
